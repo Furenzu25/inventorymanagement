@@ -1,0 +1,225 @@
+    <div x-data="{
+                    selection: @entangle($attributes->wire('model')),
+                    pageIds: {{ json_encode($getAllIds()) }},
+                    isSelectable: {{ json_encode($selectable) }},
+                    colspanSize: 0,
+                    init() {
+                        this.colspanSize = $refs.headers.childElementCount
+
+                        if (this.isSelectable) {
+                            this.handleCheckAll()
+                        }
+                    },
+                    isExpanded(key) {
+                        return this.selection.includes(key)
+                    },
+                    isPageFullSelected() {
+                        return [...this.selection]
+                                    .sort((a, b) => b - a)
+                                    .toString()
+                                    .includes([...this.pageIds].sort((a, b) => b - a).toString())
+                    },
+                    toggleCheck(checked, content) {
+                        this.$dispatch('row-selection', { row: content, selected: checked });
+                        this.handleCheckAll()
+                    },
+                    toggleCheckAll(checked) {
+                        checked ? this.pushIds() : this.removeIds()
+                    },
+                    toggleExpand(key) {
+                         this.selection.includes(key)
+                            ? this.selection = this.selection.filter(i => i !== key)
+                            : this.selection.push(key)
+                    },
+                    pushIds() {
+                        this.selection.push(...this.pageIds.filter(i => !this.selection.includes(i)))
+                    },
+                    removeIds() {
+                        this.selection =  this.selection.filter(i => !this.pageIds.includes(i) )
+                    },
+                    handleCheckAll() {
+                        this.$nextTick(() => {
+                                this.isPageFullSelected()
+                                    ? this.$refs.mainCheckbox.checked = true
+                                    : this.$refs.mainCheckbox.checked = false
+                            })
+                    }
+                 }"
+    >
+    <div class="overflow-x-auto">
+    <table
+            {{
+                $attributes
+                    ->except('wire:model')
+                    ->class([
+                        'table',
+                        'table-zebra' => $striped,
+                        'cursor-pointer' => $attributes->hasAny(['@row-click', 'link'])
+                    ])
+            }}
+        >
+            <!-- HEADERS -->
+            <thead @class(["text-black dark:text-gray-200", "hidden" => $noHeaders])>
+                <tr x-ref="headers">
+                    <!-- CHECKALL -->
+                    @if($selectable)
+                        <th class="w-1" wire:key="{{ $uuid }}-checkall-{{ implode(',', $getAllIds()) }}">
+                            <input
+                                id="checkAll-{{ $uuid }}"
+                                type="checkbox"
+                                class="checkbox checkbox-sm"
+                                x-ref="mainCheckbox"
+                                @click="toggleCheckAll($el.checked)" />
+                        </th>
+                    @endif
+
+                    <!-- EXPAND EXTRA HEADER -->
+                    @if($expandable)
+                        <th class="w-1"></th>
+                     @endif
+
+                    @foreach($headers as $header)
+                         @php
+                            # SKIP THE HIDDEN COLUMN
+                            if($isHidden($header)) continue;
+
+                            # Scoped slot`s name like `user.city` are compiled to `user___city` through `@scope / @endscope`.
+                            # So we use current `$header` key  to find that slot on context.
+                            $temp_key = str_replace('.', '___', $header['key'])
+                        @endphp
+
+                        <th
+                            class="@if($isSortable($header)) cursor-pointer hover:bg-base-200 @endif {{ $header['class'] ?? ' ' }}"
+
+                            @if($sortBy && $isSortable($header))
+                                @click="$wire.set('sortBy', {column: '{{ $getSort($header)['column'] }}', direction: '{{ $getSort($header)['direction'] }}' })"
+                            @endif
+                        >
+                            {{ isset(${"header_".$temp_key}) ? ${"header_".$temp_key}($header) : $header['label'] }}
+
+                            @if($isSortable($header) && $isSortedBy($header))
+                                <x-mary-icon :name="$getSort($header)['direction'] == 'asc' ? 'o-arrow-small-down' : 'o-arrow-small-up'"  class="w-4 h-4 mb-1" />
+                            @endif
+                        </th>
+                    @endforeach
+
+                    <!-- ACTIONS (Just a empty column) -->
+                    @if($actions)
+                        <th class="w-1"></th>
+                    @endif
+                </tr>
+            </thead>
+
+            <!-- ROWS -->
+            <tbody>
+                @foreach($rows as $k => $row)
+                    <tr
+                        wire:key="{{ $uuid }}-{{ $k }}"
+                        class="hover:bg-base-200/50 {{ $rowClasses($row) }}"
+                        @if($attributes->has('@row-click'))
+                            @click="$dispatch('row-click', {{ json_encode($row) }});"
+                        @endif
+                    >
+                        <!-- CHECKBOX -->
+                        @if($selectable)
+                            <td class="w-1">
+                                <input
+                                    id="checkbox-{{ $uuid }}-{{ $k }}"
+                                    type="checkbox"
+                                    class="checkbox checkbox-sm checkbox-primary"
+                                    value="{{ data_get($row, $selectableKey) }}"
+                                    x-model{{ $selectableModifier() }}="selection"
+                                    @click="toggleCheck($el.checked, {{ json_encode($row) }})" />
+                            </td>
+                        @endif
+
+                        <!-- EXPAND ICON -->
+                        @if($expandable)
+                            <td class="w-1 pe-0">
+                                <x-mary-icon
+                                    name="o-chevron-down"
+                                    ::class="isExpanded('{{ data_get($row, $expandableKey) }}') || '-rotate-90 !text-current !bg-base-200'"
+                                    class="cursor-pointer p-2 w-8 h-8 bg-base-300 rounded-lg"
+                                    @click="toggleExpand('{{ data_get($row, $expandableKey) }}');" />
+                            </td>
+                         @endif
+
+                        <!--  ROW VALUES -->
+                        @foreach($headers as $header)
+                            @php
+                                # SKIP THE HIDDEN COLUMN
+                                if($isHidden($header)) continue;
+
+                                # Scoped slot`s name like `user.city` are compiled to `user___city` through `@scope / @endscope`.
+                                # So we use current `$header` key  to find that slot on context.
+                                $temp_key = str_replace('.', '___', $header['key'])
+                            @endphp
+
+                            <!--  HAS CUSTOM SLOT ? -->
+                            @if(isset(${"cell_".$temp_key}))
+                                <td @class([$cellClasses($row, $header), "p-0" => $hasLink($header)])>
+                                    @if($hasLink($header))
+                                        <a href="{{ $redirectLink($row) }}" wire:navigate class="block py-3 px-4">
+                                    @endif
+
+                                    {{ ${"cell_".$temp_key}($row)  }}
+
+                                    @if($hasLink($header))
+                                        </a>
+                                     @endif
+                                </td>
+                            @else
+                                <td @class([$cellClasses($row, $header), "p-0" => $hasLink($header)])>
+                                    @if($hasLink($header))
+                                        <a href="{{ $redirectLink($row) }}" wire:navigate class="block py-3 px-4">
+                                    @endif
+
+                                    {{ data_get($row, $header['key']) }}
+
+                                    @if($hasLink($header))
+                                        </a>
+                                    @endif
+                                </td>
+                            @endif
+                        @endforeach
+
+                        <!-- ACTIONS -->
+                        @if($actions)
+                            <td class="text-right py-0">{{ $actions($row) }}</td>
+                        @endif
+                    </tr>
+
+                    <!-- EXPANSION SLOT -->
+                    @if($expandable)
+                        <tr wire:key="{{ $uuid }}-{{ $k }}--expand" :class="isExpanded('{{ data_get($row, $expandableKey) }}') || 'hidden'">
+                            <td :colspan="colspanSize">
+                                {{ $expansion($row) }}
+                            </td>
+                        </tr>
+                    @endif
+                @endforeach
+            </tbody>
+        </table>
+
+        @if(count($rows) === 0)
+            @if($showEmptyText)
+                <div class="text-center py-4 text-gray-500 dark:text-gray-400">
+                    {{ $emptyText }}
+                </div>
+            @endif
+            @if($empty)
+                <div class="text-center py-4 text-gray-500 dark:text-gray-400">
+                    {{ $empty }}
+                </div>
+            @endif
+        @endif
+    </div>
+        <!-- Pagination -->
+        @if($withPagination)
+            @if($perPage)
+                <x-mary-pagination :rows="$rows" :per-page-values="$perPageValues" wire:model.live="{{ $perPage }}" />
+            @else
+                <x-mary-pagination :rows="$rows" :per-page-values="$perPageValues" />
+            @endif
+        @endif
+    </div>
