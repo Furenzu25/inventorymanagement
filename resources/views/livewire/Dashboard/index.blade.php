@@ -8,7 +8,7 @@
             class="bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg"
         >
             <x-slot:title>
-                <span class="text-red-200">Total Customers</span>
+                <span class="text-red-100">Total Customers</span>
             </x-slot:title>
         </x-stat>
 
@@ -18,7 +18,7 @@
             class="bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg"
         >
             <x-slot:title>
-                <span class="text-blue-200">Total Pre-orders</span>
+                <span class="text-blue-100">Total Pre-orders</span>
             </x-slot:title>
         </x-stat>
 
@@ -28,7 +28,7 @@
             class="bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg"
         >
             <x-slot:title>
-                <span class="text-green-200">Total Products</span>
+                <span class="text-green-100">Total Products</span>
             </x-slot:title>
         </x-stat>
 
@@ -38,7 +38,7 @@
             class="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white shadow-lg"
         >
             <x-slot:title>
-                <span class="text-yellow-200">Total Sales</span>
+                <span class="text-yellow-100">Total Sales</span>
             </x-slot:title>
         </x-stat>
     </div>
@@ -78,7 +78,7 @@
                         <th class="text-left text-white">Brand</th>
                         <th class="text-left text-white">Price</th>
                         <th class="text-left text-white">Quantity Sold</th>
-                
+
                     </tr>
                 </thead>
                 <tbody>
@@ -87,8 +87,8 @@
                             <td class="text-white">{{ $product->product_name }}</td>
                             <td class="text-white">{{ $product->product_brand }}</td>
                             <td class="text-white">{{ number_format($product->price, 2) }}</td>
-                            <td class="text-white">{{ number_format($product->quantity_sold) }}</td>
-                          
+                            <td class="text-white">{{$preorder->quantity}}</td>
+                            
                         </tr>
                     @endforeach
                 </tbody>
