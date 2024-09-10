@@ -1,0 +1,10 @@
+.custom-input label {
+    display: block;
+    margin-bottom: 5px; /* Adjust this value to lower the label */
+}
+
+.custom-input input,
+.custom-input select,
+.custom-input textarea {
+    margin-top: 10px; /* Adjust this value to add space between the label and the input */
+}
