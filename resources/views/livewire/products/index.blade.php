@@ -23,8 +23,8 @@
         @foreach($products as $product)
             <div class="bg-gray shadow-md rounded-lg overflow-hidden flex flex-col">
                 <div class="h-48 bg-gray-200 flex items-center justify-center">
-                    @if (!empty($product->image))
-                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->product_name }}" class="w-full h-full object-contain">
+                    @if ($product->image)
+                        <img src="{{ Storage::url($product->image) }}" alt="{{ $product->product_name }}" class="w-full h-full object-contain">
                     @else
                         <!-- Default image when no product image is available -->
                         <img src="{{ asset('storage/uploads/default-image.jpg') }}" alt="Default Image" class="w-full h-full object-contain">

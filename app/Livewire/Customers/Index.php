@@ -6,10 +6,8 @@ use Livewire\Component;
 use App\Models\Customer;
 use Livewire\WithPagination;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Auth;
 
 class Index extends Component
 {
@@ -35,17 +33,11 @@ class Index extends Component
         'email' => '',
         'valid_id' => '',
         'valid_id_image' => '',
-        'created_at' => '', // Store creation date
+        'created_at' => '',
     ];
 
-    public $editReason = ''; // Reason for editing
-
-    public $showImagePreview = false;
-
-    // Restrict access to creating customers unless authorized
-
+    public $editReason = '';
     public $imageUploaded = false;
-
     public $selectedImage = null;
 
     public function create()
@@ -60,7 +52,7 @@ class Index extends Component
             'email' => '',
             'valid_id' => '',
             'valid_id_image' => '',
-            'created_at' => now(), // Capture creation date
+            'created_at' => now(),
         ];
 
         $this->customerId = null;
@@ -77,8 +69,6 @@ class Index extends Component
         $this->customerId = $id;
         $this->modalOpen = true;
         $this->imageUploaded = false;
-
-        // Request the user to provide a reason for editing
         session()->flash('info', 'Please provide a valid reason for editing.');
     }
 
@@ -129,19 +119,9 @@ class Index extends Component
         $this->imageUploaded = false;
     }
 
-    public function showImagePreview()
-    {
-        $this->showImagePreview = true;
-    }
-
-    public function hideImagePreview()
-    {
-        $this->showImagePreview = false;
-    }
-
     public function showExpandedImage($imagePath)
     {
-        $this->selectedImage = $imagePath;
+        $this->selectedImage = Storage::disk('public')->url($imagePath);
     }
 
     public function closeExpandedImage()
@@ -161,14 +141,8 @@ class Index extends Component
             ['key' => 'email', 'label' => 'E-mail', 'class' => 'w-32'],
             ['key' => 'valid_id', 'label' => 'Valid ID #', 'class' => 'w-32'],
             ['key' => 'valid_id_image', 'label' => 'Valid ID Image', 'class' => 'w-32'],
-            ['key' => 'created_at', 'label' => 'Profile Created', 'class' => 'w-32'], // Profile creation date
+            ['key' => 'created_at', 'label' => 'Profile Created', 'class' => 'w-32'],
         ];
-    }
-
-    public function logActivity($message)
-    {
-        // Example log to track activity
-        Log::info($message);
     }
 
     public function render()

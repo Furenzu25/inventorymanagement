@@ -84,7 +84,8 @@ class Index extends Component
             if ($product->image) {
                 Storage::disk('public')->delete($product->image);
             }
-            $product->image = $this->image->store('products', 'public');
+            $imagePath = $this->image->store('products', 'public');
+            $product->image = $imagePath;
         }
 
         $product->save();

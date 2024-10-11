@@ -35,7 +35,7 @@
             @scope('cell_valid_id_image', $customer)
                 @if($customer['valid_id_image'])
                     <div class="relative group cursor-pointer" wire:click="showExpandedImage('{{ $customer['valid_id_image'] }}')">
-                        <img src="{{ Storage::url($customer['valid_id_image']) }}" 
+                        <img src="{{ Storage::disk('public')->url($customer['valid_id_image']) }}" 
                              alt="Valid ID" 
                              class="w-16 h-16 object-cover transition-transform duration-300 ease-in-out transform group-hover:scale-105"
                         >
@@ -52,7 +52,7 @@
                 {{ \Carbon\Carbon::parse($customer['created_at'])->format('Y-m-d') }}
             @endscope
         </x-table>
-        {{ $customers->links() }} <!-- Pagination links -->
+        {{ $customers->links() }}
     </x-card>
 
     <x-drawer wire:model="drawer" title="Filters" right separator with-close-button>
@@ -83,7 +83,6 @@
                     </div>
                     
                     @if ($customerId)
-                        <!-- Reason for editing -->
                         <x-textarea label="Reason for Edit" wire:model.defer="editReason" rows="2" class="mb-0.5" />
                     @endif
                 </div>
@@ -99,7 +98,7 @@
     @if($selectedImage)
         <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" wire:click="closeExpandedImage">
             <div class="bg-white p-4 rounded-lg max-w-3xl max-h-3xl">
-                <img src="{{ Storage::url($selectedImage) }}" alt="Expanded Valid ID" class="max-w-full max-h-full object-contain">
+                <img src="{{ $selectedImage }}" alt="Expanded Valid ID" class="max-w-full max-h-full object-contain">
             </div>
         </div>
     @endif
