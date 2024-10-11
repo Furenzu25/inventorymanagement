@@ -13,19 +13,16 @@ return new class extends Migration
     {
         Schema::create('preorders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id')->constrained()->onDelete('cascade'); // Ensure product_name is properly defined
-            $table->foreignId('customer_id')->constrained()->onDelete('cascade'); // Ensure customer_id is properly defined
+            $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->integer('loan_duration');
-            $table->integer('quantity');
-            $table->decimal('price', 8, 2);
+            $table->decimal('total_amount', 10, 2);
+            $table->decimal('monthly_payment', 10, 2);
+            $table->decimal('interest_rate', 5, 2)->default(5.00);
             $table->string('bought_location');
-            $table->enum('status', ['ongoing', 'ready'])->default('ongoing'); // Add status column
+            $table->enum('status', ['ongoing', 'ready', 'completed'])->default('ongoing');
             $table->string('payment_method');
             $table->date('order_date');
             $table->timestamps();
-
-        
-            $table->index('product_id');
             $table->index('customer_id');
         });
     }

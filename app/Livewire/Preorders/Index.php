@@ -4,11 +4,12 @@ namespace App\Livewire\Preorders;
 
 use Livewire\Component;
 use App\Models\Preorder;
+use App\Models\PreorderItem;
 use App\Models\Customer;
 use App\Models\Product;
 use Livewire\WithPagination;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class Index extends Component
 {
@@ -20,17 +21,27 @@ class Index extends Component
     public $preorderId;
     public $preorder = [
         'customer_id' => '',
-        'product_id' => '',
         'loan_duration' => '',
-        'quantity' => '',
-        'price' => '',
         'bought_location' => '',
         'status' => '',
         'payment_method' => '',
         'order_date' => '',
     ];
+    public $preorderItems = [];
     public $customers;
     public $products;
+
+    protected $rules = [
+        'preorder.customer_id' => 'required|exists:customers,id',
+        'preorder.loan_duration' => 'required|numeric|min:0',
+        'preorder.bought_location' => 'required',
+        'preorder.status' => 'required',
+        'preorder.payment_method' => 'required',
+        'preorder.order_date' => 'required|date',
+        'preorderItems.*.product_id' => 'required|exists:products,id',
+        'preorderItems.*.quantity' => 'required|numeric|min:1',
+        'preorderItems.*.price' => 'required|numeric|min:0',
+    ];
 
     public function create()
     {
@@ -42,31 +53,51 @@ class Index extends Component
     public function edit($id)
     {
         $this->preorder = Preorder::findOrFail($id)->toArray();
+        $this->preorderItems = PreorderItem::where('preorder_id', $id)->get()->toArray();
         $this->preorderId = $id;
         $this->modalOpen = true;
     }
 
     public function store()
     {
-        $this->validate([
-            'preorder.customer_id' => 'required|exists:customers,id',
-            'preorder.product_id' => 'required|exists:products,id',
-            'preorder.price' => 'required|numeric|min:0',
-            // ... other validation rules ...
-        ]);
+        $this->validate();
 
-        if (isset($this->preorder['id'])) {
-            // Editing existing preorder
-            $preorder = Preorder::findOrFail($this->preorder['id']);
-            $preorder->update($this->preorder);
-            session()->flash('message', 'Preorder updated successfully.');
-        } else {
-            // Creating new preorder
-            Preorder::create($this->preorder);
-            session()->flash('message', 'Preorder created successfully.');
-        }
+        DB::transaction(function () {
+            $totalAmount = 0;
+            foreach ($this->preorderItems as $item) {
+                $totalAmount += $item['quantity'] * $item['price'];
+            }
 
-        $this->reset(['preorder']);
+            $interestRate = 5.00; // You might want to make this configurable
+            $monthlyPayment = $this->calculateMonthlyPayment($totalAmount, $this->preorder['loan_duration'], $interestRate);
+
+            $preorderData = array_merge($this->preorder, [
+                'total_amount' => $totalAmount,
+                'monthly_payment' => $monthlyPayment,
+                'interest_rate' => $interestRate,
+            ]);
+
+            if (isset($this->preorder['id'])) {
+                $preorder = Preorder::findOrFail($this->preorder['id']);
+                $preorder->update($preorderData);
+                $preorder->preorderItems()->delete();
+            } else {
+                $preorder = Preorder::create($preorderData);
+            }
+
+            foreach ($this->preorderItems as $item) {
+                if (!empty($item['product_id'])) {
+                    $preorder->preorderItems()->create([
+                        'product_id' => $item['product_id'],
+                        'quantity' => $item['quantity'],
+                        'price' => $item['price'],
+                    ]);
+                }
+            }
+        });
+
+        session()->flash('message', isset($this->preorder['id']) ? 'Preorder updated successfully.' : 'Preorder created successfully.');
+        $this->reset(['preorder', 'preorderItems']);
         $this->modalOpen = false;
     }
 
@@ -80,24 +111,43 @@ class Index extends Component
     {
         $this->preorder = [
             'customer_id' => '',
-            'product_id' => '',
             'loan_duration' => '',
-            'quantity' => '',
-            'price' => '',
             'bought_location' => '',
             'status' => '',
             'payment_method' => '',
             'order_date' => Carbon::now()->format('Y-m-d'),
         ];
+        $this->preorderItems = [
+            [
+                'product_id' => '',
+                'quantity' => 1,
+                'price' => '',
+            ]
+        ];
+    }
+
+    public function addItem()
+    {
+        $this->preorderItems[] = [
+            'product_id' => '',
+            'quantity' => 1,
+            'price' => '',
+        ];
+    }
+
+    public function removeItem($index)
+    {
+        unset($this->preorderItems[$index]);
+        $this->preorderItems = array_values($this->preorderItems);
     }
 
     public function render()
     {
-        $preorders = Preorder::with(['customer', 'product'])
+        $preorders = Preorder::with(['customer', 'preorderItems.product'])
             ->where(function ($query) {
                 $query->whereHas('customer', function ($q) {
                     $q->where('name', 'like', '%' . $this->search . '%');
-                })->orWhereHas('product', function ($q) {
+                })->orWhereHas('preorderItems.product', function ($q) {
                     $q->where('product_name', 'like', '%' . $this->search . '%');
                 });
             })
@@ -115,10 +165,9 @@ class Index extends Component
     {
         return [
             ['key' => 'customer.name', 'label' => 'Customer', 'sortable' => true],
-            ['key' => 'product.product_name', 'label' => 'Product', 'sortable' => true],
             ['key' => 'loan_duration', 'label' => 'Loan Duration', 'sortable' => true],
-            ['key' => 'quantity', 'label' => 'Quantity', 'sortable' => true],
-            ['key' => 'price', 'label' => 'Price', 'sortable' => true],
+            ['key' => 'total_amount', 'label' => 'Total Amount', 'sortable' => true],
+            ['key' => 'monthly_payment', 'label' => 'Monthly Payment', 'sortable' => true],
             ['key' => 'bought_location', 'label' => 'Bought Location', 'sortable' => true],
             ['key' => 'status', 'label' => 'Status', 'sortable' => true],
             ['key' => 'payment_method', 'label' => 'Payment Method', 'sortable' => true],
@@ -137,20 +186,25 @@ class Index extends Component
         $this->products = Product::all();
     }
 
-    public function updatedPreorderCustomerId($value)
+    public function updatedPreorderItems($value, $index)
     {
-        $this->preorder['customer_id'] = $value;
-    }
-
-    public function updatedPreorderProductId($value)
-    {
-        if ($value) {
+        if (str_contains($index, 'product_id')) {
+            $itemIndex = explode('.', $index)[0];
             $product = Product::find($value);
             if ($product) {
-                $this->preorder['price'] = $product->price;
+                $this->preorderItems[$itemIndex]['price'] = $product->price;
             }
-        } else {
-            $this->preorder['price'] = '';
         }
+    }
+
+    private function calculateMonthlyPayment($totalAmount, $loanDuration, $interestRate)
+    {
+        $monthlyInterestRate = $interestRate / 12 / 100;
+        $numberOfPayments = $loanDuration;
+        
+        $monthlyPayment = $totalAmount * ($monthlyInterestRate * pow(1 + $monthlyInterestRate, $numberOfPayments)) 
+                        / (pow(1 + $monthlyInterestRate, $numberOfPayments) - 1);
+        
+        return round($monthlyPayment, 2);
     }
 }

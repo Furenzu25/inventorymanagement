@@ -17,6 +17,7 @@ class Product extends Model
         'product_description',
         'storage_capacity',
         'price',
+        'image',
     ];
 
     public function preorders()

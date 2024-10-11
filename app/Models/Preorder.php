@@ -11,10 +11,10 @@ class Preorder extends Model
 
     protected $fillable = [
         'customer_id',
-        'product_id',
         'loan_duration',
-        'quantity',
-        'price',
+        'total_amount',
+        'monthly_payment',
+        'interest_rate',
         'bought_location',
         'status',
         'payment_method',
@@ -30,8 +30,8 @@ class Preorder extends Model
         return $this->belongsTo(Customer::class);
     }
 
-    public function product()
+    public function preorderItems()
     {
-        return $this->belongsTo(Product::class);
+        return $this->hasMany(PreorderItem::class);
     }
 }

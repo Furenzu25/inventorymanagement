@@ -1,19 +1,24 @@
 <?php
-
 namespace App\Livewire\Products;
 
 use Livewire\Component;
-use App\Models\Product;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
+use App\Models\Product;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class Index extends Component
 {
-    use WithPagination;
+    use WithPagination, WithFileUploads;
 
+    #[Rule('nullable|sometimes|image|mimes:jpeg,png,jpg,gif|max:5120')]
     public $search = '';
     public $sortBy = ['column' => 'product_name', 'direction' => 'asc'];
     public $modalOpen = false;
     public $productId;
+    public $image; // The uploaded image file
     public $product = [
         'product_name' => '',
         'product_model' => '',
@@ -22,32 +27,36 @@ class Index extends Component
         'product_description' => '',
         'price' => '',
         'storage_capacity' => '',
+        'status' => 'active', // New status field (default to active)
+        'image' => '', // Store the image path here
     ];
+    public $oldImage;
+    public $existingImage;
+    public $imageUploaded = false;
 
     protected $rules = [
+        'product.product_name' => 'required',
+        'product.product_model' => 'required',
+        'product.product_brand' => 'required',
+        'product.product_category' => 'required',
+        'product.product_description' => 'required',
         'product.storage_capacity' => 'required',
-        // ... other rules
+        'product.price' => 'required|numeric',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max size
     ];
 
     public function create()
     {
-        $this->product = [
-            'product_name' => '',
-            'product_model' => '',
-            'product_brand' => '',
-            'product_category' => '',
-            'product_description' => '',
-            'price' => '',
-            'storage_capacity' => '',
-        ];
-        $this->productId = null;
+        $this->resetProduct(); // Clear product form
         $this->modalOpen = true;
     }
 
     public function edit($id)
     {
-        $this->product = Product::findOrFail($id)->toArray();
-        $this->productId = $id;
+        $this->resetValidation();
+        $product = Product::findOrFail($id);
+        $this->product = $product->toArray();
+        $this->existingImage = $product->image;
         $this->modalOpen = true;
     }
 
@@ -59,81 +68,68 @@ class Index extends Component
 
     public function store()
     {
-        $this->validate([
-            'product.product_name' => 'required|string|max:255',
-            'product.product_model' => 'required|string|max:255',
-            'product.product_brand' => 'required|string|max:255',
-            'product.product_category' => 'required|string|max:255',
-            'product.product_description' => 'required|string',
-            'product.storage_capacity' => 'required|string',
-            'product.price' => 'required|numeric|min:0',
-        ]);
+        $this->validate();
 
-        if (isset($this->productId)) {
-            $product = Product::findOrFail($this->productId);
-            $product->update($this->product);
-            session()->flash('message', 'Product updated successfully.');
+        if (isset($this->product['id'])) {
+            $product = Product::findOrFail($this->product['id']);
+            $message = 'Product updated successfully.';
         } else {
-            Product::create($this->product);
-            session()->flash('message', 'Product created successfully.');
+            $product = new Product();
+            $message = 'Product created successfully.';
         }
 
-        $this->reset(['product', 'productId']);
+        $product->fill($this->product);
+
+        if ($this->image) {
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $product->image = $this->image->store('products', 'public');
+        }
+
+        $product->save();
+
         $this->modalOpen = false;
+        $this->reset(['product', 'image', 'existingImage', 'imageUploaded']);
+        session()->flash('message', $message);
     }
 
-    public function headers()
+    public function resetProduct()
     {
-        return [
-            ['key' => 'product_name', 'label' => 'Name', 'class' => 'w-32'],
-            ['key' => 'product_model', 'label' => 'Model', 'class' => 'w-32'],
-            ['key' => 'product_brand', 'label' => 'Brand', 'class' => 'w-32'],
-            ['key' => 'product_category', 'label' => 'Category', 'class' => 'w-32'],
-            ['key' => 'product_description', 'label' => 'Description', 'class' => 'w-32'],
-            ['key' => 'storage_capacity', 'label' => 'Storage Capacity', 'class' => 'w-32'],
-            ['key' => 'price', 'label' => 'Price', 'class' => 'w-32'],
+        $this->product = [
+            'product_name' => '',
+            'product_model' => '',
+            'product_brand' => '',
+            'product_category' => '',
+            'product_description' => '',
+            'price' => '',
+            'storage_capacity' => '',
+            'status' => 'active', // Default to active status
+            'image' => '', // Reset image path
         ];
+        $this->image = null; // Reset file upload
+        $this->imageUploaded = false;
     }
 
-    public function render()
+    public function updatedImage()
     {
-        $query = Product::query()
-            ->where('product_name', 'like', '%' . $this->search . '%')
-            ->orderBy($this->sortBy['column'], $this->sortBy['direction']);
-
-        $products = $query->paginate(10);
-
-        return view('livewire.products.index', [
-            'products' => $products,
-            'headers' => $this->headers(),
-            'sortBy' => $this->sortBy,
-        ]);
-    }
-
-    public function updatedSortBy($value)
-    {
-        $this->resetPage();
-    }
-
-    public function sortBy($column)
-    {
-        if ($this->sortBy['column'] === $column) {
-            $this->sortBy['direction'] = $this->sortBy['direction'] === 'asc' ? 'desc' : 'asc';
-        } else {
-            $this->sortBy['column'] = $column;
-            $this->sortBy['direction'] = 'asc';
-        }
-        $this->resetPage();
-    }
-
-    public function updatedProductStorageCapacity($value)
-    {
-        $this->product['storage_capacity'] = $value;
+        $this->imageUploaded = true;
     }
 
     public function closeModal()
     {
-        $this->modalOpen = false;
-        $this->reset(['product', 'productId']);
+        $this->modalOpen = false; // Close the modal
+        $this->resetProduct(); // Optionally reset the form fields
+    }
+
+    public function render()
+    {
+        $products = Product::where('product_name', 'like', '%'.$this->search.'%')
+            ->orderBy($this->sortBy['column'], $this->sortBy['direction'])
+            ->paginate(10);
+
+        return view('livewire.products.index', [
+            'products' => $products
+        ]);
     }
 }

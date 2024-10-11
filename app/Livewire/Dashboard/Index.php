@@ -16,18 +16,18 @@ class Index extends Component
         $preorderCount = Preorder::count();
         $productCount = Product::count();
         
-        // Calculate total sales as price * quantity
-        $totalSales = Preorder::sum(DB::raw('price * quantity'));
+        // Calculate total sales
+        $totalSales = Preorder::sum('total_amount');
 
-        $recentPreorders = Preorder::with(['customer', 'product'])
-            ->latest()
+        $recentPreorders = Preorder::with(['customer', 'preorderItems.product'])
+            ->latest('order_date')
             ->take(5)
             ->get();
 
         $topProducts = Product::select('products.*', 
-                DB::raw('SUM(preorders.quantity) as quantity_sold'),
-                DB::raw('SUM(preorders.price * preorders.quantity) as total_sales'))
-            ->leftJoin('preorders', 'products.id', '=', 'preorders.product_id')
+                DB::raw('SUM(preorder_items.quantity) as quantity_sold'),
+                DB::raw('SUM(preorder_items.price * preorder_items.quantity) as total_sales'))
+            ->leftJoin('preorder_items', 'products.id', '=', 'preorder_items.product_id')
             ->groupBy('products.id')
             ->orderByDesc('quantity_sold')
             ->take(5)

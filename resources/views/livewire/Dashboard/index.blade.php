@@ -49,10 +49,8 @@
                 <thead>
                     <tr>
                         <th class="text-left text-white">Customer</th>
-                        <th class="text-left text-white">Product</th>
-                        <th class="text-left text-white">Quantity</th>
-                        <th class="text-left text-white">Price</th>
-                        <th class="text-left text-white">Total</th>
+                        <th class="text-left text-white">Products</th>
+                        <th class="text-left text-white">Total Amount</th>
                         <th class="text-left text-white">Date</th>
                     </tr>
                 </thead>
@@ -60,10 +58,12 @@
                     @foreach($recentPreorders as $preorder)
                         <tr>
                             <td class="text-white">{{ $preorder->customer->name }}</td>
-                            <td class="text-white">{{ $preorder->product->product_name }}</td>
-                            <td class="text-white">{{ $preorder->quantity }}</td>
-                            <td class="text-white">{{ number_format($preorder->price, 2) }}</td>
-                            <td class="text-white">{{ number_format($preorder->price * $preorder->quantity, 2) }}</td>
+                            <td class="text-white">
+                                @foreach($preorder->preorderItems as $item)
+                                    {{ $item->product->product_name }} ({{ $item->quantity }})@if(!$loop->last), @endif
+                                @endforeach
+                            </td>
+                            <td class="text-white">{{ number_format($preorder->total_amount, 2) }}</td>
                             <td class="text-white">{{ $preorder->order_date->format('M d, Y') }}</td>
                         </tr>
                     @endforeach
@@ -87,7 +87,7 @@
                             <td class="text-white">{{ $product->product_name }}</td>
                             <td class="text-white">{{ $product->product_brand }}</td>
                             <td class="text-white">{{ number_format($product->price, 2) }}</td>
-                            <td class="text-white">{{$preorder->quantity}}</td>
+                            <td class="text-white">{{ $product->quantity_sold ?? 0 }}</td>
                             
                         </tr>
                     @endforeach

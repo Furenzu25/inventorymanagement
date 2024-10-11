@@ -11,9 +11,11 @@ class Customer extends Model
         // Specify which fields are mass assignable
         protected $fillable = [
             'name',
-            'age',
+            'birthday',
             'address',
             'phone_number',
+            'reference_contactperson',
+            'reference_contactperson_phonenumber',
             'email',
             'valid_id',
             'valid_id_image',

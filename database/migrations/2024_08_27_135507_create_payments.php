@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('preorder_id')->constrained()->onDelete('cascade'); // Ensure preorder_id is properly defined
-            $table->foreignId('customer_id')->constrained()->onDelete('cascade'); // Ensure customer_id is properly defined
-            $table->foreignId('sale_id')->constrained()->onDelete('cascade'); // Add sale_id as a foreign key
-            $table->decimal('total_paid', 8, 2);
+            $table->foreignId('preorder_id')->constrained()->onDelete('cascade');
+            $table->foreignId('customer_id')->constrained()->onDelete('cascade');
+            $table->foreignId('sale_id')->constrained()->onDelete('cascade');
+            $table->decimal('amount_paid', 10, 2); // Amount paid in this transaction
             $table->date('payment_date');
-            $table->decimal('due_amount', 8, 2);
+            $table->decimal('due_amount', 10, 2); // Amount due at the time of payment
             $table->timestamps();
 
             $table->index('payment_date');

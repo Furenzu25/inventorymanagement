@@ -13,9 +13,11 @@ return new class extends Migration
     {
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('preorder_id')->constrained()->onDelete('cascade'); // Ensure preorder_id is properly defined
-            $table->foreignId('customer_id')->constrained()->onDelete('cascade'); // Ensure customer_id is properly defined
-            $table->decimal('monthly_payment', 8, 2);
+            $table->foreignId('preorder_id')->constrained()->onDelete('cascade');
+            $table->foreignId('customer_id')->constrained()->onDelete('cascade');
+            $table->decimal('monthly_payment', 10, 2);
+            $table->decimal('total_paid', 10, 2)->default(0.00); // Total amount paid by the customer
+            $table->decimal('remaining_balance', 10, 2); // Remaining balance to be paid
             $table->timestamps();
 
             $table->index('preorder_id');

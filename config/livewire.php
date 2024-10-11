@@ -2,6 +2,6 @@
 return [
     'file_uploads' => [
         'enabled' => true,
-        'max_size' => 5120, // 5MB
+        'max_size' => 5000, // 5MB
     ],
 ];
