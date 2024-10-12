@@ -29,7 +29,7 @@
         @endscope
 
         @scope('cell_product', $sale)
-            {{ $sale->preorder->product->product_name }}
+            {{ $sale->preorder->preorderItems->map(function($item) { return $item->product->product_name; })->implode(', ') }}
         @endscope
 
         @scope('cell_monthly_payment', $sale)
@@ -43,5 +43,41 @@
         @scope('cell_remaining_balance', $sale)
             {{ number_format($sale->remaining_balance, 2) }}
         @endscope
+
+        @scope('cell_status', $sale)
+            <span class="{{ $sale->status === 'paid' ? 'text-green-500' : 'text-yellow-500' }}">
+                {{ ucfirst($sale->status) }}
+            </span>
+        @endscope
+
+        @scope('cell_actions', $sale)
+            <a href="{{ route('payments.history', $sale->id) }}" class="text-indigo-600 hover:text-indigo-900">View Payment History</a>
+        @endscope
     </x-table>
+
+    <div class="mt-8">
+        <h2 class="text-lg font-semibold mb-4">Convert Preorders to Sales</h2>
+        @if($preorders->isNotEmpty())
+            <x-table :headers="[
+                ['key' => 'id', 'label' => 'Preorder ID'],
+                ['key' => 'customer', 'label' => 'Customer'],
+                ['key' => 'total_amount', 'label' => 'Total Amount'],
+                ['key' => 'actions', 'label' => 'Actions']
+            ]" :rows="$preorders">
+                @scope('cell_customer', $preorder)
+                    {{ $preorder->customer->name }}
+                @endscope
+                @scope('cell_total_amount', $preorder)
+                    {{ number_format($preorder->total_amount, 2) }}
+                @endscope
+                @scope('cell_actions', $preorder)
+                    <x-button wire:click="createSaleFromPreorder({{ $preorder->id }})" class="btn-primary btn-sm">
+                        Convert to Sale
+                    </x-button>
+                @endscope
+            </x-table>
+        @else
+            <p>No preorders available for conversion.</p>
+        @endif
+    </div>
 </div>

@@ -9,6 +9,9 @@ class Preorder extends Model
 {
     use HasFactory;
 
+    const STATUS_PENDING = 'pending';
+    const STATUS_CONVERTED = 'converted';
+
     protected $fillable = [
         'customer_id',
         'loan_duration',

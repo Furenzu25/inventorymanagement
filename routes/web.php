@@ -8,6 +8,7 @@ use App\Livewire\Preorders\Index as PreordersIndex;
 use App\Livewire\Sales\Index as SalesIndex;
 use Illuminate\Support\Facades\File;
 use App\Livewire\Payments\Index as PaymentsIndex;
+use App\Livewire\Payments\History;
 
 // Main dashboard route using Volt
 Volt::route('/', 'dashboard.index')->name('dashboard.index');
@@ -26,3 +27,5 @@ Route::get('/download/{filename}', function ($filename) {
 });
 
 Route::get('/payments', PaymentsIndex::class)->name('payments.index');
+
+Route::get('/payments/history/{sale?}', History::class)->name('payments.history');

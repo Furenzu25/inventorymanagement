@@ -7,50 +7,29 @@
     @endif
     <form wire:submit.prevent="store">
         <div class="mb-4">
-            <label for="preorder_id" class="block text-sm font-medium text-gray-700">Preorder</label>
+            <label for="sale_id" class="block text-sm font-medium text-gray-700">Sale</label>
             <x-select
-                label="Preorder"
-                wire:model="preorder_id"
-                :options="$preorders->map(function($preorder) {
+                label="Sale"
+                wire:model="sale_id"
+                :options="$sales->map(function($sale) {
                     return [
-                        'id' => $preorder->id,
-                        'name' => 'Preorder #' . $preorder->id . ' - ' . 
-                                  $preorder->customer->name . ' - ' . 
-                                  $preorder->preorderItems->map(function($item) {
+                        'id' => $sale->id,
+                        'name' => 'Sale #' . $sale->id . ' - ' . 
+                                  $sale->customer->name . ' - ' . 
+                                  $sale->preorder->preorderItems->map(function($item) {
                                       return $item->product->product_name;
-                                  })->implode(', ')
+                                  })->implode(', ') .
+                                  ' (Remaining: $' . number_format($sale->remaining_balance, 2) . ')'
                     ];
                 })"
-                placeholder="Select a preorder"
+                placeholder="Select a sale"
             />
-            @error('preorder_id') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-        </div>
-
-        <div class="mb-4">
-            <label for="customer_id" class="block text-sm font-medium text-gray-700">Customer</label>
-            <select id="customer_id" wire:model="customer_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                <option value="">Select a customer</option>
-                @foreach($customers as $customer)
-                    <option value="{{ $customer->id }}">{{ $customer->name }}</option>
-                @endforeach
-            </select>
-            @error('customer_id') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-        </div>
-
-        <div class="mb-4">
-            <label for="sale_id" class="block text-sm font-medium text-gray-700">Sale</label>
-            <select id="sale_id" wire:model="sale_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                <option value="">Select a sale</option>
-                @foreach($sales as $sale)
-                    <option value="{{ $sale->id }}">Sale #{{ $sale->id }}</option>
-                @endforeach
-            </select>
             @error('sale_id') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
         </div>
 
         <div class="mb-4">
             <label for="amount_paid" class="block text-sm font-medium text-gray-700">Amount Paid</label>
-            <input type="number" id="amount_paid" wire:model="amount_paid" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+            <input type="number" id="amount_paid" wire:model.lazy="amount_paid" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
             @error('amount_paid') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
         </div>
 

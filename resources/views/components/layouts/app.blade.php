@@ -124,6 +124,9 @@
             <a href="{{ route('payments.index') }}" class="sidebar-button">
                 <i class="fas fa-money-bill-wave"></i> Payments
             </a>
+            <a href="{{ route('payments.history', ['sale' => 'all']) }}" class="sidebar-button">
+                <i class="fas fa-history"></i> Payment History
+            </a>
         </div>
 
         {{-- Sidebar Toggle Button (Visible always) --}}

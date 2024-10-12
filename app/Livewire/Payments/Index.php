@@ -5,49 +5,79 @@ namespace App\Livewire\Payments;
 use Livewire\Component;
 use App\Models\Payment;
 use App\Models\Sale;
-use App\Models\Preorder;
-use App\Models\Customer;
+use Illuminate\Validation\Rule;
 
 class Index extends Component
 {
-    public $preorder_id;
-    public $customer_id;
     public $sale_id;
     public $amount_paid;
     public $payment_date;
     public $due_amount;
 
-    protected $rules = [
-        'preorder_id' => 'required|exists:preorders,id',
-        'customer_id' => 'required|exists:customers,id',
-        'sale_id' => 'required|exists:sales,id',
-        'amount_paid' => 'required|numeric|min:0',
-        'payment_date' => 'required|date',
-        'due_amount' => 'required|numeric|min:0',
-    ];
+    public function rules()
+    {
+        return [
+            'sale_id' => 'required|exists:sales,id',
+            'amount_paid' => [
+                'required',
+                'numeric',
+                'min:0',
+                function ($attribute, $value, $fail) {
+                    if ($this->sale_id) {
+                        $sale = Sale::find($this->sale_id);
+                        if ($value > $sale->remaining_balance) {
+                            $fail("The payment amount cannot exceed the remaining balance of " . number_format($sale->remaining_balance, 2));
+                        }
+                    }
+                },
+            ],
+            'payment_date' => 'required|date',
+        ];
+    }
+
+    public function updated($propertyName)
+    {
+        if ($propertyName === 'sale_id') {
+            $this->updateDueAmount();
+        }
+        $this->validateOnly($propertyName);
+    }
+
+    public function updateDueAmount()
+    {
+        if ($this->sale_id) {
+            $sale = Sale::find($this->sale_id);
+            $this->due_amount = $sale->remaining_balance;
+        } else {
+            $this->due_amount = null;
+        }
+    }
 
     public function store()
     {
         $validatedData = $this->validate();
+        $validatedData['due_amount'] = $this->due_amount;
+
+        $sale = Sale::findOrFail($validatedData['sale_id']);
+        $validatedData['customer_id'] = $sale->customer_id;
 
         $payment = Payment::create($validatedData);
 
-        // Update the sale's total_paid and remaining_balance
-        $sale = Sale::findOrFail($validatedData['sale_id']);
-        $sale->total_paid += $payment->amount_paid;
-        $sale->remaining_balance -= $payment->amount_paid;
-        $sale->save();
+        $sale->updatePayment($payment->amount_paid);
 
-        $this->reset(['preorder_id', 'customer_id', 'sale_id', 'amount_paid', 'payment_date', 'due_amount']);
-        session()->flash('message', 'Payment recorded successfully.');
+        $this->reset(['sale_id', 'amount_paid', 'payment_date', 'due_amount']);
+        
+        $message = 'Payment recorded successfully.';
+        if ($sale->status === 'paid') {
+            $message .= ' The sale has been fully paid.';
+        }
+        session()->flash('message', $message);
     }
 
     public function render()
     {
         return view('livewire.payments.index', [
-            'preorders' => Preorder::with('preorderItems.product')->get(),
-            'customers' => Customer::all(),
-            'sales' => Sale::all(),
+            'sales' => Sale::with(['customer', 'preorder.preorderItems.product'])->get(),
         ]);
     }
 }

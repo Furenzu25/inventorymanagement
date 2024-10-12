@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('preorders', function (Blueprint $table) {
@@ -19,7 +16,7 @@ return new class extends Migration
             $table->decimal('monthly_payment', 10, 2);
             $table->decimal('interest_rate', 5, 2)->default(5.00);
             $table->string('bought_location');
-            $table->enum('status', ['ongoing', 'ready', 'completed'])->default('ongoing');
+            $table->string('status', 20)->default('ongoing');
             $table->string('payment_method');
             $table->date('order_date');
             $table->timestamps();
@@ -27,9 +24,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('preorders');

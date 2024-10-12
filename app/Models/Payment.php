@@ -10,9 +10,8 @@ class Payment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'preorder_id',
-        'customer_id',
         'sale_id',
+        'customer_id',
         'amount_paid',
         'payment_date',
         'due_amount'
@@ -22,18 +21,18 @@ class Payment extends Model
         'payment_date' => 'date',
     ];
 
+    public function sale()
+    {
+        return $this->belongsTo(Sale::class);
+    }
+
     public function preorder()
     {
-        return $this->belongsTo(Preorder::class)->with('preorderItems.product');
+        return $this->sale->preorder();
     }
 
     public function customer()
     {
-        return $this->belongsTo(Customer::class);
-    }
-
-    public function sale()
-    {
-        return $this->belongsTo(Sale::class);
+        return $this->sale->customer();
     }
 }
