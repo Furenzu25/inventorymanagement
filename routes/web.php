@@ -9,6 +9,7 @@ use App\Livewire\Payments\Index as PaymentsIndex;
 use App\Livewire\Payments\History;
 use App\Livewire\Auth\Login;
 use App\Livewire\Dashboard\Index as DashboardIndex;
+use App\Livewire\Auth\Register;
 
 // Login route
 Route::get('/login', Login::class)->name('login');
@@ -37,3 +38,5 @@ Route::get('/download/{filename}', function ($filename) {
         abort(404);
     }
 });
+
+Route::get('/register', Register::class)->name('register');
