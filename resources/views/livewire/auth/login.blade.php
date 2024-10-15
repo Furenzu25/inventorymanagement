@@ -2,6 +2,11 @@
     <div class="w-full max-w-md">
         <x-card class="bg-black/30 backdrop-blur-md border border-red-500/30">
             <h2 class="text-2xl font-bold text-center text-red-500 mb-6">Login</h2>
+            @if ($message)
+                <div class="mb-4 font-medium text-sm text-green-400">
+                    {{ $message }}
+                </div>
+            @endif
             <form wire:submit.prevent="login">
                 <div class="space-y-4">
                     <x-input 

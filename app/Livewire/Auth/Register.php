@@ -3,9 +3,11 @@
 namespace App\Livewire\Auth;
 
 use Livewire\Component;
-use App\Models\User;
+use App\Models\PendingUser;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\VerifyEmail;
 
 class Register extends Component
 {
@@ -16,7 +18,7 @@ class Register extends Component
 
     protected $rules = [
         'name' => 'required|string|max:255',
-        'email' => 'required|string|email|max:255|unique:users',
+        'email' => 'required|string|email|max:255|unique:users|unique:pending_users',
         'password' => 'required|string|min:8|confirmed',
     ];
 
@@ -24,15 +26,19 @@ class Register extends Component
     {
         $this->validate();
 
-        $user = User::create([
+        $verificationToken = Str::random(64);
+
+        $pendingUser = PendingUser::create([
             'name' => $this->name,
             'email' => $this->email,
             'password' => Hash::make($this->password),
+            'verification_token' => $verificationToken,
         ]);
 
-        Auth::login($user);
+        Mail::to($this->email)->send(new VerifyEmail($pendingUser, $verificationToken));
 
-        return redirect()->intended('/dashboard');
+        session()->flash('message', 'Please check your email to verify your account.');
+        return redirect()->route('login');
     }
 
     public function render()

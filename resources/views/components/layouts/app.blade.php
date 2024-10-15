@@ -127,6 +127,7 @@
             <a href="{{ route('payments.history', ['sale' => 'all']) }}" class="sidebar-button">
                 <i class="fas fa-history"></i> Payment History
             </a>
+            <livewire:auth.logout />
         </div>
 
         {{-- Sidebar Toggle Button (Visible always) --}}
