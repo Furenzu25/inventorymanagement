@@ -40,8 +40,14 @@ class ResetPassword extends Component
             return back()->withInput()->with('error', 'Invalid token!');
         }
 
-        User::where('email', $this->email)
-            ->update(['password' => Hash::make($this->password)]);
+        $user = User::where('email', $this->email)->first();
+
+        if (!$user) {
+            return back()->withInput()->with('error', 'User not found!');
+        }
+
+        $user->password = Hash::make($this->password);
+        $user->save();
 
         DB::table('password_reset_tokens')->where(['email'=> $this->email])->delete();
 

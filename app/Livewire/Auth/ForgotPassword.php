@@ -6,6 +6,8 @@ use Livewire\Component;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ResetPasswordMail;
 
 class ForgotPassword extends Component
 {
@@ -26,7 +28,10 @@ class ForgotPassword extends Component
             ['email' => $this->email, 'token' => $token, 'created_at' => now()]
         );
 
-        return redirect()->route('password.reset', ['token' => $token, 'email' => $this->email]);
+        // Send email
+        Mail::to($this->email)->send(new ResetPasswordMail($token));
+
+        session()->flash('message', 'We have emailed your password reset link!');
     }
 
     public function render()
