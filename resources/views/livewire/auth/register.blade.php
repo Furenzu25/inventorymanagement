@@ -32,6 +32,52 @@
                         placeholder="Confirm your password"
                         class="bg-gray-800 text-white"
                     />
+                    <x-input 
+                        label="Birthday" 
+                        wire:model.defer="birthday" 
+                        type="date" 
+                        class="bg-gray-800 text-white"
+                    />
+                    <x-textarea 
+                        label="Address" 
+                        wire:model.defer="address" 
+                        placeholder="Enter your address"
+                        class="bg-gray-800 text-white"
+                    />
+                    <x-input 
+                        label="Phone Number" 
+                        wire:model.defer="phone_number" 
+                        type="text" 
+                        placeholder="Enter your phone number"
+                        class="bg-gray-800 text-white"
+                    />
+                    <x-input 
+                        label="Reference Contact Person" 
+                        wire:model.defer="reference_contactperson" 
+                        type="text" 
+                        placeholder="Enter reference contact person"
+                        class="bg-gray-800 text-white"
+                    />
+                    <x-input 
+                        label="Reference Contact Person Phone Number" 
+                        wire:model.defer="reference_contactperson_phonenumber" 
+                        type="text" 
+                        placeholder="Enter reference contact person phone number"
+                        class="bg-gray-800 text-white"
+                    />
+                    <x-input 
+                        label="Valid ID Number" 
+                        wire:model.defer="valid_id" 
+                        type="text" 
+                        placeholder="Enter your valid ID number"
+                        class="bg-gray-800 text-white"
+                    />
+                    <x-input 
+                        label="Valid ID Image" 
+                        wire:model="valid_id_image" 
+                        type="file" 
+                        class="bg-gray-800 text-white"
+                    />
                 </div>
                 <div class="mt-6">
                     <x-button 

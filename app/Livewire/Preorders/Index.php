@@ -86,19 +86,16 @@ class Index extends Component
             }
 
             foreach ($this->preorderItems as $item) {
-                if (!empty($item['product_id'])) {
-                    $preorder->preorderItems()->create([
-                        'product_id' => $item['product_id'],
-                        'quantity' => $item['quantity'],
-                        'price' => $item['price'],
-                    ]);
-                }
+                $preorder->products()->attach($item['product_id'], [
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                ]);
             }
         });
 
-        session()->flash('message', isset($this->preorder['id']) ? 'Preorder updated successfully.' : 'Preorder created successfully.');
-        $this->reset(['preorder', 'preorderItems']);
         $this->modalOpen = false;
+        $this->reset(['preorder', 'preorderItems', 'preorderId']);
+        session()->flash('message', isset($this->preorder['id']) ? 'Pre-order updated successfully.' : 'Pre-order created successfully.');
     }
 
     public function delete($id)
@@ -154,10 +151,10 @@ class Index extends Component
             ->orderBy($this->sortBy['column'], $this->sortBy['direction'])
             ->paginate(10);
 
+        $this->loadCustomersAndProducts();
+
         return view('livewire.preorders.index', [
             'preorders' => $preorders,
-            'customers' => Customer::all(),
-            'products' => Product::all(),
         ]);
     }
 
@@ -177,7 +174,7 @@ class Index extends Component
 
     public function mount()
     {
-        $this->loadCustomersAndProducts();
+        $this->preorders = Preorder::with('customer')->latest()->paginate(10);
     }
 
     public function loadCustomersAndProducts()
@@ -206,5 +203,12 @@ class Index extends Component
                         / (pow(1 + $monthlyInterestRate, $numberOfPayments) - 1);
         
         return round($monthlyPayment, 2);
+    }
+
+    public function approvePreorder($id)
+    {
+        $preorder = Preorder::findOrFail($id);
+        $preorder->update(['status' => 'Approved']);
+        session()->flash('message', 'Pre-order approved successfully.');
     }
 }

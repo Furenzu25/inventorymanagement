@@ -17,11 +17,14 @@ class Index extends Component
     public $customerId;
     public $customer = [
         'name' => '',
-        'age' => '',
+        'birthday' => '',
         'address' => '',
         'phone_number' => '',
+        'reference_contactperson' => '',
+        'reference_contactperson_phonenumber' => '',
         'email' => '',
         'valid_id' => '',
+        'valid_id_image' => '',
     ];
 
     // Display the modal for creating or editing
@@ -29,11 +32,14 @@ class Index extends Component
     {
         $this->customer = [
             'name' => '',
-            'age' => '',
+            'birthday' => '',
             'address' => '',
             'phone_number' => '',
+            'reference_contactperson' => '',
+            'reference_contactperson_phonenumber' => '',
             'email' => '',
             'valid_id' => '',
+            'valid_id_image' => '',
         ];
         $this->customerId = null;
         $this->modalOpen = true;
@@ -103,3 +109,4 @@ class Index extends Component
         ]);
     }
 }
+

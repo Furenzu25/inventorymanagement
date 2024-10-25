@@ -59,7 +59,6 @@ class Index extends Component
         $validatedData['due_amount'] = $this->due_amount;
 
         $sale = Sale::findOrFail($validatedData['sale_id']);
-        $validatedData['customer_id'] = $sale->customer_id;
 
         $payment = Payment::create($validatedData);
 

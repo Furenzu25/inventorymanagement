@@ -16,8 +16,14 @@
             @scope('cell_customer.name', $preorder)
                 {{ $preorder->customer->name }}
             @endscope
+            @scope('cell_status', $preorder)
+                {{ $preorder->status }}
+            @endscope
             @scope('actions', $preorder)
                 <div class="flex justify-start gap-2 w-40">
+                    @if($preorder->status === 'Pending')
+                        <x-button wire:click="approvePreorder({{ $preorder->id }})" label="Approve" class="btn-success btn-sm" />
+                    @endif
                     <x-button icon="o-pencil" wire:click="edit({{ $preorder->id }})" label="Edit" class="btn-primary btn-sm" />
                     <x-button icon="o-trash" wire:click="delete({{ $preorder->id }})" wire:confirm="Are you sure?" spinner class="btn-ghost btn-sm text-red-500" />
                 </div>
@@ -41,7 +47,12 @@
                             class="w-full"
                         />
                         <x-input label="Loan Duration (months)" wire:model.defer="preorder.loan_duration" type="number" class="w-full" />
-                        <x-input label="Location Bought" wire:model.defer="preorder.bought_location" class="w-full" />
+                        <x-input 
+                            label="Bought Location" 
+                            wire:model.defer="preorder.bought_location" 
+                            placeholder="Enter bought location"
+                            class="w-full"
+                        />
                         <x-select 
                             label="Status" 
                             wire:model.defer="preorder.status"

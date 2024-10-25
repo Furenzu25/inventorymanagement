@@ -10,21 +10,28 @@ use Illuminate\Support\Facades\DB;
 
 class Index extends Component
 {
-    public function render()
+    public $customerCount;
+    public $preorderCount;
+    public $productCount;
+    public $totalSales;
+    public $recentPreorders;
+    public $topProducts;
+
+    public function mount()
     {
-        $customerCount = Customer::count();
-        $preorderCount = Preorder::count();
-        $productCount = Product::count();
+        $this->customerCount = Customer::count();
+        $this->preorderCount = Preorder::count();
+        $this->productCount = Product::count();
         
         // Calculate total sales
-        $totalSales = Preorder::sum('total_amount');
+        $this->totalSales = Preorder::sum('total_amount');
 
-        $recentPreorders = Preorder::with(['customer', 'preorderItems.product'])
+        $this->recentPreorders = Preorder::with(['customer', 'preorderItems.product'])
             ->latest('order_date')
             ->take(5)
             ->get();
 
-        $topProducts = Product::select('products.*', 
+        $this->topProducts = Product::select('products.*', 
                 DB::raw('SUM(preorder_items.quantity) as quantity_sold'),
                 DB::raw('SUM(preorder_items.price * preorder_items.quantity) as total_sales'))
             ->leftJoin('preorder_items', 'products.id', '=', 'preorder_items.product_id')
@@ -32,14 +39,10 @@ class Index extends Component
             ->orderByDesc('quantity_sold')
             ->take(5)
             ->get();
+    }
 
-        return view('livewire.dashboard.index', [
-            'customerCount' => $customerCount,
-            'preorderCount' => $preorderCount,
-            'productCount' => $productCount,
-            'totalSales' => $totalSales,
-            'recentPreorders' => $recentPreorders,
-            'topProducts' => $topProducts,
-        ]);
+    public function render()
+    {
+        return view('livewire.dashboard.index');
     }
 }

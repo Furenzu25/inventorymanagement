@@ -22,6 +22,8 @@ class Index extends Component
     public $sortBy = ['column' => 'name', 'direction' => 'asc'];
     public $modalOpen = false;
     public $customerId;
+    public $customerDetailsOpen = false;
+    public $selectedCustomer = null;
 
     public $customer = [
         'name' => '',
@@ -42,19 +44,7 @@ class Index extends Component
 
     public function create()
     {
-        $this->customer = [
-            'name' => '',
-            'birthday' => '',
-            'address' => '',
-            'phone_number' => '',
-            'reference_contactperson' => '',
-            'reference_contactperson_phonenumber' => '',
-            'email' => '',
-            'valid_id' => '',
-            'valid_id_image' => '',
-            'created_at' => now(),
-        ];
-
+        $this->resetCustomer();
         $this->customerId = null;
         $this->validIdImage = null;
         $this->modalOpen = true;
@@ -99,8 +89,60 @@ class Index extends Component
         }
 
         $this->modalOpen = false;
-        $this->reset(['customer', 'customerId', 'validIdImage', 'editReason', 'imageUploaded']);
+        $this->resetCustomer();
         session()->flash('message', $message);
+    }
+
+    public function showCustomerDetails($customerId)
+    {
+        $this->selectedCustomer = Customer::findOrFail($customerId)->toArray();
+        $this->customerDetailsOpen = true;
+    }
+
+    public function closeCustomerDetails()
+    {
+        $this->customerDetailsOpen = false;
+        $this->selectedCustomer = null;
+    }
+
+    public function render()
+    {
+        $customers = Customer::query()
+            ->when($this->search, function ($query) {
+                $query->where('name', 'like', '%' . $this->search . '%');
+            })
+            ->orderBy($this->sortBy['column'], $this->sortBy['direction'])
+            ->paginate(10);
+
+        return view('livewire.customers.index', [
+            'customers' => $customers,
+        ])->layout('components.layouts.app');
+    }
+
+    public function closeModal()
+    {
+        $this->modalOpen = false;
+        $this->resetCustomer();
+    }
+
+    protected function rules()
+    {
+        return [
+            'customer.name' => 'required|string|max:255',
+            'customer.birthday' => 'required|date',
+            'customer.address' => 'required|string',
+            'customer.phone_number' => 'required|string|max:20',
+            'customer.reference_contactperson' => 'required|string|max:255',
+            'customer.reference_contactperson_phonenumber' => 'required|string|max:20',
+            'customer.email' => 'required|email|max:255',
+            'customer.valid_id' => 'required|string|max:255',
+            'validIdImage' => 'nullable|image|max:5120', // 5MB Max
+        ];
+    }
+
+    private function resetCustomer()
+    {
+        $this->reset(['customer', 'customerId', 'validIdImage', 'editReason', 'imageUploaded']);
     }
 
     public function updatedValidIdImage()
@@ -127,74 +169,5 @@ class Index extends Component
     public function closeExpandedImage()
     {
         $this->selectedImage = null;
-    }
-
-    public function headers(): array
-    {
-        return [
-            ['key' => 'name', 'label' => 'Name', 'class' => 'w-32'],
-            ['key' => 'birthday', 'label' => 'Birthday', 'class' => 'w-32'],
-            ['key' => 'address', 'label' => 'Address', 'class' => 'w-32'],
-            ['key' => 'phone_number', 'label' => 'Phone Number', 'class' => 'w-32'],
-            ['key' => 'reference_contactperson', 'label' => 'Reference Contact Person', 'class' => 'w-32'],
-            ['key' => 'reference_contactperson_phonenumber', 'label' => 'Reference # of Contact Person', 'class' => 'w-32'],
-            ['key' => 'email', 'label' => 'E-mail', 'class' => 'w-32'],
-            ['key' => 'valid_id', 'label' => 'Valid ID #', 'class' => 'w-32'],
-            ['key' => 'valid_id_image', 'label' => 'Valid ID Image', 'class' => 'w-32'],
-            ['key' => 'created_at', 'label' => 'Profile Created', 'class' => 'w-32'],
-        ];
-    }
-
-    public function render()
-    {
-        $customers = Customer::query()
-            ->when($this->search, function ($query) {
-                $query->where('name', 'like', '%' . $this->search . '%');
-            })
-            ->orderBy($this->sortBy['column'], $this->sortBy['direction'])
-            ->paginate(10);
-
-        return view('livewire.customers.index', [
-            'customers' => $customers,
-            'headers' => $this->headers(),
-        ]);
-    }
-
-    public function closeModal()
-    {
-        $this->modalOpen = false;
-        $this->reset(['customer', 'customerId', 'validIdImage', 'editReason', 'imageUploaded']);
-    }
-
-    protected function rules()
-    {
-        return [
-            'customer.name' => 'required|string|max:255',
-            'customer.birthday' => 'required|date',
-            'customer.address' => 'required|string',
-            'customer.phone_number' => 'required|string|max:20',
-            'customer.reference_contactperson' => 'required|string|max:255',
-            'customer.reference_contactperson_phonenumber' => 'required|string|max:20',
-            'customer.email' => 'required|email|max:255',
-            'customer.valid_id' => 'required|string|max:255',
-            'validIdImage' => 'nullable|image|max:5120', // 5MB Max
-        ];
-    }
-
-    protected function messages()
-    {
-        return [
-            'customer.name.required' => 'The customer name is required.',
-            // Add more custom messages here...
-        ];
-    }
-
-    protected function validationAttributes()
-    {
-        return [
-            'customer.name' => 'customer name',
-            'customer.birthday' => 'birthday',
-            // Add more custom attribute names here...
-        ];
     }
 }

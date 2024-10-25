@@ -41,7 +41,11 @@ class VerifyEmail extends Mailable
      */
     public function content(): Content
     {
-        $verificationUrl = route('verification.verify', ['token' => $this->verificationToken]);
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            ['id' => $this->pendingUser->id, 'token' => $this->verificationToken]
+        );
 
         return new Content(
             markdown: 'emails.verify-email',
@@ -59,5 +63,13 @@ class VerifyEmail extends Mailable
     public function attachments(): array
     {
         return [];
+    }
+
+    public function build()
+    {
+        return $this->view('emails.verify-email')
+                    ->with([
+                        'verificationUrl' => route('verification.verify', ['token' => $this->token])
+                    ]);
     }
 }

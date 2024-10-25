@@ -1,24 +1,22 @@
 <?php
+
 namespace App\Livewire\Products;
 
 use Livewire\Component;
-use Livewire\WithFileUploads;
 use Livewire\WithPagination;
+use Livewire\WithFileUploads;
 use App\Models\Product;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\Rule;
 
 class Index extends Component
 {
     use WithPagination, WithFileUploads;
 
-    #[Rule('nullable|sometimes|image|mimes:jpeg,png,jpg,gif|max:5120')]
     public $search = '';
     public $sortBy = ['column' => 'product_name', 'direction' => 'asc'];
     public $modalOpen = false;
     public $productId;
-    public $image; // The uploaded image file
+    public $image;
     public $product = [
         'product_name' => '',
         'product_model' => '',
@@ -27,8 +25,8 @@ class Index extends Component
         'product_description' => '',
         'price' => '',
         'storage_capacity' => '',
-        'status' => 'active', // New status field (default to active)
-        'image' => '', // Store the image path here
+        'status' => 'active',
+        'image' => '',
     ];
     public $oldImage;
     public $existingImage;
@@ -42,12 +40,12 @@ class Index extends Component
         'product.product_description' => 'required',
         'product.storage_capacity' => 'required',
         'product.price' => 'required|numeric',
-        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max size
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
     ];
 
     public function create()
     {
-        $this->resetProduct(); // Clear product form
+        $this->resetProduct();
         $this->modalOpen = true;
     }
 
@@ -105,10 +103,10 @@ class Index extends Component
             'product_description' => '',
             'price' => '',
             'storage_capacity' => '',
-            'status' => 'active', // Default to active status
-            'image' => '', // Reset image path
+            'status' => 'active',
+            'image' => '',
         ];
-        $this->image = null; // Reset file upload
+        $this->image = null;
         $this->imageUploaded = false;
     }
 
@@ -119,8 +117,14 @@ class Index extends Component
 
     public function closeModal()
     {
-        $this->modalOpen = false; // Close the modal
-        $this->resetProduct(); // Optionally reset the form fields
+        $this->modalOpen = false;
+        $this->resetProduct();
+    }
+
+    public function showProductDetails($productId)
+    {
+        $this->product = Product::findOrFail($productId)->toArray();
+        $this->modalOpen = true;
     }
 
     public function render()

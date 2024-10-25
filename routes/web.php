@@ -15,6 +15,9 @@ use App\Livewire\Auth\ResetPassword;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\AdminController; 
+use App\Livewire\Ecommerce\Home as EcommerceHome;// Make sure to create this controller
 
 // Public routes
 Route::get('/', function () {
@@ -38,25 +41,49 @@ Route::middleware(['auth'])->group(function () {
         return view('auth.verify-email');
     })->middleware('auth')->name('verification.notice');
 
-    Route::post('/email/verification-notification', [VerifyEmailController::class, 'resend'])
-        ->middleware(['auth', 'throttle:6,1'])
-        ->name('verification.send');
+    
 });
 
-// Email verification route
-Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, 'verify'])
-    ->middleware(['auth', 'signed', 'throttle:6,1'])
-    ->name('verification.verify');
+// Email Verification Notice
+Route::get('/email/verify', function () {
+    return view('auth.verify-email');
+})->middleware('auth')->name('verification.notice');
+
+// Email Verification Handler
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+
+    
+    $request->fulfill();
+    Auth::logout();
+    session()->invalidate();
+    session()->regenerateToken();
+    
+    return redirect()->route('login')->with('status', 'Your email has been verified. Please log in.');
+})->middleware(['auth', 'signed'])->name('verification.verify');
+
+// Resend Verification Email
+Route::post('/email/verification-notification', function (Request $request) {
+    $request->user()->sendEmailVerificationNotification();
+    return back()->with('message', 'Verification link sent!');
+})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 // Protected routes (require auth and email verification)
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', DashboardIndex::class)->name('dashboard');
-    Route::get('/customers', CustomersIndex::class)->name('customers.index');
-    Route::get('/products', ProductsIndex::class)->name('products.index');
-    Route::get('/preorders', PreordersIndex::class)->name('preorders.index');
-    Route::get('/sales', SalesIndex::class)->name('sales.index');
-    Route::get('/payments', PaymentsIndex::class)->name('payments.index');
-    Route::get('/payments/history/{sale?}', History::class)->name('payments.history');
+    Route::get('/home', EcommerceHome::class)->name('home');
+
+    Route::get('/cart', \App\Livewire\Cart::class)->name('cart');
+    
+    // Admin routes
+    Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->group(function () {
+        Route::get('/dashboard', \App\Livewire\Dashboard\Index::class)->name('dashboard');
+        Route::get('/customers', CustomersIndex::class)->name('customers.index');
+        Route::get('/products', ProductsIndex::class)->name('products.index');
+        Route::get('/preorders', PreordersIndex::class)->name('preorders.index');
+        Route::get('/sales', SalesIndex::class)->name('sales.index');
+        Route::get('/payments', PaymentsIndex::class)->name('payments.index');
+        Route::get('/payments/history/{sale?}', History::class)->name('payments.history');
+        // Add other admin routes here
+    });
 });
 
 // File download route

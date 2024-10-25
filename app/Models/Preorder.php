@@ -16,16 +16,22 @@ class Preorder extends Model
         'customer_id',
         'loan_duration',
         'total_amount',
+        'status',
+        'order_date',
         'monthly_payment',
         'interest_rate',
-        'bought_location',
-        'status',
         'payment_method',
-        'order_date'
+        'bought_location',
     ];
 
     protected $casts = [
-        'order_date' => 'date',
+        'order_date' => 'datetime',
+        'bought_location' => 'string',
+    ];
+
+    // Add this line to make bought_location nullable
+    protected $attributes = [
+        'bought_location' => null,
     ];
 
     public function customer()
@@ -36,5 +42,12 @@ class Preorder extends Model
     public function preorderItems()
     {
         return $this->hasMany(PreorderItem::class);
+    }
+
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'preorder_items')
+                    ->withPivot('quantity', 'price')
+                    ->withTimestamps();
     }
 }

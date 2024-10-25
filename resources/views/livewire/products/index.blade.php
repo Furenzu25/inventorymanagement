@@ -26,7 +26,6 @@
                     @if ($product->image)
                         <img src="{{ Storage::url($product->image) }}" alt="{{ $product->product_name }}" class="w-full h-full object-contain">
                     @else
-                        <!-- Default image when no product image is available -->
                         <img src="{{ asset('storage/uploads/default-image.jpg') }}" alt="Default Image" class="w-full h-full object-contain">
                     @endif
                 </div>
@@ -34,6 +33,7 @@
                     <h2 class="text-lg font-semibold">{{ $product->product_name }}</h2>
                     <p class="text-xl font-bold mt-2">${{ number_format($product->price, 2) }}</p>
                     <div class="mt-4 flex justify-between items-center">
+                        <x-button label="View Details" wire:click="showProductDetails({{ $product->id }})" class="btn-sm mt-2 bg-red-500 hover:bg-red-600 text-white" />
                         <x-button icon="o-pencil" wire:click="edit({{ $product->id }})" label="Edit" class="btn-primary btn-sm" />
                         <x-button icon="o-trash" wire:click="delete({{ $product->id }})" wire:confirm="Are you sure?" spinner class="btn-ghost btn-sm text-red-500" />
                     </div>
@@ -45,52 +45,29 @@
     <!-- Pagination -->
     {{ $products->links() }}
 
-    <!-- Modal for creating/editing products -->
-    @teleport('body')
-        <x-modal wire:model="modalOpen" max-width="md" class="backdrop-blur-md border border-red-500/30" title="{{ isset($product['id']) ? 'Edit Product' : 'Create Product' }}">
-            <form wire:submit.prevent="store">
-                <div class="space-y-4">
-                    <x-input label="Product Name" wire:model.defer="product.product_name" class="mb-0.5" />
-                    <x-input label="Model" wire:model.defer="product.product_model" class="mb-0.5" />
-                    <x-input label="Brand" wire:model.defer="product.product_brand" class="mb-0.5" />
-                    <x-input label="Category" wire:model.defer="product.product_category" class="mb-0.5" />
-                    <x-textarea label="Description" wire:model.defer="product.product_description" class="mb-0.5" />
-                    <x-select 
-                        label="Storage Capacity" 
-                        wire:model.defer="product.storage_capacity"
-                        placeholder="Select storage capacity"
-                        :options="[ 
-                            ['name' => '16GB', 'id' => '16GB'],
-                            ['name' => '32GB', 'id' => '32GB'],
-                            ['name' => '64GB', 'id' => '64GB'],
-                            ['name' => '128GB', 'id' => '128GB'],
-                            ['name' => '256GB', 'id' => '256GB'],
-                            ['name' => '512GB', 'id' => '512GB']
-                        ]"
-                    />
-                    <x-input label="Price" type="number" wire:model.defer="product.price" />
-
-                    <!-- Image Upload -->
-                    <div>
-                        <x-file wire:model="image" label="Product Image" hint="Max 5MB" accept="image/*" class="mb-0.5" />
-                        @if($imageUploaded)
-                            <p class="text-sm text-green-500 mt-1">Image Uploaded</p>
-                        @endif
-                        @if($existingImage)
-                            <div class="mt-2">
-                                <p class="text-sm text-gray-500 mb-1">Current Image:</p>
-                                <img src="{{ asset('storage/' . $existingImage) }}" alt="Current Product Image" class="w-32 h-32 object-cover rounded">
-                            </div>
-                        @endif
+    <!-- Modal for product details -->
+    <x-modal wire:model="modalOpen">
+        <x-slot:title>
+            {{ $product['product_name'] ?? '' }} Details
+        </x-slot:title>
+        <div class="space-y-2">
+            @if($product)
+                <p><strong>Model:</strong> {{ $product['product_model'] }}</p>
+                <p><strong>Brand:</strong> {{ $product['product_brand'] }}</p>
+                <p><strong>Category:</strong> {{ $product['product_category'] }}</p>
+                <p><strong>Description:</strong> {{ $product['product_description'] }}</p>
+                <p><strong>Storage Capacity:</strong> {{ $product['storage_capacity'] }}</p>
+                <p><strong>Price:</strong> ${{ number_format($product['price'], 2) }}</p>
+                @if($product['image'])
+                    <div class="mt-4">
+                        <strong>Product Image:</strong>
+                        <img src="{{ Storage::url($product['image']) }}" alt="Product Image" class="mt-2 max-w-full h-auto">
                     </div>
-                </div>
-
-                <div class="flex justify-end gap-x-4 mt-4">
-                    <x-button label="Cancel" wire:click="closeModal" class="btn-outline text-blue-500" />
-                    <x-button label="Save" type="submit" class="btn-outline text-red-500" wire:loading.attr="disabled" />
-                </div>
-            </form>
-        </x-modal>
-    @endteleport
-
+                @endif
+            @endif
+        </div>
+        <x-slot:footer>
+            <x-button label="Close" wire:click="closeModal" />
+        </x-slot:footer>
+    </x-modal>
 </div>

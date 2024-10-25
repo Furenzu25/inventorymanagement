@@ -4,12 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use App\Models\Product;
 use App\Models\Preorder;
 
-class Preorderitem extends Model
+class PreorderItem extends Pivot
 {
-    use HasFactory;
     protected $table = 'preorder_items';
 
     protected $fillable = [

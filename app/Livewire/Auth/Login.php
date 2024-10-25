@@ -11,6 +11,8 @@ class Login extends Component
     public $email = '';
     public $password = '';
     public $message = '';
+    public $loginError = '';
+    public $status = '';
 
     protected $rules = [
         'email' => 'required|email',
@@ -20,30 +22,27 @@ class Login extends Component
     public function mount()
     {
         $this->message = session('message');
+        $this->status = session('status');
     }
 
     public function login()
     {
         $this->validate();
 
-        $pendingUser = PendingUser::where('email', $this->email)->first();
-
-        if ($pendingUser) {
-            $this->addError('email', 'Please verify your email address. Check your inbox for the verification link.');
-            return;
-        }
-
         if (Auth::attempt(['email' => $this->email, 'password' => $this->password])) {
             $user = Auth::user();
-            if ($user->email_verified_at) {
-                return redirect()->intended('/dashboard');
+            if ($user->hasVerifiedEmail()) {
+                return $user->isAdmin() 
+                    ? redirect()->intended('/dashboard') 
+                    : redirect()->intended('/home');
             } else {
                 Auth::logout();
                 return redirect()->route('verification.notice');
             }
         }
 
-        $this->addError('email', trans('auth.failed'));
+        $this->loginError = 'Invalid email or password.';
+        $this->password = '';
     }
 
     public function render()
