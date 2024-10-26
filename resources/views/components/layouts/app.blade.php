@@ -142,7 +142,7 @@
         {{-- MAIN CONTENT --}}
         <div id="mainContent" class="main-content">
             <div class="top-bar">
-                <h2 class="text-2xl font-semibold text-gray-800">{{ $title ?? 'Dashboard' }}</h2>
+                <h2 class="text-2xl font-semibold text-gray-800">{{ $title ?? '' }}</h2>
             </div>
 
             <div class="content-card">

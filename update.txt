@@ -1,0 +1,3 @@
+updated customers design and fixed the modal as well as the credentials.
+i added the payment history to the customers page.
+i added views details in products page.

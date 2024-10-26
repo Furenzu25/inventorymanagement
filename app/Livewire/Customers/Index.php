@@ -8,6 +8,7 @@ use Livewire\WithPagination;
 use Livewire\WithFileUploads;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Payment;
 
 class Index extends Component
 {
@@ -24,6 +25,8 @@ class Index extends Component
     public $customerId;
     public $customerDetailsOpen = false;
     public $selectedCustomer = null;
+    public $paymentHistoryOpen = false;
+    public $selectedCustomerPayments = [];
 
     public $customer = [
         'name' => '',
@@ -113,10 +116,9 @@ class Index extends Component
             })
             ->orderBy($this->sortBy['column'], $this->sortBy['direction'])
             ->paginate(10);
-
         return view('livewire.customers.index', [
             'customers' => $customers,
-        ])->layout('components.layouts.app');
+        ])->layout('components.layouts.app', ['title' => 'Customers']);
     }
 
     public function closeModal()
@@ -169,5 +171,26 @@ class Index extends Component
     public function closeExpandedImage()
     {
         $this->selectedImage = null;
+    }
+
+    public function viewPayment($customerId)
+    {
+        $customer = Customer::findOrFail($customerId);
+        $this->selectedCustomerPayments = Payment::whereHas('sale', function ($query) use ($customerId) {
+            $query->where('customer_id', $customerId);
+        })->latest()->get()->map(function ($payment) {
+            return [
+                'payment_date' => $payment->payment_date,
+                'amount_paid' => $payment->amount_paid,
+                'due_amount' => $payment->due_amount,
+            ];
+        })->toArray();
+        $this->paymentHistoryOpen = true;
+    }
+
+    public function closePaymentHistory()
+    {
+        $this->paymentHistoryOpen = false;
+        $this->selectedCustomerPayments = [];
     }
 }
