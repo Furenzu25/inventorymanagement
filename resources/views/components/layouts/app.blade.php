@@ -10,13 +10,24 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <!-- Additional styles and scripts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
 
     <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --background-color: #f4f7f9;
+            --text-color: #34495e;
+            --sidebar-bg: #2c3e50;
+            --sidebar-text: #ecf0f1;
+            --card-bg: #ffffff;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
         }
 
         #sidebar {
@@ -25,14 +36,14 @@
             left: 0;
             width: 250px;
             height: 100%;
-            background-color: #ffffff;
+            background-color: var(--sidebar-bg);
             z-index: 100;
             padding: 20px;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
-            transition: transform 0.3s ease;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
         }
 
         #sidebar.hidden {
@@ -44,29 +55,40 @@
             width: 100%;
             text-align: left;
             padding: 12px 15px;
-            color: #64748b;
+            color: var(--sidebar-text);
             border-radius: 8px;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
             margin-bottom: 5px;
             font-weight: 500;
         }
 
         .sidebar-button:hover, .sidebar-button.active {
-            background-color: #f1f5f9;
-            color: #3b82f6;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--primary-color);
+            transform: translateX(5px);
         }
 
         .sidebar-toggle {
             position: fixed;
             top: 20px;
-            left: 20px;
+            left: 270px;
             padding: 10px;
-            background-color: #ffffff;
-            color: #64748b;
-            border-radius: 8px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
             cursor: pointer;
             z-index: 101;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-toggle:hover {
+            background-color: var(--secondary-color);
+            transform: scale(1.1);
+        }
+
+        .sidebar-toggle.collapsed {
+            left: 20px;
         }
 
         .main-content {
@@ -80,18 +102,45 @@
         }
 
         .top-bar {
-            background-color: #ffffff;
-            padding: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            background-color: var(--card-bg);
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             margin-bottom: 20px;
-            border-radius: 8px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .content-card {
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            padding: 20px;
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .content-card:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Gradient text effect for the company name */
+        .company-name {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        /* Subtle animation for sidebar icons */
+        .sidebar-button i {
+            transition: transform 0.2s ease;
+        }
+
+        .sidebar-button:hover i {
+            transform: scale(1.2);
         }
     </style>
 </head>
@@ -102,7 +151,7 @@
         {{-- SIDEBAR --}}
         <div id="sidebar">
             <div class="mb-6 text-center">
-                <h1 class="text-xl font-bold text-gray-800">Rosels Trading</h1>
+                <h1 class="company-name">Rosels Trading</h1>
             </div>
             {{-- Sidebar buttons --}}
             <a href="/dashboard" class="sidebar-button">
@@ -143,6 +192,7 @@
         <div id="mainContent" class="main-content">
             <div class="top-bar">
                 <h2 class="text-2xl font-semibold text-gray-800">{{ $title ?? '' }}</h2>
+                <div class="text-sm text-gray-600">{{ now()->format('l, F j, Y') }}</div>
             </div>
 
             <div class="content-card">
@@ -156,12 +206,25 @@
     @livewireScripts
 
     <script>
-        document.getElementById('toggleSidebar').addEventListener('click', function() {
+        document.addEventListener('DOMContentLoaded', function() {
             const sidebar = document.getElementById('sidebar');
             const mainContent = document.getElementById('mainContent');
+            const toggleButton = document.getElementById('toggleSidebar');
             
-            sidebar.classList.toggle('hidden');
-            mainContent.classList.toggle('collapsed');
+            toggleButton.addEventListener('click', function() {
+                sidebar.classList.toggle('hidden');
+                mainContent.classList.toggle('collapsed');
+                toggleButton.classList.toggle('collapsed');
+            });
+
+            // Add active class to current sidebar button
+            const currentPath = window.location.pathname;
+            const sidebarButtons = document.querySelectorAll('.sidebar-button');
+            sidebarButtons.forEach(button => {
+                if (button.getAttribute('href') === currentPath) {
+                    button.classList.add('active');
+                }
+            });
         });
     </script>
 </body>
