@@ -47,12 +47,12 @@
                             <x-button 
                                 label="View details" 
                                 wire:click="showCustomerDetails({{ $customer['id'] }})" 
-                                class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-2 px-4 rounded-full transition duration-300 ease-in-out"
+                                class="bg-blue-600 hover:bg-blue-700 text-gray-50 font-inter text-base font-medium py-2.5 px-5 rounded-lg shadow-sm transition duration-300 ease-in-out tracking-wide"
                             />
                             <x-button 
                                 label="View Payment" 
                                 wire:click="viewPayment({{ $customer['id'] }})" 
-                                class="bg-green-500 hover:bg-green-600 text-white text-sm font-semibold py-2 px-4 rounded-full transition duration-300 ease-in-out"
+                                class="bg-green-600 hover:bg-green-700 text-gray-50 font-inter text-base font-medium py-2.5 px-5 rounded-lg shadow-sm transition duration-300 ease-in-out tracking-wide"
                             />
                             <div class="flex space-x-2">
                                 <x-button 
@@ -67,32 +67,32 @@
                 @endforeach
             </div>
         </div>
-        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+        <div class="bg-beige-50 px-6 py-4 border-t border-beige-200">
             {{ $customers->links() }}
         </div>
     </div>
 
     <!-- Customer details modal -->
     <x-modal wire:model="customerDetailsOpen">
-        <x-card title="Customer Details">
+        <x-card title="Customer Details" class="bg-beige-800" class="text-beige-600">
             @if($selectedCustomer)
-                <div class="space-y-4">
-                    <div><strong>Name:</strong> {{ $selectedCustomer['name'] }}</div>
-                    <div><strong>Birthday:</strong> {{ $selectedCustomer['birthday'] }}</div>
-                    <div><strong>Address:</strong> {{ $selectedCustomer['address'] }}</div>
-                    <div><strong>Phone Number:</strong> {{ $selectedCustomer['phone_number'] }}</div>
-                    <div><strong>Reference Contact Person:</strong> {{ $selectedCustomer['reference_contactperson'] ?? 'N/A' }}</div>
-                    <div><strong>Reference Contact Person Phone:</strong> {{ $selectedCustomer['reference_contactperson_phonenumber'] ?? 'N/A' }}</div>
-                    <div><strong>Email:</strong> {{ $selectedCustomer['email'] }}</div>
-                    <div><strong>Valid ID:</strong> {{ $selectedCustomer['valid_id'] }}</div>
+                <div class="space-y-4 text-beige-200">
+                    <div><strong class="text-gray-100">Name:</strong> {{ $selectedCustomer['name'] }}</div>
+                    <div><strong class="text-gray-100">Birthday:</strong> {{ $selectedCustomer['birthday'] }}</div>
+                    <div><strong class="text-gray-100">Address:</strong> {{ $selectedCustomer['address'] }}</div>
+                    <div><strong class="text-gray-100">Phone Number:</strong> {{ $selectedCustomer['phone_number'] }}</div>
+                    <div><strong class="text-gray-100">Reference Contact Person:</strong> {{ $selectedCustomer['reference_contactperson'] ?? 'N/A' }}</div>
+                    <div><strong class="text-gray-100">Reference Contact Person Phone:</strong> {{ $selectedCustomer['reference_contactperson_phonenumber'] ?? 'N/A' }}</div>
+                    <div><strong class="text-gray-100">Email:</strong> {{ $selectedCustomer['email'] }}</div>
+                    <div><strong class="text-gray-100">Valid ID:</strong> {{ $selectedCustomer['valid_id'] }}</div>
                     @if($selectedCustomer['valid_id_image'])
-                        <div><strong>Valid ID Image:</strong> <img src="{{ Storage::url($selectedCustomer['valid_id_image']) }}" alt="Valid ID" class="max-w-xs mt-2"></div>
+                        <div><strong class="text-gray-100">Valid ID Image:</strong> <img src="{{ Storage::url($selectedCustomer['valid_id_image']) }}" alt="Valid ID" class="max-w-xs mt-2"></div>
                     @endif
                 </div>
             @endif
             <x-slot name="footer">
                 <div class="flex justify-end">
-                    <x-button label="Close" wire:click="closeCustomerDetails" />
+                    <x-button label="Close" wire:click="closeCustomerDetails" class="bg-beige-700 hover:bg-beige-600 text-beige-100" />
                 </div>
             </x-slot>
         </x-card>
@@ -122,23 +122,32 @@
 
     <!-- Payment History Modal -->
     <x-modal wire:model="paymentHistoryOpen">
-        <x-card title="Payment History">
+        <x-card title="Payment History" class="font-inter" class="text-beige-600">
             @if(count($selectedCustomerPayments) > 0)
                 <div class="space-y-4">
                     @foreach($selectedCustomerPayments as $payment)
-                        <div class="border-b pb-2">
-                            <div><strong>Date:</strong> {{ $payment['payment_date'] }}</div>
-                            <div><strong>Amount Paid:</strong> ${{ number_format($payment['amount_paid'], 2) }}</div>
-                            <div><strong>Due Amount:</strong> ${{ number_format($payment['due_amount'], 2) }}</div>
+                        <div class="border-b pb-4">
+                            <div class="text-lg font-medium text-gray-200 mb-2">
+                                <span class="font-semibold">Date:</span> 
+                                <span class="text-beige-600">{{ $payment['payment_date'] }}</span>
+                            </div>
+                            <div class="text-lg font-medium text-gray-200 mb-2">
+                                <span class="font-semibold">Amount Paid:</span> 
+                                <span class="text-beige-600">₱{{ number_format($payment['amount_paid'], 2) }}</span>
+                            </div>
+                            <div class="text-lg font-medium text-gray-200">
+                                <span class="font-semibold">Due Amount:</span> 
+                                <span class="text-beige-600">₱{{ number_format($payment['due_amount'], 2) }}</span>
+                            </div>
                         </div>
                     @endforeach
                 </div>
             @else
-                <p>No payment history available for this customer.</p>
+                <p class="text-gray-500 text-lg">No payment history available for this customer.</p>
             @endif
             <x-slot name="footer">
                 <div class="flex justify-end">
-                    <x-button label="Close" wire:click="closePaymentHistory" />
+                    <x-button label="Close" wire:click="closePaymentHistory" class="bg-gray-600 hover:bg-gray-700 text-beige" />
                 </div>
             </x-slot>
         </x-card>

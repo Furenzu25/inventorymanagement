@@ -17,6 +17,8 @@ class Index extends Component
     public $modalOpen = false;
     public $productId;
     public $image;
+    public $productDetailsOpen = false;
+    public $selectedProduct = null;
     public $product = [
         'product_name' => '',
         'product_model' => '',
@@ -68,6 +70,9 @@ class Index extends Component
     {
         $this->validate();
 
+        // Ensure price is a float
+        $this->product['price'] = (float) $this->product['price'];
+
         if (isset($this->product['id'])) {
             $product = Product::findOrFail($this->product['id']);
             $message = 'Product updated successfully.';
@@ -113,6 +118,7 @@ class Index extends Component
     public function updatedImage()
     {
         $this->imageUploaded = true;
+        session()->flash('message', 'Image uploaded successfully.');
     }
 
     public function closeModal()
@@ -123,8 +129,8 @@ class Index extends Component
 
     public function showProductDetails($productId)
     {
-        $this->product = Product::findOrFail($productId)->toArray();
-        $this->modalOpen = true;
+        $this->selectedProduct = Product::find($productId);
+        $this->productDetailsOpen = true;
     }
 
     public function render()
