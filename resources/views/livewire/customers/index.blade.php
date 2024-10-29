@@ -33,35 +33,39 @@
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach($customers as $customer)
-                    <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition duration-300 ease-in-out">
+                    <div class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition duration-300 ease-in-out">
                         <div class="flex items-center mb-4">
-                            <div class="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mr-4">
+                            <div class="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-xl font-bold mr-3">
                                 {{ strtoupper(substr($customer['name'], 0, 1)) }}
                             </div>
-                            <div>
-                                <h3 class="text-lg font-semibold text-gray-800">{{ $customer['name'] }}</h3>
-                                <p class="text-sm text-gray-600">{{ $customer['email'] }}</p>
+                            <div class="overflow-hidden">
+                                <h3 class="text-base font-semibold text-gray-800 truncate">{{ $customer['name'] }}</h3>
+                                <p class="text-sm text-gray-600 truncate">{{ $customer['email'] }}</p>
                             </div>
                         </div>
-                        <div class="flex justify-between items-center mt-4">
+                        <div class="grid grid-cols-2 gap-2 mb-2">
                             <x-button 
                                 label="View details" 
                                 wire:click="showCustomerDetails({{ $customer['id'] }})" 
-                                class="bg-blue-600 hover:bg-blue-700 text-gray-50 font-inter text-base font-medium py-2.5 px-5 rounded-lg shadow-sm transition duration-300 ease-in-out tracking-wide"
+                                class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1.5 px-2 rounded"
                             />
                             <x-button 
                                 label="View Payment" 
                                 wire:click="viewPayment({{ $customer['id'] }})" 
-                                class="bg-green-600 hover:bg-green-700 text-gray-50 font-inter text-base font-medium py-2.5 px-5 rounded-lg shadow-sm transition duration-300 ease-in-out tracking-wide"
+                                class="w-full bg-green-600 hover:bg-green-700 text-white text-xs py-1.5 px-2 rounded"
                             />
-                            <div class="flex space-x-2">
-                                <x-button 
-                                    icon="o-pencil" 
-                                    wire:click="edit({{ $customer['id'] }})" 
-                                    class="btn-icon btn-sm bg-gray-200 hover:bg-gray-300 text-gray-600"
-                                />
-                                <x-button icon="o-trash" wire:click="delete({{ $customer['id'] }})" class="btn-icon btn-sm bg-red-200 hover:bg-red-300 text-red-600" />
-                            </div>
+                        </div>
+                        <div class="flex justify-end space-x-2">
+                            <x-button 
+                                icon="o-pencil" 
+                                wire:click="edit({{ $customer['id'] }})" 
+                                class="btn-icon btn-xs bg-gray-200 hover:bg-gray-300 text-gray-600"
+                            />
+                            <x-button 
+                                icon="o-trash" 
+                                wire:click="delete({{ $customer['id'] }})" 
+                                class="btn-icon btn-xs bg-red-200 hover:bg-red-300 text-red-600" 
+                            />
                         </div>
                     </div>
                 @endforeach

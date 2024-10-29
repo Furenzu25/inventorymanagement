@@ -14,7 +14,7 @@
 
     <x-header title="Products">
         <x-slot:actions>
-            <x-button label="Create Product" wire:click="create" class="btn-outline text-red-500"/>
+            <x-button label="Create Product" wire:click="create" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out" />
         </x-slot:actions>
     </x-header>
 
@@ -38,8 +38,18 @@
                             wire:click="showProductDetails({{ $product->id }})" 
                             class="bg-blue-600 hover:bg-blue-700 text-white"
                         />
-                        <x-button icon="o-pencil" wire:click="edit({{ $product->id }})" label="Edit" class="btn-primary btn-sm" />
-                        <x-button icon="o-trash" wire:click="delete({{ $product->id }})" wire:confirm="Are you sure?" spinner class="btn-ghost btn-sm text-red-500" />
+                        <x-button 
+                            icon="o-pencil" 
+                            wire:click="edit({{ $product->id }})" 
+                            class="btn-icon btn-xs bg-gray-200 hover:bg-gray-300 text-gray-600"
+                        />
+                        <x-button 
+                            icon="o-trash" 
+                            wire:click="delete({{ $product->id }})" 
+                            wire:confirm="Are you sure?" 
+                            spinner 
+                            class="btn-icon btn-xs bg-red-200 hover:bg-red-300 text-red-600"
+                        />
                     </div>
                 </div>
             </div>
