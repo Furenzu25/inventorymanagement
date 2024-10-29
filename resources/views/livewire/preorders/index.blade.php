@@ -65,8 +65,13 @@
                                         @if($preorder->status === 'Pending')
                                             <x-button wire:click="approvePreorder({{ $preorder->id }})" label="Approve" class="bg-green-500 hover:bg-green-600 text-white text-xs py-1 px-2 rounded" />
                                         @endif
-                                        <x-button icon="o-pencil" wire:click="edit({{ $preorder->id }})" class="bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded" />
-                                        <x-button icon="o-trash" wire:click="delete({{ $preorder->id }})" wire:confirm="Are you sure?" class="bg-red-500 hover:bg-red-600 text-white text-xs py-1 px-2 rounded" />
+                                        <x-button icon="o-pencil" wire:click="edit({{ $preorder->id }})" class="btn-icon btn-xs bg-gray-200 hover:bg-gray-300 text-gray-600" />
+                                        <x-button 
+                                            icon="o-trash" 
+                                            wire:click="delete({{ $preorder->id }})" 
+                                            wire:confirm="Are you sure?" 
+                                            class="btn-icon btn-xs bg-red-200 hover:bg-red-300 text-red-600"
+                                        />
                                     </div>
                                 </td>
                             </tr>
