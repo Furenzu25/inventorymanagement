@@ -10,12 +10,18 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <!-- Additional styles and scripts -->
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/TextPlugin.min.js"></script>
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 
     <style>
+        /* Facebook-style font stack */
+        :root {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
+                "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
         .bg-gradient-animate {
             background-size: 400% 400%;
             animation: gradientAnimation 15s ease infinite;
@@ -25,9 +31,21 @@
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
+
+        /* Facebook-style input fields */
+        input {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
+                "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-size: 17px;
+        }
+
+        input::placeholder {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
+                "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
     </style>
 </head>
-<body class="font-sans antialiased min-h-screen bg-gradient-animate bg-gradient-to-br from-red-900 via-black to-purple-900 text-gray-200">
+<body class="antialiased min-h-screen bg-gradient-animate bg-gradient-to-r from-[#2c3e50] via-[#3498db] to-[#2ecc71]">
     <div id="app-wrapper" class="min-h-screen">
         {{ $slot }}
     </div>
