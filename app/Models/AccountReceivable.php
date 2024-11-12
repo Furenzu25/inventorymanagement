@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Sale extends Model
+class AccountReceivable extends Model
 {
     use HasFactory;
+
+    protected $table = 'account_receivables';
 
     protected $fillable = [
         'preorder_id',
@@ -18,7 +20,7 @@ class Sale extends Model
         'total_amount',
         'payment_months',
         'interest_rate',
-        'status', // Add this new field
+        'status'
     ];
 
     public function customer()
@@ -29,6 +31,11 @@ class Sale extends Model
     public function preorder()
     {
         return $this->belongsTo(Preorder::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
     }
 
     public function calculateMonthlyPayment()
@@ -48,28 +55,6 @@ class Sale extends Model
         $this->save();
 
         return $this->monthly_payment;
-    }
-
-    public function updatePayment($amount)
-    {
-        $this->total_paid += $amount;
-        $this->remaining_balance -= $amount;
-        $this->checkAndUpdateStatus();
-        $this->save();
-    }
-
-    public function checkAndUpdateStatus()
-    {
-        if ($this->remaining_balance <= 0) {
-            $this->status = 'paid';
-        } else {
-            $this->status = 'ongoing';
-        }
-    }
-
-    public function payments()
-    {
-        return $this->hasMany(Payment::class);
     }
 }
 

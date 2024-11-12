@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('sales', function (Blueprint $table) {
+        Schema::create('account_receivables', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_id')->constrained();
             $table->foreignId('preorder_id')->constrained();
@@ -18,13 +18,13 @@ return new class extends Migration
             $table->decimal('total_amount', 10, 2);
             $table->integer('payment_months');
             $table->decimal('interest_rate', 5, 2);
-            $table->string('status');
+            $table->string('status')->default('pending');
             $table->timestamps();
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('sales');
+        Schema::dropIfExists('account_receivables');
     }
-};
+}; 

@@ -3,80 +3,146 @@
 namespace App\Livewire\Payments;
 
 use Livewire\Component;
+use Livewire\WithPagination;
 use App\Models\Payment;
-use App\Models\Sale;
-use Illuminate\Validation\Rule;
+use App\Models\AccountReceivable;
+use App\Models\Customer;
 
 class Index extends Component
 {
-    public $sale_id;
-    public $amount_paid;
-    public $payment_date;
-    public $due_amount;
+    use WithPagination;
 
-    public function rules()
+    public $search = '';
+    public $paymentHistoryOpen = false;
+    public $recordPaymentOpen = false;
+    public $selectedCustomer = null;
+    public $selectedCustomerPayments = [];
+    public $payment = [
+        'due_amount' => '',
+        'amount_paid' => '',
+        'payment_date' => '',
+    ];
+    public $selectedAR = null;
+
+    protected $listeners = ['refreshComponent' => '$refresh'];
+
+    public function mount()
     {
-        return [
-            'sale_id' => 'required|exists:sales,id',
-            'amount_paid' => [
-                'required',
-                'numeric',
-                'min:0',
-                function ($attribute, $value, $fail) {
-                    if ($this->sale_id) {
-                        $sale = Sale::find($this->sale_id);
-                        if ($value > $sale->remaining_balance) {
-                            $fail("The payment amount cannot exceed the remaining balance of " . number_format($sale->remaining_balance, 2));
-                        }
-                    }
-                },
-            ],
-            'payment_date' => 'required|date',
-        ];
+        $this->payment['payment_date'] = date('Y-m-d');
     }
 
-    public function updated($propertyName)
+    public function viewPaymentHistory($customerId)
     {
-        if ($propertyName === 'sale_id') {
-            $this->updateDueAmount();
-        }
-        $this->validateOnly($propertyName);
-    }
-
-    public function updateDueAmount()
-    {
-        if ($this->sale_id) {
-            $sale = Sale::find($this->sale_id);
-            $this->due_amount = $sale->remaining_balance;
-        } else {
-            $this->due_amount = null;
-        }
-    }
-
-    public function store()
-    {
-        $validatedData = $this->validate();
-        $validatedData['due_amount'] = $this->due_amount;
-
-        $sale = Sale::findOrFail($validatedData['sale_id']);
-
-        $payment = Payment::create($validatedData);
-
-        $sale->updatePayment($payment->amount_paid);
-
-        $this->reset(['sale_id', 'amount_paid', 'payment_date', 'due_amount']);
+        $this->selectedCustomer = Customer::with(['accountReceivables.preorder.preorderItems.product'])
+            ->findOrFail($customerId);
+        $this->selectedCustomerPayments = Payment::whereHas('accountReceivable', function($query) use ($customerId) {
+            $query->where('customer_id', $customerId);
+        })->orderBy('payment_date', 'desc')->get();
         
-        $message = 'Payment recorded successfully.';
-        if ($sale->status === 'paid') {
-            $message .= ' The sale has been fully paid.';
+        $this->selectedAR = null;
+        $this->paymentHistoryOpen = true;
+    }
+
+    public function closePaymentHistory()
+    {
+        $this->paymentHistoryOpen = false;
+        $this->selectedCustomer = null;
+        $this->selectedCustomerPayments = [];
+    }
+
+    public function selectCustomer($customerId)
+    {
+        $this->selectedCustomer = Customer::findOrFail($customerId);
+        $this->selectedCustomerPayments = Payment::whereHas('accountReceivable', function($query) use ($customerId) {
+            $query->where('customer_id', $customerId);
+        })->orderBy('payment_date', 'desc')->get();
+        $this->paymentHistoryOpen = true;
+    }
+
+    public function selectAR($arId)
+    {
+        $this->selectedAR = AccountReceivable::findOrFail($arId);
+        $this->selectedCustomerPayments = Payment::where('account_receivable_id', $arId)
+            ->orderBy('payment_date', 'desc')
+            ->get();
+    }
+
+    public function showRecordPayment()
+    {
+        if (!$this->selectedCustomer) {
+            session()->flash('error', 'Please select a customer first.');
+            return;
         }
-        session()->flash('message', $message);
+
+        if (!$this->selectedAR) {
+            session()->flash('error', 'Please select an Account Receivable first.');
+            return;
+        }
+
+        if ($this->selectedAR->status === 'paid') {
+            session()->flash('error', 'This Account Receivable is already fully paid.');
+            return;
+        }
+
+        $this->payment['due_amount'] = $this->selectedAR->monthly_payment;
+        $this->payment['amount_paid'] = '';
+        $this->payment['payment_date'] = date('Y-m-d');
+        
+        $this->recordPaymentOpen = true;
+    }
+
+    public function closeRecordPayment()
+    {
+        $this->recordPaymentOpen = false;
+        $this->reset('payment');
+    }
+
+    public function recordPayment()
+    {
+        if (!$this->selectedAR) {
+            session()->flash('error', 'No Account Receivable selected.');
+            return;
+        }
+
+        $this->validate([
+            'payment.amount_paid' => 'required|numeric|min:0',
+            'payment.due_amount' => 'required|numeric|min:0',
+            'payment.payment_date' => 'required|date'
+        ]);
+
+        Payment::create([
+            'account_receivable_id' => $this->selectedAR->id,
+            'amount_paid' => $this->payment['amount_paid'],
+            'payment_date' => $this->payment['payment_date'],
+            'due_amount' => $this->payment['due_amount'],
+            'remaining_balance' => $this->selectedAR->remaining_balance - $this->payment['amount_paid']
+        ]);
+
+        $new_remaining = $this->selectedAR->remaining_balance - $this->payment['amount_paid'];
+        $this->selectedAR->update([
+            'total_paid' => $this->selectedAR->total_paid + $this->payment['amount_paid'],
+            'remaining_balance' => $new_remaining,
+            'status' => ($new_remaining <= 0) ? 'paid' : 'pending'
+        ]);
+
+        $this->recordPaymentOpen = false;
+        $this->reset('payment');
+        $this->viewPaymentHistory($this->selectedCustomer->id);
+        
+        session()->flash('message', 'Payment recorded successfully.');
     }
 
     public function render()
     {
+        $customers = Customer::query()
+            ->with('accountReceivables')
+            ->when($this->search, function ($query) {
+                $query->where('name', 'like', '%' . $this->search . '%');
+            })
+            ->paginate(10);
+
         return view('livewire.payments.index', [
-            'sales' => Sale::with(['customer', 'preorder.preorderItems.product'])->get(),
+            'customers' => $customers
         ]);
     }
 }
