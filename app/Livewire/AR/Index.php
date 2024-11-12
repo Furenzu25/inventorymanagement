@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Livewire\Sales;
+namespace App\Livewire\AR;
 
 use Livewire\Component;
-use App\Models\Sale;
+use App\Models\AccountReceivable;
 use App\Models\Preorder;
 use App\Models\Customer;
 use Illuminate\Support\Facades\DB;
@@ -22,16 +22,16 @@ class Index extends Component
 
     public function render()
     {
-        $sales = Sale::with(['customer', 'preorder.preorderItems.product'])->get();
+        $accountReceivables = AccountReceivable::with(['customer', 'preorder.preorderItems.product'])->get();
 
-        $totalSales = $sales->sum('total_paid');
-        $totalOutstanding = $sales->sum('remaining_balance');
+        $totalAR = $accountReceivables->sum('total_paid');
+        $totalOutstanding = $accountReceivables->sum('remaining_balance');
 
         $preorders = Preorder::where('status', '!=', 'converted')->get();
 
-        return view('livewire.sales.index', [
-            'sales' => $sales,
-            'totalSales' => $totalSales,
+        return view('livewire.AR.index', [
+            'accountReceivables' => $accountReceivables,
+            'totalAR' => $totalAR,
             'totalOutstanding' => $totalOutstanding,
             'preorders' => $preorders,
         ]);
@@ -41,17 +41,20 @@ class Index extends Component
     {
         $validatedData = $this->validate();
 
-        $sale = Sale::create($validatedData);
-        $sale->calculateMonthlyPayment();
+        $ar = AccountReceivable::create($validatedData);
+        $ar->calculateMonthlyPayment();
 
         $this->reset();
-        session()->flash('message', 'Sale recorded successfully.');
+        session()->flash('message', 'Account Receivable recorded successfully.');
     }
 
-    public function createSaleFromPreorder(Preorder $preorder)
+    public function createARFromPreorder(Preorder $preorder)
     {
         DB::transaction(function () use ($preorder) {
-            $sale = Sale::create([
+            // Debug the preorder monthly payment
+            \Log::info('Preorder Monthly Payment: ' . $preorder->monthly_payment);
+
+            $ar = AccountReceivable::create([
                 'preorder_id' => $preorder->id,
                 'customer_id' => $preorder->customer_id,
                 'monthly_payment' => $preorder->monthly_payment,
@@ -63,12 +66,17 @@ class Index extends Component
                 'status' => 'ongoing',
             ]);
 
-            $sale->calculateMonthlyPayment();
+            // Debug the AR monthly payment after creation
+            \Log::info('AR Monthly Payment after creation: ' . $ar->monthly_payment);
 
-            // Update the preorder status to 'converted' or something similar
+            $ar->calculateMonthlyPayment();
+
+            // Debug the AR monthly payment after calculation
+            \Log::info('AR Monthly Payment after calculation: ' . $ar->monthly_payment);
+
             $preorder->update(['status' => 'converted']);
 
-            session()->flash('message', 'Sale created successfully from preorder #' . $preorder->id);
+            session()->flash('message', 'Account Receivable created successfully from preorder #' . $preorder->id);
         });
     }
 }

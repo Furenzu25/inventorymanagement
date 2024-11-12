@@ -6,8 +6,8 @@
                     <svg class="mx-auto h-12 w-auto mb-4 text-[#3498db]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M21 16V8.00002C20.9996 7.6493 20.9071 7.30483 20.7315 7.00119C20.556 6.69754 20.3037 6.44539 20 6.27002L13 2.27002C12.696 2.09449 12.3511 2.00208 12 2.00208C11.6489 2.00208 11.304 2.09449 11 2.27002L4 6.27002C3.69626 6.44539 3.44398 6.69754 3.26846 7.00119C3.09294 7.30483 3.00036 7.6493 3 8.00002V16C3.00036 16.3508 3.09294 16.6952 3.26846 16.9989C3.44398 17.3025 3.69626 17.5547 4 17.73L11 21.73C11.304 21.9056 11.6489 21.998 12 21.998C12.3511 21.998 12.696 21.9056 13 21.73L20 17.73C20.3037 17.5547 20.556 17.3025 20.7315 16.9989C20.9071 16.6952 20.9996 16.3508 21 16Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                    <h2 class="text-3xl font-bold" style="background: linear-gradient(45deg, #3498db, #2ecc71); -webkit-background-clip: text; background-clip: text; color: transparent;">Create an Account</h2>
-                    <p class="text-gray-600 mt-2">Join Rosels Trading today</p>
+                    <h2 class="text-3xl font-bold tracking-tight" style="background: linear-gradient(45deg, #3498db, #2ecc71); -webkit-background-clip: text; background-clip: text; color: transparent;">Create an Account</h2>
+                    <p class="text-gray-600 mt-2 text-[17px]">Join Rosels Trading today</p>
                 </div>
                 <form wire:submit.prevent="register">
                     <div class="space-y-4">
@@ -16,79 +16,44 @@
                             wire:model.defer="name" 
                             type="text" 
                             placeholder="Enter your name"
+                            class="text-[17px]"
                         />
                         <x-input 
                             label="Email" 
                             wire:model.defer="email" 
                             type="email" 
                             placeholder="Enter your email"
+                            class="text-[17px]"
                         />
                         <x-input 
                             label="Password" 
                             wire:model.defer="password" 
                             type="password" 
                             placeholder="Enter your password"
+                            class="text-[17px]"
                         />
                         <x-input 
                             label="Confirm Password" 
                             wire:model.defer="password_confirmation" 
                             type="password" 
                             placeholder="Confirm your password"
-                        />
-                        <x-input 
-                            label="Birthday" 
-                            wire:model.defer="birthday" 
-                            type="date" 
-                        />
-                        <x-textarea 
-                            label="Address" 
-                            wire:model.defer="address" 
-                            placeholder="Enter your address"
-                        />
-                        <x-input 
-                            label="Phone Number" 
-                            wire:model.defer="phone_number" 
-                            type="text" 
-                            placeholder="Enter your phone number"
-                        />
-                        <x-input 
-                            label="Reference Contact Person" 
-                            wire:model.defer="reference_contactperson" 
-                            type="text" 
-                            placeholder="Enter reference contact person"
-                        />
-                        <x-input 
-                            label="Reference Contact Person Phone Number" 
-                            wire:model.defer="reference_contactperson_phonenumber" 
-                            type="text" 
-                            placeholder="Enter reference contact person phone number"
-                        />
-                        <x-input 
-                            label="Valid ID Number" 
-                            wire:model.defer="valid_id" 
-                            type="text" 
-                            placeholder="Enter your valid ID number"
-                        />
-                        <x-input 
-                            label="Valid ID Image" 
-                            wire:model="valid_id_image" 
-                            type="file" 
+                            class="text-[17px]"
                         />
                     </div>
                     <div class="mt-6">
                         <x-button 
                             type="submit" 
                             label="Register" 
-                            class="w-full bg-[#3498db] hover:bg-[#2980b9] text-white"
+                            class="w-full bg-[#3498db] hover:bg-[#2980b9] text-white text-[17px] font-semibold"
                             spinner
                         />
                     </div>
                 </form>
             </div>
             <div class="bg-gray-50 px-4 py-3 sm:px-6 text-center">
-                <p class="text-sm text-gray-600">
+                <p class="text-[15px] text-gray-600">
                     Already have an account? 
-                    <a href="{{ route('login') }}" class="font-medium text-[#3498db] hover:text-[#2980b9]">Sign in</a>
+                    <a href="{{ route('login') }}" class="font-semibold text-[#3498db] hover:text-[#2980b9]">Sign in</a>
                 </p>
             </div>
         </div>

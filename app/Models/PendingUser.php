@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Support\Str;
 
 class PendingUser extends Model implements MustVerifyEmail

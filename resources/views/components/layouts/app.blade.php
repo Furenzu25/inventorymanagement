@@ -171,8 +171,8 @@
             <a href="{{ route('preorders.index') }}" class="sidebar-button">
                 <i class="fas fa-clipboard-list mr-2"></i> Pre-orders
             </a>
-            <a href="{{ route('sales.index') }}" class="sidebar-button">
-                <i class="fas fa-dollar-sign mr-2"></i> Sales
+            <a href="{{ route('ar.index') }}" class="sidebar-button">
+                <i class="fas fa-dollar-sign mr-2"></i> Account Receivables
             </a>
             <a href="{{ route('payments.index') }}" class="sidebar-button">
                 <i class="fas fa-money-bill-wave mr-2"></i> Payments

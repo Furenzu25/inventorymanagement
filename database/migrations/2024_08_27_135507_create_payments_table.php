@@ -6,22 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('sale_id')->constrained()->onDelete('cascade');
+            $table->foreignId('account_receivable_id')->constrained();
             $table->decimal('amount_paid', 10, 2);
             $table->date('payment_date');
             $table->decimal('due_amount', 10, 2);
+            $table->decimal('remaining_balance', 10, 2);
             $table->timestamps();
-
-            $table->index('payment_date');
         });
     }
 
-    public function down(): void
+    public function down()
     {
         Schema::dropIfExists('payments');
     }
-};
+}; 

@@ -10,28 +10,29 @@ class Payment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'sale_id',
+        'account_receivable_id',
         'amount_paid',
         'payment_date',
-        'due_amount'
+        'due_amount',
+        'remaining_balance'
     ];
 
     protected $casts = [
         'payment_date' => 'date',
     ];
 
-    public function sale()
+    public function accountReceivable()
     {
-        return $this->belongsTo(Sale::class);
+        return $this->belongsTo(AccountReceivable::class);
     }
 
     public function preorder()
     {
-        return $this->sale->preorder();
+        return $this->accountReceivable->preorder();
     }
 
     public function customer()
     {
-        return $this->sale->customer();
+        return $this->accountReceivable->customer();
     }
 }
