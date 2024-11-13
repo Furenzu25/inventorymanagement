@@ -6,6 +6,7 @@ use App\Livewire\Products\Index as ProductsIndex;
 use App\Livewire\Preorders\Index as PreordersIndex;
 use App\Livewire\AR\Index as ARIndex;
 use App\Livewire\Payments\Index as PaymentsIndex;
+use App\Livewire\Inventory\Index as InventoryIndex;
 use App\Livewire\Payments\History;
 use App\Livewire\Auth\Login;
 use App\Livewire\Dashboard\Index as DashboardIndex;
@@ -69,6 +70,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/ar', ARIndex::class)->name('ar.index');
         Route::get('/payments', PaymentsIndex::class)->name('payments.index');
         Route::get('/payments/history/{account_receivable?}', History::class)->name('payments.history');
+        Route::get('/inventory', InventoryIndex::class)->name('inventory.index');
     });
 });
 

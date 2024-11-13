@@ -10,7 +10,10 @@ class Preorder extends Model
     use HasFactory;
 
     const STATUS_PENDING = 'pending';
+    const STATUS_APPROVED = 'approved';
+    const STATUS_READY_FOR_PICKUP = 'ready_for_pickup';
     const STATUS_CONVERTED = 'converted';
+    const STATUS_CANCELLED = 'cancelled';
 
     protected $fillable = [
         'customer_id',
@@ -49,5 +52,10 @@ class Preorder extends Model
         return $this->belongsToMany(Product::class, 'preorder_items')
                     ->withPivot('quantity', 'price')
                     ->withTimestamps();
+    }
+
+    public function inventoryItems()
+    {
+        return $this->hasMany(InventoryItem::class);
     }
 }

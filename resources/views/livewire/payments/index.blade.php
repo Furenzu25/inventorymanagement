@@ -130,9 +130,21 @@
                 </div>
 
                 <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Remaining Balance</label>
+                    <x-input 
+                        :value="$selectedAR ? number_format($this->calculatedRemainingBalance, 2) : '0.00'"
+                        wire:model.live="calculatedRemainingBalance"
+                        type="text" 
+                        readonly
+                        disabled
+                        class="mt-1 block w-full"
+                    />
+                </div>
+
+                <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700">Amount to Pay</label>
                     <x-input 
-                        wire:model.defer="payment.amount_paid" 
+                        wire:model.live="payment.amount_paid" 
                         type="number" 
                         step="0.01"
                         placeholder="Enter payment amount"

@@ -180,6 +180,9 @@
             <a href="{{ route('payments.history', ['sale' => 'all']) }}" class="sidebar-button">
                 <i class="fas fa-history mr-2"></i> Payment History
             </a>
+            <a href="{{ route('inventory.index') }}" class="sidebar-button">
+                <i class="fas fa-box mr-2"></i> Inventory
+            </a>
             <form method="POST" action="{{ route('logout') }}" class="mt-auto">
                 @csrf
                 <button type="submit" class="sidebar-button">

@@ -20,7 +20,7 @@ class Index extends Component
     public $payment = [
         'due_amount' => '',
         'amount_paid' => '',
-        'payment_date' => '',
+        'payment_date' => ''
     ];
     public $selectedAR = null;
 
@@ -144,5 +144,15 @@ class Index extends Component
         return view('livewire.payments.index', [
             'customers' => $customers
         ]);
+    }
+
+    public function getCalculatedRemainingBalanceProperty()
+    {
+        if (!$this->selectedAR) {
+            return 0;
+        }
+        
+        $amountPaid = floatval($this->payment['amount_paid'] ?? 0);
+        return $this->selectedAR->remaining_balance - $amountPaid;
     }
 }

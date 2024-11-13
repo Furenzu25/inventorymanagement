@@ -176,7 +176,7 @@ class Index extends Component
     public function viewPayment($customerId)
     {
         $customer = Customer::findOrFail($customerId);
-        $this->selectedCustomerPayments = Payment::whereHas('sale', function ($query) use ($customerId) {
+        $this->selectedCustomerPayments = Payment::whereHas('accountReceivable', function ($query) use ($customerId) {
             $query->where('customer_id', $customerId);
         })->latest()->get()->map(function ($payment) {
             return [
