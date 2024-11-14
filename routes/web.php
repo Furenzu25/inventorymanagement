@@ -17,6 +17,7 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Auth;
+use App\Livewire\Customers\EditProfileModal;
 use App\Http\Controllers\AdminController;
 use App\Livewire\Ecommerce\Home as EcommerceHome;
 
@@ -54,13 +55,16 @@ Route::middleware(['auth'])->group(function () {
         $request->user()->sendEmailVerificationNotification();
         return back()->with('message', 'Verification link sent!');
     })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+
+    Route::get('/edit-profile', App\Livewire\Customers\EditProfileModal::class)->name('customer.edit-profile');
 });
 
 // Protected routes (require auth and email verification)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/home', EcommerceHome::class)->name('home');
     Route::get('/cart', \App\Livewire\Cart::class)->name('cart');
-    
+    Route::get('/my-orders', App\Livewire\Customers\Orders::class)->name('customer.orders');
+
     // Admin routes
     Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->group(function () {
         Route::get('/dashboard', \App\Livewire\Dashboard\Index::class)->name('dashboard');
@@ -70,7 +74,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/ar', ARIndex::class)->name('ar.index');
         Route::get('/payments', PaymentsIndex::class)->name('payments.index');
         Route::get('/payments/history/{account_receivable?}', History::class)->name('payments.history');
-        Route::get('/inventory', InventoryIndex::class)->name('inventory.index');
+        Route::get('/inventory', \App\Livewire\Inventory\Index::class)->name('inventory.index');
     });
 });
 

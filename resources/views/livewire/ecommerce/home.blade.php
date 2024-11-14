@@ -22,7 +22,7 @@
                     <x-slot:trigger>
                         <x-button icon="o-user-circle" class="btn-ghost text-[#3498db] hover:text-[#2ecc71]" />
                     </x-slot:trigger>
-                    <x-menu-item title="Edit Profile" icon="o-user-circle" wire:click="$emit('openEditProfileModal')" />
+                    <x-menu-item title="Edit Profile" icon="o-user-circle" wire:click="editProfile" />
                     <x-menu-item title="Logout" icon="o-arrow-left-on-rectangle" wire:click="logout" />
                 </x-dropdown>
             </div>
@@ -93,8 +93,7 @@
         </div>
     </div>
 
-    <livewire:user-profile />
-    <livewire:complete-profile />
+    <livewire:ecommerce.edit-profile-modal />
 
     @if(!auth()->user()->customer)
         <div class="fixed bottom-4 right-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded shadow-lg">

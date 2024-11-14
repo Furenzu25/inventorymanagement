@@ -177,9 +177,6 @@
             <a href="{{ route('payments.index') }}" class="sidebar-button">
                 <i class="fas fa-money-bill-wave mr-2"></i> Payments
             </a>
-            <a href="{{ route('payments.history', ['sale' => 'all']) }}" class="sidebar-button">
-                <i class="fas fa-history mr-2"></i> Payment History
-            </a>
             <a href="{{ route('inventory.index') }}" class="sidebar-button">
                 <i class="fas fa-box mr-2"></i> Inventory
             </a>

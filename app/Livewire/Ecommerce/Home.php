@@ -10,10 +10,19 @@ class Home extends Component
 {
     public $showEditProfileModal = false;
 
-    protected $listeners = ['openEditProfileModal', 'cart-updated' => 'updateCartCount'];
+    protected $listeners = [
+        'openEditProfileModal',
+        'cart-updated' => 'updateCartCount',
+        'profile-updated' => '$refresh'
+    ];
 
     public $cart = [];
     public $cartCount = 0;
+
+    public function editProfile()
+    {
+        $this->dispatch('openEditProfileModal');
+    }
 
     public function render()
     {

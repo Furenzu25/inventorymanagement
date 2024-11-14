@@ -10,6 +10,7 @@ use App\Models\Product;
 use Livewire\WithPagination;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Models\InventoryItem;
 
 class Index extends Component
 {
@@ -210,5 +211,25 @@ class Index extends Component
         $preorder = Preorder::findOrFail($id);
         $preorder->update(['status' => 'Approved']);
         session()->flash('message', 'Pre-order approved successfully.');
+    }
+
+    public function cancelPreorder($id)
+    {
+        DB::transaction(function () use ($id) {
+            $preorder = Preorder::findOrFail($id);
+            
+            // If there's an inventory item assigned, mark it as available
+            $inventoryItem = InventoryItem::where('preorder_id', $preorder->id)->first();
+            if ($inventoryItem) {
+                $inventoryItem->update([
+                    'status' => 'in_stock',
+                    'preorder_id' => null
+                ]);
+            }
+            
+            $preorder->update(['status' => 'Cancelled']);
+        });
+        
+        session()->flash('message', 'Pre-order cancelled successfully.');
     }
 }

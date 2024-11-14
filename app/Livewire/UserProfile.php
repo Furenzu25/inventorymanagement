@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 
 class UserProfile extends Component
 {
-    public $user;
+    public $showModal = false;
     public $name;
     public $email;
 
@@ -18,22 +18,22 @@ class UserProfile extends Component
 
     public function mount()
     {
-        $this->user = Auth::user();
-        $this->name = $this->user->name;
-        $this->email = $this->user->email;
+        $this->name = Auth::user()->name;
+        $this->email = Auth::user()->email;
     }
 
     public function updateProfile()
     {
         $this->validate();
 
-        $this->user->update([
+        Auth::user()->update([
             'name' => $this->name,
             'email' => $this->email,
         ]);
 
+        $this->showModal = false;
         session()->flash('message', 'Profile updated successfully.');
-        $this->emit('profileUpdated');
+        $this->dispatch('profile-updated');
     }
 
     public function render()

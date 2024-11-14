@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class InventoryItem extends Model
 {
@@ -12,6 +13,16 @@ class InventoryItem extends Model
         'status',
         'preorder_id'
     ];
+
+    public static function generateSerialNumber()
+    {
+        do {
+            // Format: RT-YYYY-XXXXX (RT for Rosels Trading)
+            $serial = 'RT-' . date('Y') . '-' . strtoupper(Str::random(5));
+        } while (static::where('serial_number', $serial)->exists());
+
+        return $serial;
+    }
 
     public function product()
     {
