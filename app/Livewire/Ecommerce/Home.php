@@ -75,4 +75,9 @@ class Home extends Component
     {
         $this->updateCartCount();
     }
+
+    public function editProfile()
+    {
+        $this->dispatch('openEditProfileModal');
+    }
 }
