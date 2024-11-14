@@ -162,6 +162,9 @@
             <a href="/dashboard" class="sidebar-button">
                 <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
             </a>
+            <a href="{{ route('inventory.index') }}" class="sidebar-button">
+                <i class="fas fa-box mr-2"></i> Inventory
+            </a>    
             <a href="{{ route('customers.index') }}" class="sidebar-button">
                 <i class="fas fa-users mr-2"></i> Customers
             </a>
@@ -177,9 +180,9 @@
             <a href="{{ route('payments.index') }}" class="sidebar-button">
                 <i class="fas fa-money-bill-wave mr-2"></i> Payments
             </a>
-            <a href="{{ route('inventory.index') }}" class="sidebar-button">
-                <i class="fas fa-box mr-2"></i> Inventory
-            </a>
+            <a href="{{ route('sales.index') }}" class="sidebar-button">
+    <i class="fas fa-chart-line mr-2"></i> Sales
+</a>
             <form method="POST" action="{{ route('logout') }}" class="mt-auto">
                 @csrf
                 <button type="submit" class="sidebar-button">
