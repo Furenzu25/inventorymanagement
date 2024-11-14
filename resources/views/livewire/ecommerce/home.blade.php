@@ -93,7 +93,6 @@
         </div>
     </div>
 
-    <livewire:ecommerce.edit-profile-modal />
 
     @if(!auth()->user()->customer)
         <div class="fixed bottom-4 right-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded shadow-lg">

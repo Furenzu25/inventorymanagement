@@ -17,9 +17,9 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Auth;
-use App\Livewire\Customers\EditProfileModal;
 use App\Http\Controllers\AdminController;
 use App\Livewire\Ecommerce\Home as EcommerceHome;
+use App\Livewire\Customers\Orders;
 
 // Public routes
 Route::get('/', function () {
@@ -56,7 +56,9 @@ Route::middleware(['auth'])->group(function () {
         return back()->with('message', 'Verification link sent!');
     })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
-    Route::get('/edit-profile', App\Livewire\Customers\EditProfileModal::class)->name('customer.edit-profile');
+    Route::get('/sales', App\Livewire\Sales\Index::class)->name('sales.index');
+    Route::get('/customers/orders', Orders::class)->name('customers.orders');
+    Route::get('/customers/orders/{order}', [App\Livewire\Customers\Orders::class, 'show'])->name('customers.orders.show');
 });
 
 // Protected routes (require auth and email verification)

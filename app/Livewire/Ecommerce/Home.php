@@ -8,10 +8,10 @@ use Illuminate\Support\Facades\Auth;
 
 class Home extends Component
 {
-    public $showEditProfileModal = false;
+  
 
     protected $listeners = [
-        'openEditProfileModal',
+        
         'cart-updated' => 'updateCartCount',
         'profile-updated' => '$refresh'
     ];
@@ -19,10 +19,7 @@ class Home extends Component
     public $cart = [];
     public $cartCount = 0;
 
-    public function editProfile()
-    {
-        $this->dispatch('openEditProfileModal');
-    }
+    
 
     public function render()
     {
@@ -38,10 +35,7 @@ class Home extends Component
         return redirect()->route('login');
     }
 
-    public function openEditProfileModal()
-    {
-        $this->showEditProfileModal = true;
-    }
+    
 
     public function addToCart($productId)
     {

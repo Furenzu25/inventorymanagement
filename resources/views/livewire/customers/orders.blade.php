@@ -21,7 +21,11 @@
                 <tbody>
                     @foreach($orders as $order)
                         <tr class="border-b">
-                            <td class="px-4 py-2">#{{ $order->id }}</td>
+                            <td class="px-4 py-2">
+                                <a href="#" wire:click.prevent="show({{ $order->id }})" class="text-blue-600 hover:text-blue-800">
+                                    #{{ $order->id }}
+                                </a>
+                            </td>
                             <td class="px-4 py-2">
                                 @foreach($order->preorderItems as $item)
                                     {{ $item->product->product_name }}<br>
@@ -38,12 +42,7 @@
                             <td class="px-4 py-2">
                                 <a href="{{ route('customers.orders.show', $order->id) }}" class="text-blue-500">View</a>
                                 @if ($order->status === 'Pending')
-                                    <x-button 
-                                        wire:click="editProfile"
-                                        class="bg-blue-500 hover:bg-blue-600 text-white"
-                                    >
-                                        Edit Profile
-                                    </x-button>
+                                    
                                 @endif
                             </td>
                         </tr>
@@ -53,5 +52,16 @@
         </div>
     </div>
 
-    <livewire:customers.edit-profile-modal />
+    <!-- Order Details Modal -->
+    @if($showOrderDetails && $selectedOrder)
+        <x-modal wire:model="showOrderDetails">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold mb-4">Order Details #{{ $selectedOrder->id }}</h3>
+                <!-- Add your order details here -->
+                <div class="mt-4">
+                    <x-button wire:click="$set('showOrderDetails', false)">Close</x-button>
+                </div>
+            </div>
+        </x-modal>
+    @endif
 </div> 

@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\DB;
 
 class Orders extends Component
 {
+    public $showOrderDetails = false;
+    public $selectedOrder = null;
+
     public function render()
     {
         return view('livewire.customers.orders', [
@@ -18,6 +21,15 @@ class Orders extends Component
                               ->latest()
                               ->get()
         ]);
+    }
+
+    public function show($orderId)
+    {
+        $this->selectedOrder = Preorder::where('id', $orderId)
+                                     ->where('customer_id', Auth::user()->customer->id)
+                                     ->with(['preorderItems.product'])
+                                     ->firstOrFail();
+        $this->showOrderDetails = true;
     }
 
     public function cancelPreorder($preorderId)
@@ -42,8 +54,5 @@ class Orders extends Component
         session()->flash('message', 'Your pre-order has been cancelled successfully.');
     }
 
-    public function editProfile()
-    {
-        $this->dispatch('openEditProfileModal');
-    }
+   
 }
