@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\Ecommerce;
 
 use Livewire\Component;
 use App\Models\Preorder;
@@ -71,6 +71,7 @@ class Cart extends Component
                 $preorder->products()->attach($item['id'], [
                     'quantity' => $item['quantity'],
                     'price' => $item['price'],
+                    'variant_id' => $item['variant_id'] ?? null,
                 ]);
             }
             Log::info('All items added to preorder');
@@ -106,7 +107,7 @@ class Cart extends Component
     public function render()
     {
         $this->refreshCart();
-        return view('livewire.cart')->layout('components.layouts.guest');
+        return view('livewire.ecommerce.cart')->layout('components.layouts.guest');
     }
 
     public function refreshCart()

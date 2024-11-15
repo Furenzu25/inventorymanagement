@@ -23,6 +23,7 @@
                         <x-button icon="o-user-circle" class="btn-ghost text-[#3498db] hover:text-[#2ecc71]" />
                     </x-slot:trigger>
                     <x-menu-item title="Edit Profile" icon="o-user-circle" wire:click="editProfile" />
+                    <x-menu-item title="My Orders" icon="o-shopping-bag" href="{{ route('customer.orders') }}" />
                     <x-menu-item title="Logout" icon="o-arrow-left-on-rectangle" wire:click="logout" />
                 </x-dropdown>
             </div>
@@ -66,9 +67,10 @@
                                     <p class="text-gray-400 mt-2">₱{{ number_format($product->price, 2) }}</p>
                                     <p class="text-gray-400 mt-2">{{ Str::limit($product->product_description, 100) }}</p>
                                     <div class="mt-4 flex justify-between items-center">
-                                        <x-button wire:click="addToCart({{ $product->id }})" class="bg-[#3498db] hover:bg-[#2980b9] text-white px-4 py-2 rounded transition duration-300">
+                                        <button wire:click="$dispatch('openModal', [{{ $product->id }}])" 
+                                                class="bg-[#3498db] text-white px-4 py-2 rounded hover:bg-[#2980b9]">
                                             Add to Cart
-                                        </x-button>
+                                        </button>
                                         <a href="#" class="text-[#3498db] hover:text-[#2ecc71] transition duration-300">View Details</a>
                                     </div>
                                 </div>
@@ -100,6 +102,8 @@
             <p>Complete your profile to unlock pre-ordering features.</p>
         </div>
     @endif
+
+    <livewire:ecommerce.add-to-cart-modal />
 </div>
 
 <script>
@@ -140,4 +144,5 @@
         modal.classList.remove('flex');
     }
 </script>
+
 

@@ -7,6 +7,9 @@ use Livewire\WithPagination;
 use App\Models\Payment;
 use App\Models\AccountReceivable;
 use App\Models\Customer;
+use Illuminate\Support\Facades\DB;
+use App\Models\Sale;
+use App\Models\InventoryItem;
 
 class Index extends Component
 {
@@ -99,36 +102,42 @@ class Index extends Component
 
     public function recordPayment()
     {
-        if (!$this->selectedAR) {
-            session()->flash('error', 'No Account Receivable selected.');
-            return;
-        }
+        DB::transaction(function () {
+            // Create payment record
+            $payment = Payment::create([
+                'account_receivable_id' => $this->selectedAR->id,
+                'amount' => $this->payment['amount_paid'],
+                'payment_date' => $this->payment['payment_date']
+            ]);
 
-        $this->validate([
-            'payment.amount_paid' => 'required|numeric|min:0',
-            'payment.due_amount' => 'required|numeric|min:0',
-            'payment.payment_date' => 'required|date'
-        ]);
-
-        Payment::create([
-            'account_receivable_id' => $this->selectedAR->id,
-            'amount_paid' => $this->payment['amount_paid'],
-            'payment_date' => $this->payment['payment_date'],
-            'due_amount' => $this->payment['due_amount'],
-            'remaining_balance' => $this->selectedAR->remaining_balance - $this->payment['amount_paid']
-        ]);
-
-        $new_remaining = $this->selectedAR->remaining_balance - $this->payment['amount_paid'];
-        $this->selectedAR->update([
-            'total_paid' => $this->selectedAR->total_paid + $this->payment['amount_paid'],
-            'remaining_balance' => $new_remaining,
-            'status' => ($new_remaining <= 0) ? 'paid' : 'pending'
-        ]);
+            // Update AR balances
+            $this->selectedAR->total_paid += $this->payment['amount_paid'];
+            $this->selectedAR->remaining_balance -= $this->payment['amount_paid'];
+            
+            // Check if fully paid
+            if ($this->selectedAR->remaining_balance <= 0) {
+                $this->selectedAR->status = 'paid';
+                
+                // Create sale record
+                Sale::create([
+                    'preorder_id' => $this->selectedAR->preorder_id,
+                    'customer_id' => $this->selectedAR->customer_id,
+                    'account_receivable_id' => $this->selectedAR->id,
+                    'total_amount' => $this->selectedAR->total_amount,
+                    'payment_method' => 'loan',
+                    'completion_date' => now()
+                ]);
+                
+                // Update inventory item status
+                InventoryItem::where('preorder_id', $this->selectedAR->preorder_id)
+                    ->update(['status' => 'sold']);
+            }
+            
+            $this->selectedAR->save();
+        });
 
         $this->recordPaymentOpen = false;
         $this->reset('payment');
-        $this->viewPaymentHistory($this->selectedCustomer->id);
-        
         session()->flash('message', 'Payment recorded successfully.');
     }
 

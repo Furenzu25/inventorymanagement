@@ -61,6 +61,13 @@
                                 </td>
                                 <td class="px-4 py-3">
                                     <a href="{{ route('payments.history', $ar->id) }}" class="text-indigo-600 hover:text-indigo-900">View Payment History</a>
+                                    @if($ar->status === 'ongoing')
+                                        <x-button wire:click="reassignProduct({{ $ar->id }})" 
+                                                          class="bg-red-500 hover:bg-red-600 text-white text-xs py-1 px-2 rounded"
+                                                          onclick="confirm('Are you sure you want to repossess this product?') || event.stopImmediatePropagation()">
+                                            Repossess
+                                        </x-button>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

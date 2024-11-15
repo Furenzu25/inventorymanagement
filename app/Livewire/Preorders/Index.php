@@ -213,23 +213,26 @@ class Index extends Component
         session()->flash('message', 'Pre-order approved successfully.');
     }
 
-    public function cancelPreorder($id)
+    public function cancelPreorder($preorderId)
     {
-        DB::transaction(function () use ($id) {
-            $preorder = Preorder::findOrFail($id);
+        DB::transaction(function () use ($preorderId) {
+            $preorder = Preorder::findOrFail($preorderId);
             
-            // If there's an inventory item assigned, mark it as available
-            $inventoryItem = InventoryItem::where('preorder_id', $preorder->id)->first();
+            // Get the inventory item associated with this preorder
+            $inventoryItem = InventoryItem::where('preorder_id', $preorderId)->first();
+            
             if ($inventoryItem) {
+                // Free up the inventory item for reassignment
                 $inventoryItem->update([
-                    'status' => 'in_stock',
+                    'status' => 'available',
                     'preorder_id' => null
                 ]);
             }
             
-            $preorder->update(['status' => 'Cancelled']);
+            // Mark the preorder as cancelled
+            $preorder->update(['status' => 'cancelled']);
+            
+            session()->flash('message', 'Pre-order cancelled successfully. Product is now available for reassignment.');
         });
-        
-        session()->flash('message', 'Pre-order cancelled successfully.');
     }
 }

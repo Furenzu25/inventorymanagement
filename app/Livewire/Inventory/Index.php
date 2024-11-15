@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\InventoryItem;
 use App\Models\Preorder;
 use Illuminate\Support\Facades\DB;
+use App\Models\Sale;
 
 class Index extends Component
 {
@@ -80,15 +81,29 @@ class Index extends Component
             $preorder = Preorder::findOrFail($preorderId);
             
             $this->selectedInventoryItem->update([
-                'status' => 'reserved',
+                'status' => $preorder->payment_method === 'cash' ? 'sold' : 'reserved',
                 'preorder_id' => $preorder->id
             ]);
             
-            $preorder->update(['status' => 'ready_for_pickup']);
+            // If cash payment, directly mark as completed
+            if ($preorder->payment_method === 'cash') {
+                $preorder->update(['status' => 'completed']);
+                
+                // Create a direct sale record
+                Sale::create([
+                    'preorder_id' => $preorder->id,
+                    'customer_id' => $preorder->customer_id,
+                    'total_amount' => $preorder->total_amount,
+                    'payment_method' => 'cash',
+                    'completion_date' => now()
+                ]);
+            } else {
+                $preorder->update(['status' => 'ready_for_pickup']);
+            }
         });
         
         $this->modalOpen = false;
-        session()->flash('message', 'Product assigned successfully.');
+        session()->flash('message', 'Product processed successfully.');
     }
 
     public function render()
@@ -98,9 +113,30 @@ class Index extends Component
                                         ->whereDoesntHave('inventoryItems')
                                         ->with(['customer', 'preorderItems.product'])
                                         ->get(),
+            'availableItems' => InventoryItem::where('status', 'available')
+                                            ->with(['product'])
+                                            ->latest()
+                                            ->get(),
             'inventoryItems' => InventoryItem::with(['product', 'preorder.customer'])
                                            ->latest()
                                            ->get()
         ]);
+    }
+
+    public function assignAvailableProduct($inventoryItemId, $preorderId)
+    {
+        DB::transaction(function () use ($inventoryItemId, $preorderId) {
+            $inventoryItem = InventoryItem::findOrFail($inventoryItemId);
+            $preorder = Preorder::findOrFail($preorderId);
+            
+            $inventoryItem->update([
+                'status' => 'reserved',
+                'preorder_id' => $preorder->id
+            ]);
+            
+            $preorder->update(['status' => 'ready_for_pickup']);
+            
+            session()->flash('message', 'Available product assigned to new pre-order successfully.');
+        });
     }
 }

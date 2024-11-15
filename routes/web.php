@@ -19,7 +19,9 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AdminController;
 use App\Livewire\Ecommerce\Home as EcommerceHome;
-use App\Livewire\Customers\Orders;
+use App\Livewire\Ecommerce\CustomerOrders;
+use App\Livewire\Ecommerce\Profile;
+use App\Livewire\Admin\AdminOrders;
 
 // Public routes
 Route::get('/', function () {
@@ -57,15 +59,14 @@ Route::middleware(['auth'])->group(function () {
     })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
     Route::get('/sales', App\Livewire\Sales\Index::class)->name('sales.index');
-    Route::get('/customers/orders', Orders::class)->name('customers.orders');
-    Route::get('/customers/orders/{order}', [App\Livewire\Customers\Orders::class, 'show'])->name('customers.orders.show');
+    Route::get('/profile', Profile::class)->name('profile');
 });
 
 // Protected routes (require auth and email verification)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/home', EcommerceHome::class)->name('home');
-    Route::get('/cart', \App\Livewire\Cart::class)->name('cart');
-    Route::get('/my-orders', App\Livewire\Customers\Orders::class)->name('customer.orders');
+    Route::get('/cart', \App\Livewire\Ecommerce\Cart::class)->name('cart');
+    Route::get('/my-orders', CustomerOrders::class)->name('customer.orders');
 
     // Admin routes
     Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->group(function () {
@@ -77,6 +78,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/payments', PaymentsIndex::class)->name('payments.index');
         Route::get('/payments/history/{account_receivable?}', History::class)->name('payments.history');
         Route::get('/inventory', \App\Livewire\Inventory\Index::class)->name('inventory.index');
+        Route::get('/admin/orders', AdminOrders::class)->name('admin.orders');
     });
 });
 

@@ -18,18 +18,17 @@ class Preorder extends Model
     protected $fillable = [
         'customer_id',
         'loan_duration',
-        'total_amount',
-        'status',
-        'order_date',
-        'monthly_payment',
-        'interest_rate',
-        'payment_method',
         'bought_location',
+        'status',
+        'payment_method',
+        'order_date',
+        'total_amount',
+        'monthly_payment',
+        'interest_rate'
     ];
 
     protected $casts = [
-        'order_date' => 'datetime',
-        'bought_location' => 'string',
+        'order_date' => 'date'
     ];
 
     // Add this line to make bought_location nullable

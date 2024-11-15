@@ -22,7 +22,7 @@
                     <x-slot:trigger>
                         <x-button icon="o-user-circle" class="btn-ghost text-[#3498db] hover:text-[#2ecc71]" />
                     </x-slot:trigger>
-                    <x-menu-item title="Edit Profile" icon="o-user-circle" wire:click="$emit('openEditProfileModal')" />
+                    <x-menu-item title="Edit Profile" icon="o-user-circle" wire:click="$dispatch('openProfileManagement')" />
                     <x-menu-item title="Logout" icon="o-arrow-left-on-rectangle" wire:click="logout" />
                 </x-dropdown>
             </div>
@@ -74,5 +74,12 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="flex justify-between items-center">
+        <a href="{{ route('customer.orders') }}" class="text-blue-600 hover:text-blue-800">
+            View My Orders
+        </a>
+        <!-- Other cart actions -->
     </div>
 </div>

@@ -72,6 +72,49 @@
                     @endforeach
                 </tbody>
             </table>
+
+            <!-- Available Products Section -->
+            <div class="mt-8">
+                <h2 class="text-lg font-semibold mb-4">Available Products</h2>
+                <div class="bg-white shadow-md rounded-lg overflow-hidden">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="px-4 py-2 text-left">Product</th>
+                                <th class="px-4 py-2 text-left">Serial Number</th>
+                                <th class="px-4 py-2 text-left">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($availableItems as $item)
+                                <tr class="border-b">
+                                    <td class="px-4 py-2">{{ $item->product->product_name }}</td>
+                                    <td class="px-4 py-2">{{ $item->serial_number }}</td>
+                                    <td class="px-4 py-2">
+                                        @if($pendingPreorders->isNotEmpty())
+                                            <x-dropdown>
+                                                <x-slot name="trigger">
+                                                    <x-button>Assign to Pre-order</x-button>
+                                                </x-slot>
+                                                
+                                                @foreach($pendingPreorders as $preorder)
+                                                    <x-dropdown-item 
+                                                        wire:click="assignAvailableProduct({{ $item->id }}, {{ $preorder->id }})"
+                                                    >
+                                                        Order #{{ $preorder->id }} - {{ $preorder->customer->name }}
+                                                    </x-dropdown-item>
+                                                @endforeach
+                                            </x-dropdown>
+                                        @else
+                                            <span class="text-gray-500">No pending pre-orders</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
