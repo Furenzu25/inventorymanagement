@@ -14,11 +14,17 @@ class InventoryItem extends Model
         'preorder_id'
     ];
 
-    public static function generateSerialNumber()
+    public static function generateSerialNumber($productId)
     {
         do {
-            // Format: RT-YYYY-XXXXX (RT for Rosels Trading)
-            $serial = 'RT-' . date('Y') . '-' . strtoupper(Str::random(5));
+            // Format: RT-{PRODUCT_ID}-{YEAR}-{RANDOM}
+            // Example: RT-001-2024-XY123
+            $serial = sprintf(
+                'RT-%03d-%s-%s',
+                $productId,
+                date('Y'),
+                strtoupper(Str::random(5))
+            );
         } while (static::where('serial_number', $serial)->exists());
 
         return $serial;

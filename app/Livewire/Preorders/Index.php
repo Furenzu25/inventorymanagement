@@ -11,6 +11,7 @@ use Livewire\WithPagination;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\InventoryItem;
+use App\Models\AccountReceivable;
 
 class Index extends Component
 {
@@ -141,21 +142,13 @@ class Index extends Component
 
     public function render()
     {
-        $preorders = Preorder::with(['customer', 'preorderItems.product'])
-            ->where(function ($query) {
-                $query->whereHas('customer', function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%');
-                })->orWhereHas('preorderItems.product', function ($q) {
-                    $q->where('product_name', 'like', '%' . $this->search . '%');
-                });
-            })
-            ->orderBy($this->sortBy['column'], $this->sortBy['direction'])
-            ->paginate(10);
-
-        $this->loadCustomersAndProducts();
-
         return view('livewire.preorders.index', [
-            'preorders' => $preorders,
+            'preorders' => Preorder::with([
+                'customer:id,name,email',
+                'preorderItems.product:id,product_name,price'
+            ])
+            ->latest()
+            ->paginate(10)
         ]);
     }
 
@@ -209,7 +202,25 @@ class Index extends Component
     public function approvePreorder($id)
     {
         $preorder = Preorder::findOrFail($id);
-        $preorder->update(['status' => 'Approved']);
+        
+        DB::transaction(function () use ($preorder) {
+            // Update preorder status
+            $preorder->update(['status' => 'approved']);
+            
+            // If payment method is monthly/loan, automatically create AR
+            if ($preorder->payment_method === 'Monthly') {
+                AccountReceivable::create([
+                    'preorder_id' => $preorder->id,
+                    'customer_id' => $preorder->customer_id,
+                    'total_amount' => $preorder->total_amount,
+                    'remaining_balance' => $preorder->total_amount,
+                    'monthly_payment' => $preorder->monthly_payment,
+                    'next_payment_date' => now()->addMonth(),
+                    'status' => 'pending'
+                ]);
+            }
+        });
+        
         session()->flash('message', 'Pre-order approved successfully.');
     }
 

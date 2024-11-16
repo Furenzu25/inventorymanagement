@@ -76,10 +76,4 @@
         </div>
     </div>
 
-    <div class="flex justify-between items-center">
-        <a href="{{ route('customer.orders') }}" class="text-blue-600 hover:text-blue-800">
-            View My Orders
-        </a>
-        <!-- Other cart actions -->
-    </div>
 </div>

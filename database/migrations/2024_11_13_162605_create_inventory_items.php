@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('serial_number')->unique();
             $table->string('status')->default('in_stock'); // in_stock, reserved, sold
             $table->foreignId('preorder_id')->nullable()->constrained('preorders');
+            $table->timestamp('cancellation_date')->nullable()->after('preorder_id');
             $table->timestamps();
         });
     }

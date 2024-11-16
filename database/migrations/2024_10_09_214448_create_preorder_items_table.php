@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('preorder_id')->constrained('preorders')->onDelete('cascade'); // Links to Preorder
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');   // Links to Product
+            $table->foreignId('variant_id')->nullable()->constrained('product_variants')->after('product_id');
             $table->integer('quantity'); // The quantity of the product ordered
             $table->decimal('price', 10, 2); // The price of the product at the time of the preorder
             $table->timestamps();

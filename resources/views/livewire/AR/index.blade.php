@@ -77,39 +77,5 @@
         </div>
     </div>
 
-    <div class="mt-8">
-        <h2 class="text-lg font-semibold mb-4">Convert Preorders to AR</h2>
-        @if($preorders->isNotEmpty())
-            <div class="bg-white shadow-md rounded-lg overflow-hidden">
-                <div class="p-4">
-                    <table class="w-full">
-                        <thead>
-                            <tr class="bg-gray-100">
-                                <th class="px-4 py-2 text-left text-gray-600">Preorder ID</th>
-                                <th class="px-4 py-2 text-left text-gray-600">Customer</th>
-                                <th class="px-4 py-2 text-left text-gray-600">Total Amount</th>
-                                <th class="px-4 py-2 text-left text-gray-600">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($preorders as $preorder)
-                                <tr class="border-b hover:bg-gray-50">
-                                    <td class="px-4 py-3">{{ $preorder->id }}</td>
-                                    <td class="px-4 py-3">{{ $preorder->customer->name }}</td>
-                                    <td class="px-4 py-3">₱{{ number_format($preorder->total_amount, 2) }}</td>
-                                    <td class="px-4 py-3">
-                                        <x-button wire:click="createARFromPreorder({{ $preorder->id }})" class="bg-green-500 hover:bg-green-600 text-white text-xs py-1 px-2 rounded">
-                                            Convert to AR
-                                        </x-button>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        @else
-            <p class="text-gray-600">No preorders available for conversion.</p>
-        @endif
-    </div>
+   
 </div>
