@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('account_receivable_id')->constrained()->onDelete('cascade');
+            $table->foreignId('account_receivable_id')->constrained('account_receivables')->onDelete('cascade');
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->foreignId('preorder_id')->constrained()->onDelete('cascade');
             $table->decimal('total_amount', 10, 2);

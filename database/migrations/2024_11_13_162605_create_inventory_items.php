@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('inventory_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id')->constrained('products');
-            $table->string('serial_number')->unique();
-            $table->string('status')->default('in_stock'); // in_stock, reserved, sold
-            $table->foreignId('preorder_id')->nullable()->constrained('preorders');
-            $table->timestamp('cancellation_date')->nullable()->after('preorder_id');
+            $table->foreignId('product_id')->constrained();
+            $table->string('serial_number');
+            $table->string('status')->default('in_stock');
+            $table->foreignId('preorder_id')->nullable()->constrained();
+            $table->timestamp('cancellation_date')->nullable();
             $table->timestamps();
         });
     }

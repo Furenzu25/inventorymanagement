@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('product_model');
             $table->string('product_brand');
             $table->string('product_description');
+            $table->text('product_details');
             $table->string('product_category');
             $table->decimal('price', 8, 2);
             $table->string('storage_capacity');

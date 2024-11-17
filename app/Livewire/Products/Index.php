@@ -25,6 +25,7 @@ class Index extends Component
         'product_brand' => '',
         'product_category' => '',
         'product_description' => '',
+        'product_details' => '',
         'price' => '',
         'storage_capacity' => '',
         'status' => 'active',
@@ -40,6 +41,7 @@ class Index extends Component
         'product.product_brand' => 'required',
         'product.product_category' => 'required',
         'product.product_description' => 'required',
+        'product.product_details' => 'required',
         'product.storage_capacity' => 'required',
         'product.price' => 'required|numeric',
         'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
@@ -106,6 +108,7 @@ class Index extends Component
             'product_brand' => '',
             'product_category' => '',
             'product_description' => '',
+            'product_details' => '',
             'price' => '',
             'storage_capacity' => '',
             'status' => 'active',
@@ -118,7 +121,7 @@ class Index extends Component
     public function updatedImage()
     {
         $this->imageUploaded = true;
-        session()->flash('message', 'Image uploaded successfully.');
+        
     }
 
     public function closeModal()

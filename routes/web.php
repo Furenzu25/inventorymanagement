@@ -22,11 +22,10 @@ use App\Livewire\Ecommerce\Home as EcommerceHome;
 use App\Livewire\Ecommerce\CustomerOrders;
 use App\Livewire\Ecommerce\Profile;
 use App\Livewire\Admin\AdminOrders;
+use App\Livewire\Landing;
 
 // Public routes
-Route::get('/', function () {
-    return redirect()->route('login');
-});
+Route::get('/', \App\Livewire\Landing::class)->name('landing');
 Route::get('/login', Login::class)->name('login');
 Route::get('/register', Register::class)->name('register');
 Route::get('/forgot-password', ForgotPassword::class)->name('password.request');
@@ -77,7 +76,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/ar', ARIndex::class)->name('ar.index');
         Route::get('/payments', PaymentsIndex::class)->name('payments.index');
         Route::get('/payments/history/{account_receivable?}', History::class)->name('payments.history');
-        Route::get('/inventory', \App\Livewire\Inventory\Index::class)->name('inventory.index');
+        Route::get('/inventory', InventoryIndex::class)->name('inventory.index');
         Route::get('/admin/orders', AdminOrders::class)->name('admin.orders');
     });
 });

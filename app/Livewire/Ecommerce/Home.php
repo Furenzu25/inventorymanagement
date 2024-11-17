@@ -8,15 +8,11 @@ use Illuminate\Support\Facades\Auth;
 
 class Home extends Component
 {
-  
-
+    public $cartCount = 0;
     protected $listeners = [
-        
         'cart-updated' => 'updateCartCount',
         'profile-updated' => '$refresh',
     ];
-
-    
 
     public function render()
     {
@@ -32,11 +28,6 @@ class Home extends Component
         return redirect()->route('login');
     }
 
-    public function getCartCountProperty()
-    {
-        return count($this->cart);
-    }
-
     public function updateCartCount()
     {
         $cart = session('cart', []);
@@ -46,6 +37,9 @@ class Home extends Component
     public function mount()
     {
         $this->updateCartCount();
+        if (Auth::check()) {
+            Auth::user()->load('customer');
+        }
     }
 
     public function editProfile()
@@ -53,41 +47,17 @@ class Home extends Component
         return redirect()->route('profile');
     }
 
-    public function addToCart()
+    public function getProductDetails($productId)
     {
-        $cart = session('cart', []);
-        $product = $this->selectedProduct;
-        $variant = $this->selectedVariant ? ProductVariant::find($this->selectedVariant) : null;
-        
-        $cartItemKey = $this->findCartItem($product->id, $this->selectedVariant);
-        
-        if ($cartItemKey !== false) {
-            $cart[$cartItemKey]['quantity'] += $this->quantity;
-        } else {
-            $cart[] = [
-                'id' => $product->id,
-                'name' => $product->product_name,
-                'price' => $variant ? ($product->price + $variant->price_adjustment) : $product->price,
-                'quantity' => $this->quantity,
-                'variant_id' => $this->selectedVariant,
-                'variant_name' => $variant ? $variant->name : null,
-            ];
-        }
-
-        session(['cart' => $cart]);
-        $this->updateCartCount();
-        $this->dispatch('cart-updated');
-        $this->showAddToCartModal = false;
-    }
-
-    private function findCartItem($productId, $variantId)
-    {
-        $cart = session('cart', []);
-        foreach ($cart as $key => $item) {
-            if ($item['id'] === $productId && $item['variant_id'] === $variantId) {
-                return $key;
-            }
-        }
-        return false;
+        $product = Product::findOrFail($productId);
+        return [
+            'product_name' => $product->product_name,
+            'product_model' => $product->product_model,
+            'product_brand' => $product->product_brand,
+            'product_category' => $product->product_category,
+            'storage_capacity' => $product->storage_capacity,
+            'product_description' => $product->product_description,
+            'product_details' => $product->product_details
+        ];
     }
 }

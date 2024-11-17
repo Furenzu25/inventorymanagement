@@ -4,6 +4,7 @@ namespace App\Livewire\Ecommerce;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
@@ -14,6 +15,8 @@ class Profile extends Component
     public $validIdImage;
     public $profileImage;
     public $currentTab = 'profile';
+    public $validIdProgress = false;
+    public $profileProgress = false;
     public $customer = [
         'name' => '',
         'birthday' => '',
@@ -40,6 +43,40 @@ class Profile extends Component
     public function switchTab($tab)
     {
         $this->currentTab = $tab;
+    }
+
+    public function updatedValidIdImage()
+    {
+        $this->validateOnly('validIdImage', [
+            'validIdImage' => 'image|max:5120'
+        ]);
+        
+        $this->validIdProgress = true;
+        
+        try {
+            if ($this->validIdImage instanceof TemporaryUploadedFile) {
+                session()->flash('valid_id_message', 'Valid ID uploaded successfully!');
+            }
+        } finally {
+            $this->validIdProgress = false;
+        }
+    }
+
+    public function updatedProfileImage()
+    {
+        $this->validateOnly('profileImage', [
+            'profileImage' => 'image|max:5120'
+        ]);
+        
+        $this->profileProgress = true;
+        
+        try {
+            if ($this->profileImage instanceof TemporaryUploadedFile) {
+                session()->flash('profile_message', 'Profile picture uploaded successfully!');
+            }
+        } finally {
+            $this->profileProgress = false;
+        }
     }
 
     public function updateProfile()
@@ -82,7 +119,10 @@ class Profile extends Component
         }
 
         $customer->save();
-        session()->flash('message', 'Profile updated successfully.');
+        session()->flash('message', 'Profile updated successfully!');
+        
+        // Redirect to home page
+        return redirect()->route('home');
     }
 
     public function render()

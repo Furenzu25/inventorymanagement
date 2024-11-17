@@ -9,14 +9,17 @@ use Livewire\WithFileUploads;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Payment;
+use Illuminate\Support\Facades\DB;
 
 class Index extends Component
 {
     use WithPagination;
     use WithFileUploads;
 
-    #[Rule('nullable|image|max:5120')] // 5MB Max
     public $validIdImage;
+    public $oldImage;
+    public $existingImage;
+    public $imageUploaded = false;
 
     public $search = '';
     public $drawer = false;
@@ -42,7 +45,6 @@ class Index extends Component
     ];
 
     public $editReason = '';
-    public $imageUploaded = false;
     public $selectedImage = null;
 
     public function create()
@@ -54,15 +56,14 @@ class Index extends Component
         $this->imageUploaded = false;
     }
 
-    public function edit($id)
+    public function edit($customerId)
     {
-        $this->resetValidation();
-        $customer = Customer::findOrFail($id);
+        $customer = Customer::findOrFail($customerId);
+        $this->customerId = $customerId;
         $this->customer = $customer->toArray();
-        $this->customerId = $id;
+        $this->existingImage = $customer->valid_id_image;
+        $this->oldImage = $customer->valid_id_image;
         $this->modalOpen = true;
-        $this->imageUploaded = false;
-        session()->flash('info', 'Please provide a valid reason for editing.');
     }
 
     public function delete($id)
@@ -76,24 +77,39 @@ class Index extends Component
     {
         $this->validate();
 
-        if ($this->customerId) {
-            $customer = Customer::findOrFail($this->customerId);
-            $customer->update($this->customer);
-            $message = 'Customer updated successfully.';
-        } else {
-            $customer = Customer::create($this->customer);
-            $message = 'Customer created successfully.';
-        }
+        try {
+            DB::transaction(function () {
+                if ($this->customerId) {
+                    $customer = Customer::findOrFail($this->customerId);
+                    
+                    // Handle image update
+                    if ($this->validIdImage) {
+                        // Delete old image if it exists
+                        if ($this->oldImage) {
+                            Storage::disk('public')->delete($this->oldImage);
+                        }
+                        $imagePath = $this->validIdImage->store('customers', 'public');
+                        $this->customer['valid_id_image'] = $imagePath;
+                    }
+                    
+                    $customer->update($this->customer);
+                } else {
+                    // Handle new image upload
+                    if ($this->validIdImage) {
+                        $imagePath = $this->validIdImage->store('customers', 'public');
+                        $this->customer['valid_id_image'] = $imagePath;
+                    }
+                    
+                    Customer::create($this->customer);
+                }
+            });
 
-        if ($this->validIdImage) {
-            $imagePath = $this->validIdImage->store('valid_ids', 'public');
-            $customer->valid_id_image = $imagePath;
-            $customer->save();
+            session()->flash('message', $this->customerId ? 'Customer updated successfully.' : 'Customer created successfully.');
+            $this->modalOpen = false;
+            $this->resetCustomer();
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error: ' . $e->getMessage());
         }
-
-        $this->modalOpen = false;
-        $this->resetCustomer();
-        session()->flash('message', $message);
     }
 
     public function showCustomerDetails($customerId)
@@ -144,15 +160,26 @@ class Index extends Component
 
     private function resetCustomer()
     {
-        $this->reset(['customer', 'customerId', 'validIdImage', 'editReason', 'imageUploaded']);
+        $this->customer = [
+            'name' => '',
+            'birthday' => '',
+            'address' => '',
+            'phone_number' => '',
+            'reference_contactperson' => '',
+            'reference_contactperson_phonenumber' => '',
+            'email' => '',
+            'valid_id' => '',
+            'valid_id_image' => '',
+        ];
+        $this->validIdImage = null;
+        $this->oldImage = null;
+        $this->existingImage = null;
+        $this->imageUploaded = false;
+        $this->customerId = null;
     }
 
     public function updatedValidIdImage()
     {
-        $this->validate([
-            'validIdImage' => 'image|max:5120', // 5MB Max
-        ]);
-
         $this->imageUploaded = true;
     }
 

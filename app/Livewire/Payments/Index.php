@@ -106,8 +106,10 @@ class Index extends Component
             // Create payment record
             $payment = Payment::create([
                 'account_receivable_id' => $this->selectedAR->id,
-                'amount' => $this->payment['amount_paid'],
-                'payment_date' => $this->payment['payment_date']
+                'amount_paid' => $this->payment['amount_paid'],
+                'payment_date' => $this->payment['payment_date'],
+                'due_amount' => $this->payment['due_amount'],
+                'remaining_balance' => $this->calculatedRemainingBalance
             ]);
 
             // Update AR balances
@@ -118,14 +120,19 @@ class Index extends Component
             if ($this->selectedAR->remaining_balance <= 0) {
                 $this->selectedAR->status = 'paid';
                 
-                // Create sale record
+                // Calculate interest earned
+                $interestEarned = $this->selectedAR->total_paid - $this->selectedAR->total_amount;
+                
+                // Create sale record with interest_earned
                 Sale::create([
                     'preorder_id' => $this->selectedAR->preorder_id,
                     'customer_id' => $this->selectedAR->customer_id,
                     'account_receivable_id' => $this->selectedAR->id,
                     'total_amount' => $this->selectedAR->total_amount,
+                    'interest_earned' => $interestEarned,
                     'payment_method' => 'loan',
-                    'completion_date' => now()
+                    'completion_date' => now(),
+                    'status' => 'completed'
                 ]);
                 
                 // Update inventory item status
@@ -134,17 +141,26 @@ class Index extends Component
             }
             
             $this->selectedAR->save();
+
+            // Refresh the payment history immediately
+            $this->selectedCustomerPayments = Payment::where('account_receivable_id', $this->selectedAR->id)
+                ->orderBy('payment_date', 'desc')
+                ->get();
         });
 
         $this->recordPaymentOpen = false;
         $this->reset('payment');
         session()->flash('message', 'Payment recorded successfully.');
+        
+        // Refresh the component and show payment history
+        $this->dispatch('payment-recorded')->to('payments.index');
+        $this->paymentHistoryOpen = true;
     }
 
     public function render()
     {
         $customers = Customer::query()
-            ->with('accountReceivables')
+            ->with(['accountReceivables.preorder.preorderItems.product', 'accountReceivables.payments'])
             ->when($this->search, function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%');
             })
@@ -163,5 +179,13 @@ class Index extends Component
         
         $amountPaid = floatval($this->payment['amount_paid'] ?? 0);
         return $this->selectedAR->remaining_balance - $amountPaid;
+    }
+
+    public function getListeners()
+    {
+        return [
+            'refreshComponent' => '$refresh',
+            'echo:payment-recorded,PaymentRecorded' => '$refresh'
+        ];
     }
 }

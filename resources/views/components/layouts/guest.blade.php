@@ -9,47 +9,41 @@
     @livewireStyles
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- Additional styles and scripts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/TextPlugin.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
 
     <style>
-        /* Facebook-style font stack */
         :root {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
-                "Helvetica Neue", Helvetica, Arial, sans-serif;
+            --color-primary: #401B1B;
+            --color-secondary: #72383D;
+            --color-tertiary: #AB644B;
+            --color-quaternary: #9CABB4;
+            --color-quinary: #D2DCE6;
+            --color-senary: #F2F2EB;
         }
 
-        .bg-gradient-animate {
-            background-size: 400% 400%;
-            animation: gradientAnimation 15s ease infinite;
-        }
-        @keyframes gradientAnimation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to bottom right, var(--color-senary), var(--color-quinary));
         }
 
-        /* Facebook-style input fields */
-        input {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
-                "Helvetica Neue", Helvetica, Arial, sans-serif;
-            font-size: 17px;
+        .company-name {
+            background: linear-gradient(45deg, var(--color-primary), var(--color-secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
         }
 
-        input::placeholder {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
-                "Helvetica Neue", Helvetica, Arial, sans-serif;
+        .auth-card {
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
-<body class="antialiased min-h-screen bg-gradient-animate bg-gradient-to-r from-[#2c3e50] via-[#3498db] to-[#2ecc71]">
+<body class="bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6]">
     <div id="app-wrapper" class="min-h-screen">
         {{ $slot }}
     </div>
-
-    
+    @livewireScripts
 </body>
 </html>

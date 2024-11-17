@@ -10,6 +10,7 @@ class Customer extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'name',
         'birthday',
         'address',
@@ -19,6 +20,7 @@ class Customer extends Model
         'email',
         'valid_id',
         'valid_id_image',
+        'profile_image',
     ];
 
     public function preorders()
@@ -28,7 +30,7 @@ class Customer extends Model
 
     public function user()
     {
-        return $this->hasOne(User::class);
+        return $this->belongsTo(User::class);
     }
 
     public function payments()

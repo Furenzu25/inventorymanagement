@@ -22,7 +22,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'is_admin',
-        'customer_id',
     ];
 
     /**
@@ -59,14 +58,12 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function customer()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->hasOne(Customer::class);
     }
 
     public function createCustomerProfile($customerData)
     {
-        $customer = Customer::create($customerData);
-        $this->customer()->associate($customer);
-        $this->save();
-        return $customer;
+        $customerData['user_id'] = $this->id;
+        return $this->customer()->create($customerData);
     }
 }
