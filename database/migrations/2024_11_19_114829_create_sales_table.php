@@ -6,31 +6,31 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('account_receivable_id')->constrained('account_receivables')->onDelete('cascade');
+            $table->foreignId('account_receivable_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
-            $table->foreignId('preorder_id')->constrained()->onDelete('cascade');
+            $table->foreignId('preorder_id')->nullable()->constrained()->onDelete('set null');
             $table->decimal('total_amount', 10, 2);
             $table->decimal('interest_earned', 10, 2);
             $table->date('completion_date');
             $table->string('payment_method');
-            $table->string('status')->default('completed');
+            $table->string('status');
             $table->text('notes')->nullable();
             $table->timestamps();
-            
-            // Indexes for better query performance
-            $table->index('account_receivable_id');
-            $table->index('customer_id');
-            $table->index('preorder_id');
-            $table->index('completion_date');
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('sales');
     }
-}; 
+};

@@ -47,7 +47,7 @@
                                             <img src="{{ Storage::url($product->image) }}" alt="{{ $product->product_name }}" class="w-full h-full object-cover rounded-xl transition-transform duration-300 group-hover:scale-110">
                                         @else
                                             <div class="w-full h-full bg-gradient-to-br from-[#D2DCE6] to-[#9CABB4] flex items-center justify-center rounded-xl">
-                                                <x-icon name="o-photograph" class="w-16 h-16 text-white" />
+                                                <x-icon name="o-photo" class="w-16 h-16 text-white" />
                                             </div>
                                         @endif
                                     </div>

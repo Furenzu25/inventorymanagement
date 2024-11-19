@@ -5,21 +5,21 @@
         </div>
     @endif
 
-    <x-header title="Pre-orders" class="text-[#401B1B] mb-6">
-        <x-slot:actions>
-            <x-button label="Create Pre-order" wire:click="create" class="bg-[#72383D] hover:bg-[#401B1B] text-white font-bold py-2 px-4 rounded transition duration-300" />
-        </x-slot:actions>
-    </x-header>
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+        <x-header title="Pre-orders" class="text-[#401B1B] text-3xl font-bold" />
+        <div class="flex space-x-2 mt-4 md:mt-0">
+            <x-input 
+                icon="o-magnifying-glass" 
+                placeholder="Search pre-orders..." 
+                wire:model.live="search" 
+                class="pl-10 w-full bg-[#F2F2EB]/50 border-[#72383D]/20 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30 rounded-md shadow-sm"
+            />
+            
+        </div>
+    </div>
 
     <div class="bg-white shadow-lg rounded-lg overflow-hidden">
         <div class="p-6">
-            <div class="flex justify-between items-center mb-4">
-                <x-input icon="o-magnifying-glass" placeholder="Search pre-orders..." wire:model.live="search" class="w-64" />
-                <div class="flex space-x-2">
-                    <x-button icon="o-adjustments-horizontal" label="Filter" class="bg-[#9CABB4] hover:bg-[#72383D] text-white transition duration-300" />
-                    <x-button icon="o-arrows-up-down" label="Sort" class="bg-[#9CABB4] hover:bg-[#72383D] text-white transition duration-300" />
-                </div>
-            </div>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>

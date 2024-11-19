@@ -1,5 +1,16 @@
 <div class="bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] min-h-screen p-6">
-    <x-header title="Account Receivables Management" class="text-[#401B1B] text-3xl font-bold mb-6" />
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+        <x-header title="Account Receivables Management" class="text-[#401B1B] text-3xl font-bold" />
+        <div class="flex space-x-2 mt-4 md:mt-0">
+            <x-input 
+                icon="o-magnifying-glass" 
+                placeholder="Search AR..." 
+                wire:model.live="search" 
+                class="pl-10 w-full bg-[#F2F2EB]/50 border-[#72383D]/20 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30 rounded-md shadow-sm"
+            />
+            
+        </div>
+    </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <x-stat
@@ -25,13 +36,6 @@
 
     <div class="bg-white shadow-lg rounded-lg overflow-hidden">
         <div class="p-6">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-6">
-                <x-input icon="o-magnifying-glass" placeholder="Search AR..." wire:model.live="search" class="mb-4 md:mb-0 md:w-64" />
-                <div class="flex space-x-2">
-                    <x-button icon="o-adjustments-horizontal" label="Filter" class="bg-[#9CABB4] hover:bg-[#72383D] text-white transition duration-300" />
-                    <x-button icon="o-arrows-up-down" label="Sort" class="bg-[#9CABB4] hover:bg-[#72383D] text-white transition duration-300" />
-                </div>
-            </div>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>

@@ -72,11 +72,8 @@ class Index extends Component
     {
         $this->validate();
 
-        // Ensure price is a float
-        $this->product['price'] = (float) $this->product['price'];
-
-        if (isset($this->product['id'])) {
-            $product = Product::findOrFail($this->product['id']);
+        if ($this->productId) {
+            $product = Product::findOrFail($this->productId);
             $message = 'Product updated successfully.';
         } else {
             $product = new Product();
@@ -86,18 +83,27 @@ class Index extends Component
         $product->fill($this->product);
 
         if ($this->image) {
-            if ($product->image) {
+            if ($product->image && Storage::disk('public')->exists($product->image)) {
                 Storage::disk('public')->delete($product->image);
             }
-            $imagePath = $this->image->store('products', 'public');
-            $product->image = $imagePath;
+
+            try {
+                $imagePath = $this->image->store('products', 'public');
+                $product->image = $imagePath;
+            } catch (\Exception $e) {
+                session()->flash('error', 'Error uploading image: ' . $e->getMessage());
+                return;
+            }
         }
 
-        $product->save();
-
-        $this->modalOpen = false;
-        $this->reset(['product', 'image', 'existingImage', 'imageUploaded']);
-        session()->flash('message', $message);
+        try {
+            $product->save();
+            $this->modalOpen = false;
+            $this->reset(['product', 'image', 'existingImage', 'imageUploaded']);
+            session()->flash('message', $message);
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error saving product: ' . $e->getMessage());
+        }
     }
 
     public function resetProduct()
@@ -120,8 +126,10 @@ class Index extends Component
 
     public function updatedImage()
     {
+        $this->validate([
+            'image' => 'image|mimes:jpeg,png,jpg,gif|max:5120'
+        ]);
         $this->imageUploaded = true;
-        
     }
 
     public function closeModal()
@@ -138,12 +146,14 @@ class Index extends Component
 
     public function render()
     {
-        $products = Product::where('product_name', 'like', '%'.$this->search.'%')
-            ->orderBy($this->sortBy['column'], $this->sortBy['direction'])
-            ->paginate(10);
-
         return view('livewire.products.index', [
-            'products' => $products
+            'products' => Product::query()
+                ->when($this->search, function($query) {
+                    $query->where('product_name', 'like', '%' . $this->search . '%')
+                        ->orWhere('product_model', 'like', '%' . $this->search . '%')
+                        ->orWhere('product_brand', 'like', '%' . $this->search . '%');
+                })
+                ->paginate(10)
         ]);
     }
 }
