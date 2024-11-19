@@ -40,7 +40,7 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6]">
+<body>
     <div id="app-wrapper" class="min-h-screen">
         {{ $slot }}
     </div>

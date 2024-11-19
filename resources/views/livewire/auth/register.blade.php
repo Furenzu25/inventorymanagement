@@ -1,5 +1,4 @@
-<div class="flex items-center justify-center min-h-screen p-6 bg-gradient-to-br from-[#401B1B] via-[#72383D] via-[#AB644B] via-[#9CABB4] via-[#D2DCE6] to-[#F2F2EB]">
-    <div class="w-full max-w-md">
+<div class="flex items-center justify-center min-h-screen p-6 bg-gradient-to-br from-[#401B1B] from-20% via-[#72383D] via-40% via-[#AB644B] via-60% via-[#9CABB4] via-80% to-[#F2F2EB]">    <div class="w-full max-w-md">
         <div class="auth-card bg-white/90 backdrop-blur-sm shadow-lg rounded-lg overflow-hidden">
             <div class="p-8">
                 <div class="mb-8 text-center">
@@ -73,6 +72,11 @@
                     <a href="{{ route('login') }}" class="text-[#72383D] hover:text-[#401B1B] transition-colors">
                         <i class="fas fa-sign-in-alt mr-1"></i> Already have an account? Sign in
                     </a>
+                    <div class="mt-4">
+                        <a href="{{ route('landing') }}" class="text-[#72383D] hover:text-[#401B1B] transition-colors">
+                            <i class="fas fa-home mr-1"></i> Back to Landing Page
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
