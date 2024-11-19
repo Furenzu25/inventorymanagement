@@ -26,6 +26,10 @@ class Index extends Component
         'payment_date' => ''
     ];
     public $selectedAR = null;
+    public $editingPayment = null;
+    public $isEditing = false;
+    public $originalPayment = null;
+    public $confirmingReverse = null;
 
     protected $listeners = ['refreshComponent' => '$refresh'];
 
@@ -97,6 +101,8 @@ class Index extends Component
     public function closeRecordPayment()
     {
         $this->recordPaymentOpen = false;
+        $this->isEditing = false;
+        $this->editingPayment = null;
         $this->reset('payment');
     }
 
@@ -187,5 +193,128 @@ class Index extends Component
             'refreshComponent' => '$refresh',
             'echo:payment-recorded,PaymentRecorded' => '$refresh'
         ];
+    }
+
+    public function reversePayment(Payment $payment)
+    {
+        DB::transaction(function () use ($payment) {
+            $ar = $payment->accountReceivable;
+            
+            // Store the payment details before reversal
+            $this->selectedAR = $ar;
+            $this->payment = [
+                'due_amount' => $payment->due_amount,
+                'amount_paid' => $payment->amount_paid,
+                'payment_date' => $payment->payment_date->format('Y-m-d')
+            ];
+            
+            // Revert AR balances
+            $ar->total_paid -= $payment->amount_paid;
+            $ar->remaining_balance += $payment->amount_paid;
+            $ar->status = 'partial';
+            $ar->save();
+
+            // Update subsequent payments' remaining balance
+            $subsequentPayments = Payment::where('account_receivable_id', $ar->id)
+                ->where('id', '>', $payment->id)
+                ->get();
+
+            foreach ($subsequentPayments as $subsequentPayment) {
+                $subsequentPayment->remaining_balance += $payment->amount_paid;
+                $subsequentPayment->save();
+            }
+
+            // Delete the payment
+            $payment->delete();
+        });
+
+        // Reset confirmation state
+        $this->confirmingReverse = null;
+        
+        // Open the record payment modal with the reversed payment details
+        $this->recordPaymentOpen = true;
+        session()->flash('message', 'Payment reversed. You can now adjust the payment amount.');
+    }
+
+    public function processPaymentReversion()
+    {
+        DB::transaction(function () {
+            $payment = $this->editingPayment;
+            $ar = $payment->accountReceivable;
+            
+            // Revert this payment and all subsequent payments
+            $subsequentPayments = Payment::where('account_receivable_id', $ar->id)
+                ->where('id', '>=', $payment->id)
+                ->orderBy('id', 'asc')
+                ->get();
+
+            // First, revert AR balances
+            $ar->total_paid -= $payment->amount_paid;
+            $ar->remaining_balance += $payment->amount_paid;
+            
+            // Record the new payment
+            $newPayment = Payment::create([
+                'account_receivable_id' => $ar->id,
+                'amount_paid' => $this->payment['amount_paid'],
+                'payment_date' => $this->payment['payment_date'],
+                'due_amount' => $this->payment['due_amount'],
+                'remaining_balance' => $ar->remaining_balance - $this->payment['amount_paid']
+            ]);
+
+            // Update AR with new payment
+            $ar->total_paid += $this->payment['amount_paid'];
+            $ar->remaining_balance -= $this->payment['amount_paid'];
+            
+            // Update AR status
+            if ($ar->remaining_balance <= 0) {
+                $ar->status = 'paid';
+            } else {
+                $ar->status = 'partial';
+            }
+            
+            $ar->save();
+
+            // Delete the old payment and all subsequent payments
+            foreach ($subsequentPayments as $subsequentPayment) {
+                $subsequentPayment->delete();
+            }
+        });
+
+        $this->recordPaymentOpen = false;
+        $this->isEditing = false;
+        $this->editingPayment = null;
+        $this->reset('payment');
+        session()->flash('message', 'Payment reversed and updated successfully.');
+        
+        $this->dispatch('payment-recorded')->to('payments.index');
+    }
+
+    public function deletePayment(Payment $payment)
+    {
+        DB::transaction(function () use ($payment) {
+            $ar = $payment->accountReceivable;
+            
+            // Revert AR balances
+            $ar->total_paid -= $payment->amount_paid;
+            $ar->remaining_balance += $payment->amount_paid;
+            $ar->status = 'partial';
+            $ar->save();
+
+            // Update subsequent payments' remaining balance
+            $subsequentPayments = Payment::where('account_receivable_id', $ar->id)
+                ->where('id', '>', $payment->id)
+                ->get();
+
+            foreach ($subsequentPayments as $subsequentPayment) {
+                $subsequentPayment->remaining_balance += $payment->amount_paid;
+                $subsequentPayment->save();
+            }
+
+            // Delete the payment
+            $payment->delete();
+        });
+
+        session()->flash('message', 'Payment deleted successfully.');
+        $this->dispatch('payment-recorded')->to('payments.index');
     }
 }
