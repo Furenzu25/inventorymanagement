@@ -137,6 +137,7 @@
                                             <th class="px-6 py-4 text-left text-xs font-semibold text-[#401B1B] uppercase tracking-wider">Amount Paid</th>
                                             <th class="px-6 py-4 text-left text-xs font-semibold text-[#401B1B] uppercase tracking-wider">Due Amount</th>
                                             <th class="px-6 py-4 text-left text-xs font-semibold text-[#401B1B] uppercase tracking-wider">Remaining Balance</th>
+                                            <th class="px-6 py-4 text-left text-xs font-semibold text-[#401B1B] uppercase tracking-wider">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white/50 divide-y divide-[#72383D]/10">
@@ -146,6 +147,33 @@
                                                 <td class="px-6 py-4 text-[#401B1B] font-medium">₱{{ number_format($payment->amount_paid, 2) }}</td>
                                                 <td class="px-6 py-4 text-[#401B1B]">₱{{ number_format($payment->due_amount, 2) }}</td>
                                                 <td class="px-6 py-4 text-[#401B1B]">₱{{ number_format($payment->remaining_balance, 2) }}</td>
+                                                <td class="px-6 py-4 space-y-2">
+                                                    @if($confirmingReverse === $payment->id)
+                                                        <div class="bg-[#F2F2EB] p-3 rounded-lg shadow-sm border border-[#72383D]/20">
+                                                            <p class="text-sm text-[#401B1B] mb-2">
+                                                                Are you sure you want to reverse the payment of ₱{{ number_format($payment->amount_paid, 2) }}?
+                                                            </p>
+                                                            <div class="flex space-x-2">
+                                                                <x-button 
+                                                                    wire:click="reversePayment({{ $payment->id }})"
+                                                                    class="bg-[#72383D] hover:bg-[#401B1B] text-white text-sm px-3 py-1"
+                                                                    label="Yes, Reverse"
+                                                                />
+                                                                <x-button 
+                                                                    wire:click="$set('confirmingReverse', null)"
+                                                                    class="bg-[#AB644B] hover:bg-[#72383D] text-white text-sm px-3 py-1"
+                                                                    label="Cancel"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    @else
+                                                        <x-button 
+                                                            wire:click="$set('confirmingReverse', {{ $payment->id }})"
+                                                            class="bg-[#72383D] hover:bg-[#401B1B] text-white text-sm px-3 py-1"
+                                                            label="Reverse Payment"
+                                                        />
+                                                    @endif
+                                                </td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -192,12 +220,22 @@
             
             <div class="relative bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg max-w-lg w-full border-2 border-[#72383D]/20 shadow-xl">
                 <div class="p-6">
-                    <h3 class="text-2xl font-bold text-[#401B1B] mb-6">Record Payment - {{ $selectedCustomer?->name }}</h3>
+                    <button 
+                        wire:click="closeRecordPayment" 
+                        class="absolute top-4 right-4 text-[#72383D] hover:text-[#401B1B] transition-colors duration-300"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+
+                    <h3 class="text-2xl font-bold text-[#401B1B] mb-6">
+                        {{ $payment['amount_paid'] ? 'Update Reversed Payment' : 'Record New Payment' }} - {{ $selectedCustomer?->name }}
+                    </h3>
 
                     @if (session()->has('message'))
                         <div class="mb-6 p-4 bg-green-100 text-green-800 rounded-lg flex items-center justify-between">
                             <span>{{ session('message') }}</span>
-                            <span class="text-sm">Redirecting to payment history...</span>
                         </div>
                     @endif
 
@@ -252,16 +290,20 @@
                             @enderror
                         </div>
 
-                        <div class="mt-6">
+                        <div class="mt-6 space-y-2">
                             <x-button 
                                 wire:click="recordPayment"
                                 wire:loading.attr="disabled"
                                 class="w-full bg-gradient-to-r from-[#72383D] to-[#AB644B] hover:from-[#401B1B] hover:to-[#72383D] text-white transition duration-300 shadow-md"
-                                label="Submit Payment"
                             >
                                 <span wire:loading.remove>Submit Payment</span>
                                 <span wire:loading>Recording Payment...</span>
                             </x-button>
+                            <x-button 
+                                wire:click="closeRecordPayment"
+                                class="w-full mt-2 bg-[#AB644B] hover:bg-[#72383D] text-white transition duration-300 shadow-md"
+                                label="Cancel"
+                            />
                         </div>
                     </div>
                 </div>
