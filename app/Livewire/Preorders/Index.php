@@ -12,6 +12,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\InventoryItem;
 use App\Models\AccountReceivable;
+use App\Models\CustomerNotification;
+use App\Services\NotificationService;
 
 class Index extends Component
 {
@@ -32,6 +34,9 @@ class Index extends Component
     public $preorderItems = [];
     public $customers;
     public $products;
+    public $showDisapprovalModal = false;
+    public $disapprovalReason = '';
+    public $selectedPreorderId;
 
     protected $rules = [
         'preorder.customer_id' => 'required|exists:customers,id',
@@ -201,24 +206,14 @@ class Index extends Component
 
     public function approvePreorder($id)
     {
-        $preorder = Preorder::findOrFail($id);
-        
-        DB::transaction(function () use ($preorder) {
-            // Update preorder status
-            $preorder->update(['status' => 'approved']);
-            
-            // If payment method is monthly/loan, automatically create AR
-            if ($preorder->payment_method === 'Monthly') {
-                AccountReceivable::create([
-                    'preorder_id' => $preorder->id,
-                    'customer_id' => $preorder->customer_id,
-                    'total_amount' => $preorder->total_amount,
-                    'remaining_balance' => $preorder->total_amount,
-                    'monthly_payment' => $preorder->monthly_payment,
-                    'next_payment_date' => now()->addMonth(),
-                    'status' => 'pending'
-                ]);
-            }
+        DB::transaction(function () use ($id) {
+            $preorder = Preorder::findOrFail($id);
+            $preorder->update(['status' => Preorder::STATUS_APPROVED]);
+
+            // Create customer notification
+            NotificationService::preorderApproved($preorder);
+
+            // Rest of your approval logic...
         });
         
         session()->flash('message', 'Pre-order approved successfully.');
@@ -245,5 +240,39 @@ class Index extends Component
             
             session()->flash('message', 'Pre-order cancelled successfully. Product is now available for reassignment.');
         });
+    }
+
+    public function openDisapprovalModal($id)
+    {
+        $this->selectedPreorderId = $id;
+        $this->disapprovalReason = '';
+        $this->showDisapprovalModal = true;
+    }
+
+    public function disapprovePreorder()
+    {
+        $this->validate([
+            'disapprovalReason' => 'required|min:10',
+        ], [
+            'disapprovalReason.required' => 'Please provide a reason for disapproval.',
+            'disapprovalReason.min' => 'The reason must be at least 10 characters.',
+        ]);
+
+        DB::transaction(function () {
+            $preorder = Preorder::findOrFail($this->selectedPreorderId);
+            
+            $preorder->update([
+                'status' => Preorder::STATUS_DISAPPROVED,
+                'disapproval_reason' => $this->disapprovalReason
+            ]);
+
+            // Use NotificationService instead of direct creation
+            NotificationService::preorderDisapproved($preorder, $this->disapprovalReason);
+        });
+
+        $this->showDisapprovalModal = false;
+        $this->reset(['disapprovalReason', 'selectedPreorderId']);
+        
+        session()->flash('message', 'Pre-order has been disapproved.');
     }
 }

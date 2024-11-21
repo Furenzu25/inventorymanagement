@@ -3,24 +3,40 @@
 namespace App\Livewire\Ecommerce;
 
 use Livewire\Component;
+use App\Traits\WithCartCount;
+use App\Traits\WithNotificationCount;
 use App\Models\Preorder;
 use App\Models\PreorderItem;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\InventoryItem;
+use App\Notifications\PreorderStatusNotification;
+use App\Models\User;
+use App\Notifications\AdminPreorderNotification;
 
 class Cart extends Component
 {
+    use WithCartCount;
+    use WithNotificationCount;
+
     public $cartItems = [];
-    public $loanDuration = 12; // Default to 12 months, you can make this adjustable
-    private $interestRate = 5.00; // You can make this configurable
-    public $cartCount = 0;
+    public $loanDuration = 12;
+    public $paymentMethod = '';
+    private $interestRate = 5.00;
+
+    protected $rules = [
+        'loanDuration' => 'required|integer|in:6,12,24,36',
+        'paymentMethod' => 'required|in:Card,Cash,Bank Transfer',
+    ];
+
+    protected $messages = [
+        'paymentMethod.required' => 'Please select a payment method.',
+    ];
 
     public function mount()
     {
         $this->cartItems = session('cart', []);
-        $this->cartCount = count($this->cartItems);
     }
 
     public function removeItem($index)
@@ -28,11 +44,12 @@ class Cart extends Component
         unset($this->cartItems[$index]);
         $this->cartItems = array_values($this->cartItems);
         session(['cart' => $this->cartItems]);
-        $this->cartCount = count($this->cartItems);
     }
 
     public function submitPreorder()
     {
+        $this->validate();
+
         $user = Auth::user();
         
         if (!$user->customer) {
@@ -44,14 +61,9 @@ class Cart extends Component
             return $item['price'] * $item['quantity'];
         });
 
-        Log::info('Submitting preorder for user: ' . $user->id);
-        Log::info('Cart items: ' . json_encode($this->cartItems));
-        Log::info('Total amount: ' . $totalAmount);
+        $preorder = null;
 
-        Log::info('Transaction started');
-        DB::transaction(function () use ($user, $totalAmount) {
-            Log::info('Creating preorder for user: ' . $user->id);
-
+        DB::transaction(function () use ($user, $totalAmount, &$preorder) {
             $preorder = Preorder::create([
                 'customer_id' => $user->customer->id,
                 'loan_duration' => $this->loanDuration,
@@ -60,27 +72,34 @@ class Cart extends Component
                 'order_date' => now(),
                 'monthly_payment' => $this->calculateMonthlyPayment($totalAmount, $this->loanDuration, $this->interestRate),
                 'interest_rate' => $this->interestRate,
-                'payment_method' => 'Card',
-                'bought_location' => 'Online', // Set a default value instead of null
+                'payment_method' => $this->paymentMethod,
+                'bought_location' => 'Online',
             ]);
-
-            Log::info('Preorder created successfully');
             
             foreach ($this->cartItems as $item) {
-                Log::info('Adding item to preorder: ' . json_encode($item));
                 $preorder->products()->attach($item['id'], [
                     'quantity' => $item['quantity'],
                     'price' => $item['price'],
                     'variant_id' => $item['variant_id'] ?? null,
                 ]);
             }
-            Log::info('All items added to preorder');
         });
-        Log::info('Transaction completed');
+
+        // Send notification to customer
+        $user->notify(new PreorderStatusNotification(
+            $preorder,
+            'Pending',
+            "Your pre-order #{$preorder->id} has been submitted successfully. Total amount: ₱" . number_format($totalAmount, 2)
+        ));
+
+        // Send notification to admin users
+        $adminUsers = User::where('is_admin', true)->get();
+        foreach ($adminUsers as $admin) {
+            $admin->notify(new AdminPreorderNotification($preorder));
+        }
 
         session()->forget('cart');
         $this->cartItems = [];
-        $this->cartCount = 0;
 
         session()->flash('message', 'Pre-order submitted successfully.');
         return redirect()->route('home');
@@ -106,14 +125,15 @@ class Cart extends Component
 
     public function render()
     {
-        $this->refreshCart();
-        return view('livewire.ecommerce.cart')->layout('components.layouts.guest');
+        return view('livewire.ecommerce.cart', [
+            'paymentMethods' => Preorder::getPaymentMethods(),
+            'loanDurationOptions' => $this->getLoanDurationOptions()
+        ])->layout('components.layouts.guest');
     }
 
     public function refreshCart()
     {
         $this->cartItems = session('cart', []);
-        $this->cartCount = count($this->cartItems);
     }
 
     public function getTotalItemsCount()
@@ -148,5 +168,15 @@ class Cart extends Component
         
         session()->flash('message', 'Your pre-order has been cancelled successfully.');
         return redirect()->route('home');
+    }
+
+    public function getLoanDurationOptions()
+    {
+        return [
+            6 => '6 months',
+            12 => '12 months',
+            24 => '24 months',
+            36 => '36 months'
+        ];
     }
 }

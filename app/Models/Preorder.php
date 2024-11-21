@@ -14,6 +14,21 @@ class Preorder extends Model
     const STATUS_READY_FOR_PICKUP = 'ready_for_pickup';
     const STATUS_CONVERTED = 'converted';
     const STATUS_CANCELLED = 'cancelled';
+    const STATUS_DISAPPROVED = 'disapproved';
+
+    // Add payment method constants
+    const PAYMENT_METHOD_CARD = 'Card';
+    const PAYMENT_METHOD_CASH = 'Cash';
+    const PAYMENT_METHOD_BANK_TRANSFER = 'Bank Transfer';
+
+    public static function getPaymentMethods()
+    {
+        return [
+            self::PAYMENT_METHOD_CARD => 'Card',
+            self::PAYMENT_METHOD_CASH => 'Cash',
+            self::PAYMENT_METHOD_BANK_TRANSFER => 'Bank Transfer',
+        ];
+    }
 
     protected $fillable = [
         'customer_id',
@@ -24,7 +39,8 @@ class Preorder extends Model
         'order_date',
         'total_amount',
         'monthly_payment',
-        'interest_rate'
+        'interest_rate',
+        'disapproval_reason'
     ];
 
     protected $casts = [

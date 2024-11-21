@@ -3,15 +3,13 @@
 namespace App\Livewire\Admin;
 
 use Livewire\Component;
-use App\Models\Notification;
+use Illuminate\Support\Facades\Auth;
 
 class NotificationBell extends Component
 {
-    public $unreadCount = 0;
-    public $notifications = [];
     public $showNotifications = false;
-    
-    protected $listeners = ['refreshNotifications' => 'loadNotifications'];
+    public $notifications = [];
+    public $unreadCount = 0;
 
     public function mount()
     {
@@ -20,19 +18,72 @@ class NotificationBell extends Component
 
     public function loadNotifications()
     {
-        $this->unreadCount = Notification::where('status', 'unread')->count();
-        $this->notifications = Notification::latest()->take(5)->get();
+        if (Auth::check() && Auth::user()->is_admin) {
+            $this->notifications = auth()->user()
+                ->notifications()
+                ->latest()
+                ->take(10)
+                ->get();
+
+            $this->unreadCount = auth()->user()
+                ->unreadNotifications()
+                ->count();
+        }
     }
 
     public function toggleNotifications()
     {
         $this->showNotifications = !$this->showNotifications;
+        $this->loadNotifications();
     }
 
-    public function markAsRead($id)
+    public function markAsRead($notificationId)
     {
-        Notification::find($id)->update(['status' => 'read']);
-        $this->loadNotifications();
+        $notification = auth()->user()
+            ->notifications()
+            ->where('id', $notificationId)
+            ->first();
+
+        if ($notification) {
+            $notification->markAsRead();
+            $this->loadNotifications();
+        }
+    }
+
+    public function viewPayment($paymentId)
+    {
+        try {
+            if (!$paymentId) {
+                session()->flash('error', 'Invalid payment submission ID.');
+                return;
+            }
+
+            // First verify the payment submission exists
+            $paymentSubmission = \App\Models\PaymentSubmission::find($paymentId);
+            
+            if (!$paymentSubmission) {
+                session()->flash('error', 'Payment submission not found.');
+                return;
+            }
+            
+            // Store in session before redirect
+            session(['pending_payment_submission' => $paymentId]);
+            
+            // Use Livewire's navigation method
+            return $this->redirect('/payments');
+            
+        } catch (\Exception $e) {
+            \Log::error('Payment view error:', [
+                'payment_id' => $paymentId,
+                'error' => $e->getMessage()
+            ]);
+            session()->flash('error', 'Unable to load payment submission.');
+        }
+    }
+
+    public function viewPreorder($preorderId)
+    {
+        return redirect()->route('preorders.index', ['preorder_id' => $preorderId]);
     }
 
     public function render()

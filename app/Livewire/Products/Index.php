@@ -56,6 +56,7 @@ class Index extends Component
     public function edit($id)
     {
         $this->resetValidation();
+        $this->productId = $id;
         $product = Product::findOrFail($id);
         $this->product = $product->toArray();
         $this->existingImage = $product->image;
@@ -99,7 +100,7 @@ class Index extends Component
         try {
             $product->save();
             $this->modalOpen = false;
-            $this->reset(['product', 'image', 'existingImage', 'imageUploaded']);
+            $this->reset(['product', 'image', 'existingImage', 'imageUploaded', 'productId']);
             session()->flash('message', $message);
         } catch (\Exception $e) {
             session()->flash('error', 'Error saving product: ' . $e->getMessage());
@@ -108,6 +109,7 @@ class Index extends Component
 
     public function resetProduct()
     {
+        $this->productId = null;
         $this->product = [
             'product_name' => '',
             'product_model' => '',
@@ -122,6 +124,7 @@ class Index extends Component
         ];
         $this->image = null;
         $this->imageUploaded = false;
+        $this->existingImage = null;
     }
 
     public function updatedImage()

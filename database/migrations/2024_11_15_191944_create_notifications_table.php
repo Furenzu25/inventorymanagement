@@ -9,18 +9,17 @@ return new class extends Migration
     public function up()
     {
         Schema::create('notifications', function (Blueprint $table) {
-            $table->id();
-            $table->string('type'); // preorder, ar_due, inventory, etc.
-            $table->string('title');
-            $table->text('message');
-            $table->string('status')->default('unread');
-            $table->json('data')->nullable(); // For additional data
+            $table->uuid('id')->primary();
+            $table->string('type');
+            $table->morphs('notifiable');
+            $table->text('data');
+            $table->timestamp('read_at')->nullable();
             $table->timestamps();
         });
     }
 
     public function down()
     {
-        Schema::dropTable('notifications');
+        Schema::dropIfExists('notifications');
     }
 };

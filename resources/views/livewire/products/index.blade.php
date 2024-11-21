@@ -139,6 +139,10 @@
                                     @error('image') 
                                         <span class="text-red-500 text-sm">{{ $message }}</span>
                                     @enderror
+                                    
+                                    @if ($imageUploaded)
+                                        <p class="text-sm text-[#72383D]">New image uploaded. Save to apply changes.</p>
+                                    @endif
                                 </div>
                             </div>
                         </div>

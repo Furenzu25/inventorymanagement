@@ -66,6 +66,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/home', EcommerceHome::class)->name('home');
     Route::get('/cart', \App\Livewire\Ecommerce\Cart::class)->name('cart');
     Route::get('/my-orders', CustomerOrders::class)->name('customer.orders');
+    Route::get('/customer/payments', \App\Livewire\Customers\PaymentHistory::class)->name('customer.payments');
+    Route::get('/profile', \App\Livewire\Ecommerce\Profile::class)->name('profile');
 
     // Admin routes
     Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->group(function () {

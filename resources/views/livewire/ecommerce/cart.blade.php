@@ -1,34 +1,6 @@
 <div class="relative z-10 bg-gradient-to-br from-[#F2F2EB] via-[#D2DCE6] to-[#9CABB4] min-h-screen">
-    <x-nav sticky full-width class="bg-gradient-to-r from-[#401B1B] to-[#72383D] backdrop-blur-md border-b border-[#AB644B]/30 z-50">
-        <x-slot:brand>
-            <a href="{{ route('home') }}" class="flex items-center space-x-2 group">
-                <x-icon name="o-cube-transparent" class="w-12 h-12 text-[#F2F2EB] group-hover:text-[#AB644B] transition-all duration-300" />
-                <span class="font-bold text-3xl text-[#F2F2EB] font-['Poppins'] group-hover:text-[#AB644B] transition-all duration-300">
-                    Rosels Trading
-                </span>
-            </a>
-        </x-slot:brand>
-        <x-slot:actions>
-            <div class="flex items-center space-x-4">
-                <a href="{{ route('cart') }}" class="text-[#F2F2EB] hover:text-[#AB644B] transition-all duration-300 relative">
-                    <x-icon name="o-shopping-cart" class="w-6 h-6" />
-                    @if($cartCount > 0)
-                        <span class="absolute -top-2 -right-2 bg-[#AB644B] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                            {{ $cartCount }}
-                        </span>
-                    @endif
-                </a>
-                <x-dropdown>
-                    <x-slot:trigger>
-                        <x-button icon="o-user-circle" class="btn-ghost text-[#F2F2EB] hover:text-[#AB644B]" />
-                    </x-slot:trigger>
-                    <x-menu-item title="Edit Profile" icon="o-user-circle" wire:click="$dispatch('openProfileManagement')" />
-                    <x-menu-item title="Logout" icon="o-arrow-left-on-rectangle" wire:click="logout" />
-                </x-dropdown>
-            </div>
-        </x-slot:actions>
-    </x-nav>
-
+    @include('livewire.ecommerce.components.nav-bar')
+    
     <div wire:poll.5s="refreshCart" class="p-4 sm:p-6 md:p-8">
         <div class="max-w-7xl mx-auto">
             <div class="bg-white/40 backdrop-blur-md overflow-hidden shadow-2xl sm:rounded-3xl border border-[#AB644B]/20">
@@ -57,20 +29,40 @@
                                 <p class="text-2xl font-bold text-[#401B1B]">Total: ₱{{ number_format($this->getTotal(), 2) }}</p>
                             </div>
                             
-                            <div class="bg-white/50 p-6 rounded-xl shadow-inner border border-[#AB644B]/10">
-                                <label class="block text-sm font-semibold text-[#401B1B] mb-2">Loan Duration (months)</label>
-                                <select wire:model="loanDuration" 
-                                        class="w-full rounded-lg border-[#AB644B]/20 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30 bg-white/50">
-                                    <option value="6">6 months</option>
-                                    <option value="12">12 months</option>
-                                    <option value="24">24 months</option>
-                                    <option value="36">36 months</option>
-                                </select>
-                            </div>
-                            
-                            <div class="mt-8">
+                            <div class="mt-8 space-y-4">
+                                <div>
+                                    <label for="loanDuration" class="block text-sm font-medium text-[#401B1B]">
+                                        Loan Duration
+                                    </label>
+                                    <select wire:model="loanDuration" id="loanDuration" 
+                                        class="mt-1 block w-full rounded-md border-[#72383D]/20 bg-white/50 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30">
+                                        @foreach($loanDurationOptions as $months => $label)
+                                            <option value="{{ $months }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('loanDuration') 
+                                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label for="paymentMethod" class="block text-sm font-medium text-[#401B1B]">
+                                        Payment Method
+                                    </label>
+                                    <select wire:model="paymentMethod" id="paymentMethod" 
+                                        class="mt-1 block w-full rounded-md border-[#72383D]/20 bg-white/50 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30">
+                                        <option value="">Select payment method</option>
+                                        @foreach($paymentMethods as $value => $label)
+                                            <option value="{{ $value }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('paymentMethod') 
+                                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
                                 <button wire:click="submitPreorder" 
-                                        class="w-full bg-gradient-to-r from-[#72383D] to-[#AB644B] hover:from-[#401B1B] hover:to-[#72383D] text-white px-6 py-3 rounded-lg transition duration-300 transform hover:scale-105">
+                                    class="w-full bg-gradient-to-r from-[#72383D] to-[#AB644B] text-white py-2 px-4 rounded-md hover:from-[#401B1B] hover:to-[#72383D] transition-all duration-300">
                                     Submit Pre-order
                                 </button>
                             </div>

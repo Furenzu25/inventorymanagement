@@ -56,5 +56,33 @@ class AccountReceivable extends Model
 
         return $this->monthly_payment;
     }
+
+    public function updateStatus()
+    {
+        if ($this->remaining_balance <= 0) {
+            $this->status = 'paid';
+            
+            // Create sale if it doesn't exist
+            if (!Sale::where('account_receivable_id', $this->id)->exists()) {
+                $totalInterest = $this->total_paid - $this->total_amount;
+                
+                Sale::create([
+                    'account_receivable_id' => $this->id,
+                    'customer_id' => $this->customer_id,
+                    'preorder_id' => $this->preorder_id,
+                    'total_amount' => $this->total_paid,
+                    'interest_earned' => $totalInterest,
+                    'completion_date' => now(),
+                    'payment_method' => 'Monthly Payment',
+                    'status' => 'completed',
+                    'notes' => 'Converted from Account Receivable #' . $this->id
+                ]);
+            }
+        } else {
+            $this->status = 'ongoing';
+        }
+        
+        $this->save();
+    }
 }
 

@@ -48,7 +48,7 @@ class AddToCartModal extends Component
     {
         if (!$this->product) return;
 
-        $cart = session('cart', []);
+        $cart = session()->get('cart', []);
         $variant = $this->selectedVariant ? ProductVariant::find($this->selectedVariant) : null;
         
         $cartItemKey = $this->findCartItem($this->product->id, $this->selectedVariant);
@@ -67,7 +67,14 @@ class AddToCartModal extends Component
         }
 
         session(['cart' => $cart]);
+        
+        // Dispatch both events
         $this->dispatch('cart-updated');
+        $this->dispatch('notify', [
+            'message' => 'Product added to cart successfully!',
+            'type' => 'success'
+        ]);
+        
         $this->closeModal();
     }
 

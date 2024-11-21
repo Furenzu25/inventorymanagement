@@ -4,13 +4,19 @@ namespace App\Livewire\Ecommerce;
 
 use Livewire\Component;
 use App\Models\Preorder;
+use App\Traits\WithCartCount;
+use App\Traits\WithNotificationCount;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class CustomerOrders extends Component
 {
+    use WithCartCount;
+    use WithNotificationCount;
+    
     public $showOrderDetails = false;
     public $selectedOrder = null;
+    public $orderDetails = null;
     public $cancellationReason = '';
     public $showCancellationModal = false;
     public $selectedOrderId = null;
@@ -23,6 +29,16 @@ class CustomerOrders extends Component
                               ->latest()
                               ->get()
         ])->layout('components.layouts.guest');
+    }
+
+    public function viewOrderDetails($orderId)
+    {
+        $this->orderDetails = Preorder::with(['preorderItems.product'])
+            ->where('id', $orderId)
+            ->where('customer_id', Auth::user()->customer->id)
+            ->firstOrFail();
+            
+        $this->showOrderDetails = true;
     }
 
     public function cancelPreorder($preorderId)

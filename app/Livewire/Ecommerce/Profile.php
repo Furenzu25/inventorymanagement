@@ -7,10 +7,12 @@ use Livewire\WithFileUploads;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Traits\WithCartCount;
+use App\Traits\WithNotificationCount;
 
 class Profile extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, WithCartCount, WithNotificationCount;
 
     public $validIdImage;
     public $profileImage;

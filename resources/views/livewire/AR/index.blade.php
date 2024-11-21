@@ -63,7 +63,6 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <a href="{{ route('payments.history', $ar->id) }}" class="text-[#72383D] hover:text-[#401B1B] transition duration-300">View Payment History</a>
                                     @if($ar->status === 'ongoing')
                                         <x-button wire:click="reassignProduct({{ $ar->id }})" 
                                                   class="bg-[#9CABB4] hover:bg-[#72383D] text-white text-xs py-1 px-2 rounded transition duration-300"

@@ -26,11 +26,6 @@
                 wire:model.live="search" 
                 class="pl-10 w-full bg-[#F2F2EB]/50 border-[#72383D]/20 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30 rounded-md shadow-sm"
             />
-            <x-button 
-                label="Create Customer" 
-                wire:click="create" 
-                class="bg-[#72383D] hover:bg-[#401B1B] text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out" 
-            />
         </div>
     </div>
 
@@ -229,81 +224,34 @@
         </div>
     </div>
 
-    <!-- Create/Edit Customer Modal -->
-    <div x-data="{ open: @entangle('modalOpen') }" 
+    <!-- Delete Confirmation Modal -->
+    <div x-data="{ open: @entangle('deleteModalOpen') }" 
          x-show="open" 
          x-cloak
          class="fixed inset-0 z-50 overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="fixed inset-0 backdrop-blur-sm bg-black/50 transition-opacity" @click="open = false"></div>
+            <div class="fixed inset-0 backdrop-blur-sm bg-black/50 transition-opacity"></div>
             
-            <div class="relative bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg max-w-4xl w-full border-2 border-[#72383D]/20 shadow-xl">
+            <div class="relative bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg max-w-md w-full border-2 border-[#72383D]/20 shadow-xl">
                 <div class="p-6">
-                    <h3 class="text-2xl font-bold text-[#401B1B] mb-6">{{ $customerId ? 'Edit Customer' : 'Create Customer' }}</h3>
+                    <h3 class="text-xl font-bold text-[#401B1B] mb-4">Confirm Deletion</h3>
                     
-                    <form wire:submit.prevent="store">
-                        <div class="grid grid-cols-2 gap-6">
-                            <!-- Left Column -->
-                            <div class="space-y-4">
-                                <x-input label="Name" wire:model="customer.name" class="bg-white/50 border-[#AB644B]/20 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30" />
-                                <x-input label="Birthday" type="date" wire:model="customer.birthday" class="bg-white/50 border-[#AB644B]/20 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30" />
-                                <x-input label="Address" wire:model="customer.address" class="bg-white/50 border-[#AB644B]/20 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30" />
-                                <x-input label="Phone Number" wire:model="customer.phone_number" class="bg-white/50 border-[#AB644B]/20 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30" />
-                                <x-input label="Email" type="email" wire:model="customer.email" class="bg-white/50 border-[#AB644B]/20 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30" />
-                            </div>
+                    <p class="text-[#72383D] mb-6">
+                        Are you sure you want to delete this customer? This action cannot be undone.
+                    </p>
 
-                            <!-- Right Column -->
-                            <div class="space-y-4">
-                                <x-input label="Reference Contact Person" wire:model="customer.reference_contactperson" class="bg-white/50 border-[#AB644B]/20 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30" />
-                                <x-input label="Reference Contact Person Phone" wire:model="customer.reference_contactperson_phonenumber" class="bg-white/50 border-[#AB644B]/20 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30" />
-                                <x-input label="Valid ID" wire:model="customer.valid_id" class="bg-white/50 border-[#AB644B]/20 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30" />
-                                
-                                <div class="space-y-2">
-                                    <x-file 
-                                        wire:model="validIdImage" 
-                                        label="Valid ID Image"
-                                        accept="image/png, image/jpeg, image/jpg, image/gif"
-                                        hint="Upload image (max 5MB)"
-                                    >
-                                        <x-slot:preview>
-                                            @if ($validIdImage && $imageUploaded)
-                                                <img src="{{ $validIdImage->temporaryUrl() }}" class="h-32 w-32 object-cover rounded-lg" />
-                                            @elseif ($existingImage)
-                                                <img src="{{ Storage::url($existingImage) }}" class="h-32 w-32 object-cover rounded-lg" />
-                                            @else
-                                                <div class="h-32 w-32 rounded-lg bg-[#1A1B1E] flex items-center justify-center">
-                                                    <x-icon name="o-photo" class="w-8 h-8 text-gray-400" />
-                                                </div>
-                                            @endif
-                                        </x-slot:preview>
-                                    </x-file>
-                                    
-                                    @error('validIdImage') 
-                                        <span class="text-red-500 text-sm">{{ $message }}</span>
-                                    @enderror
-                                    
-                                    @if ($imageUploaded)
-                                        <p class="text-sm text-[#72383D]">New image uploaded. Save to apply changes.</p>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-6 flex justify-end space-x-3">
-                            <x-button type="button" wire:click="closeModal" class="bg-[#9CABB4] hover:bg-[#72383D] text-white transition duration-300">Cancel</x-button>
-                            <x-button type="submit" class="bg-[#72383D] hover:bg-[#401B1B] text-white transition duration-300">Save</x-button>
-                        </div>
-                    </form>
-
-                    <!-- Close Button -->
-                    <button 
-                        wire:click="closeModal" 
-                        class="absolute top-4 right-4 text-[#72383D] hover:text-[#401B1B] transition-colors duration-300"
-                    >
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+                    <div class="flex justify-end space-x-2">
+                        <x-button 
+                            wire:click="confirmDelete"
+                            class="bg-[#AB644B] hover:bg-[#72383D] text-white"
+                            label="Yes, Delete"
+                        />
+                        <x-button 
+                            wire:click="cancelDelete"
+                            class="bg-[#72383D] hover:bg-[#401B1B] text-white"
+                            label="Cancel"
+                        />
+                    </div>
                 </div>
             </div>
         </div>

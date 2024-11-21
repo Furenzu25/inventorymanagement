@@ -2,50 +2,79 @@
 
 namespace App\Services;
 
-use App\Models\Notification;
 use App\Models\Preorder;
 use App\Models\AccountReceivable;
+use App\Models\User;
+use App\Notifications\PreorderStatusNotification;
+use App\Notifications\PaymentDueNotification;
+use App\Notifications\LowInventoryNotification;
 
 class NotificationService
 {
+    // Admin notifications
     public static function preorderCreated(Preorder $preorder)
     {
-        Notification::create([
-            'type' => 'preorder_created',
-            'title' => 'New Preorder',
-            'message' => "New preorder #{$preorder->id} created by {$preorder->customer->name}",
-            'data' => [
-                'preorder_id' => $preorder->id,
-                'customer_name' => $preorder->customer->name,
-                'amount' => $preorder->total_amount
-            ]
-        ]);
+        $admin = User::where('is_admin', true)->first();
+        if ($admin) {
+            $admin->notify(new PreorderStatusNotification(
+                $preorder,
+                'New Preorder',
+                "New preorder #{$preorder->id} created by {$preorder->customer->name}"
+            ));
+        }
     }
 
     public static function arDueSoon(AccountReceivable $ar, $daysUntilDue)
     {
-        Notification::create([
-            'type' => 'ar_due_soon',
-            'title' => 'Payment Due Soon',
-            'message' => "Payment for AR #{$ar->id} due in {$daysUntilDue} days",
-            'data' => [
-                'ar_id' => $ar->id,
-                'customer_name' => $ar->customer->name,
-                'due_amount' => $ar->monthly_payment
-            ]
-        ]);
+        // Notify admin
+        $admin = User::where('is_admin', true)->first();
+        if ($admin) {
+            $admin->notify(new PaymentDueNotification(
+                $ar,
+                "Payment for AR #{$ar->id} due in {$daysUntilDue} days"
+            ));
+        }
+
+        // Notify customer
+        if ($ar->customer->user) {
+            $ar->customer->user->notify(new PaymentDueNotification(
+                $ar,
+                "Your payment of ₱{$ar->monthly_payment} is due in {$daysUntilDue} days"
+            ));
+        }
     }
 
     public static function lowInventory($product, $quantity)
     {
-        Notification::create([
-            'type' => 'low_inventory',
-            'title' => 'Low Inventory Alert',
-            'message' => "Product {$product->name} is running low ({$quantity} remaining)",
-            'data' => [
-                'product_id' => $product->id,
-                'current_quantity' => $quantity
-            ]
-        ]);
+        $admin = User::where('is_admin', true)->first();
+        if ($admin) {
+            $admin->notify(new LowInventoryNotification(
+                $product,
+                "Product {$product->name} is running low ({$quantity} remaining)"
+            ));
+        }
+    }
+
+    // Customer notifications
+    public static function preorderDisapproved(Preorder $preorder, $reason)
+    {
+        if ($preorder->customer->user) {
+            $preorder->customer->user->notify(new PreorderStatusNotification(
+                $preorder,
+                'Pre-order Disapproved',
+                "Your pre-order #{$preorder->id} has been disapproved. Reason: {$reason}"
+            ));
+        }
+    }
+
+    public static function preorderApproved(Preorder $preorder)
+    {
+        if ($preorder->customer->user) {
+            $preorder->customer->user->notify(new PreorderStatusNotification(
+                $preorder,
+                'Pre-order Approved',
+                "Your pre-order #{$preorder->id} has been approved!"
+            ));
+        }
     }
 }

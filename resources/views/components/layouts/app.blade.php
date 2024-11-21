@@ -110,7 +110,9 @@
                     <i class="fas fa-bars"></i>
                 </button>
                 <div class="flex items-center space-x-4">
-                    <livewire:admin.notification-bell />
+                    @if(Auth::check() && Auth::user()->is_admin)
+                        <livewire:admin.notification-bell />
+                    @endif
                     <h2 class="text-2xl font-semibold text-[#401B1B]">{{ $title ?? '' }}</h2>
                     <div class="text-sm text-[#72383D]">{{ now()->format('l, F j, Y') }}</div>
                 </div>

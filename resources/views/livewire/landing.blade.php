@@ -42,27 +42,40 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             @foreach($products as $product)
                                 <div class="bg-gradient-to-br from-white to-[#F2F2EB] p-6 rounded-2xl flex flex-col transition-all duration-300 hover:shadow-xl hover:scale-105 group">
-                                    <div class="aspect-w-16 aspect-h-9 mb-6 overflow-hidden rounded-xl">
+                                    <div class="relative aspect-square mb-6 overflow-hidden rounded-xl">
                                         @if($product->image)
-                                            <img src="{{ Storage::url($product->image) }}" alt="{{ $product->product_name }}" class="w-full h-full object-cover rounded-xl transition-transform duration-300 group-hover:scale-110">
+                                            <img 
+                                                src="{{ Storage::url($product->image) }}" 
+                                                alt="{{ $product->product_name }}" 
+                                                class="absolute inset-0 w-full h-full object-contain rounded-xl transition-transform duration-300 group-hover:scale-110"
+                                            >
                                         @else
-                                            <div class="w-full h-full bg-gradient-to-br from-[#D2DCE6] to-[#9CABB4] flex items-center justify-center rounded-xl">
+                                            <div class="absolute inset-0 bg-gradient-to-br from-[#D2DCE6] to-[#9CABB4] flex items-center justify-center rounded-xl">
                                                 <x-icon name="o-photo" class="w-16 h-16 text-white" />
                                             </div>
                                         @endif
                                     </div>
-                                    <h4 class="font-semibold text-[#401B1B] text-xl mb-2">{{ $product->product_name }}</h4>
-                                    <p class="text-[#401B1B] font-bold text-2xl mb-3">₱{{ number_format($product->price, 2) }}</p>
-                                    <p class="text-[#72383D] mb-4 flex-grow">{{ Str::limit($product->product_description, 100) }}</p>
-                                    <div class="mt-auto flex justify-between items-center">
-                                        <a href="{{ route('register') }}" 
-                                           class="bg-gradient-to-r from-[#72383D] to-[#AB644B] text-white px-4 py-2 rounded-lg hover:from-[#401B1B] hover:to-[#72383D] transition duration-300 transform hover:scale-105">
-                                            Register to Order
-                                        </a>
-                                        <button onclick="showProductDetails({{ $product->id }})" 
-                                                class="text-[#AB644B] hover:text-[#401B1B] transition duration-300 underline">
-                                            View Details
-                                        </button>
+                                    
+                                    <div class="flex flex-col h-[250px]">
+                                        <div class="flex-grow">
+                                            <h4 class="font-semibold text-[#401B1B] text-xl mb-2 line-clamp-2">{{ $product->product_name }}</h4>
+                                            <p class="text-[#401B1B] font-bold text-2xl mb-3">₱{{ number_format($product->price, 2) }}</p>
+                                            <p class="text-[#72383D] line-clamp-3">{{ Str::limit($product->product_description, 100) }}</p>
+                                        </div>
+                                        
+                                        <div class="mt-4 flex justify-between items-center">
+                                            <a href="{{ route('register') }}" 
+                                               class="bg-gradient-to-r from-[#72383D] to-[#AB644B] text-white px-4 py-2 rounded-lg hover:from-[#401B1B] hover:to-[#72383D] transition duration-300 transform hover:scale-105"
+                                            >
+                                                Register to Order
+                                            </a>
+                                            <button 
+                                                onclick="showProductDetails({{ $product->id }})" 
+                                                class="text-[#AB644B] hover:text-[#401B1B] transition duration-300 underline"
+                                            >
+                                                View Details
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach

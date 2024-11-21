@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 class Home extends Component
 {
     public $cartCount = 0;
+    public $accountReceivables;
     protected $listeners = [
         'cart-updated' => 'updateCartCount',
         'profile-updated' => '$refresh',
@@ -39,6 +40,7 @@ class Home extends Component
         $this->updateCartCount();
         if (Auth::check()) {
             Auth::user()->load('customer');
+            $this->accountReceivables = Auth::user()->customer?->accountReceivables ?? collect();
         }
     }
 

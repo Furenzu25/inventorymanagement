@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('status', 20)->default('ongoing');
             $table->string('payment_method');
             $table->date('order_date');
+            $table->text('disapproval_reason')->nullable();
             $table->timestamps();
             $table->index('customer_id');
         });

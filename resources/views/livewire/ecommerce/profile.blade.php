@@ -1,22 +1,6 @@
 <div class="relative z-10 bg-gradient-to-br from-[#F2F2EB] via-[#D2DCE6] to-[#9CABB4] min-h-screen">
-    <x-nav sticky full-width class="bg-gradient-to-r from-[#401B1B] to-[#72383D] backdrop-blur-md border-b border-[#AB644B]/30 z-50">
-        <x-slot:brand>
-            <a href="{{ route('home') }}" class="flex items-center space-x-2 group">
-                <x-icon name="o-cube-transparent" class="w-12 h-12 text-[#F2F2EB] group-hover:text-[#AB644B] transition-all duration-300" />
-                <span class="font-bold text-3xl text-[#F2F2EB] font-['Poppins'] group-hover:text-[#AB644B] transition-all duration-300">
-                    Rosels Trading
-                </span>
-            </a>
-        </x-slot:brand>
-        <x-slot:actions>
-            <div class="flex items-center space-x-4">
-                <a href="{{ route('home') }}" class="text-[#F2F2EB] hover:text-[#AB644B] transition-all duration-300">
-                    <x-icon name="o-home" class="w-6 h-6" />
-                </a>
-            </div>
-        </x-slot:actions>
-    </x-nav>
-
+    @include('livewire.ecommerce.components.nav-bar')
+    
     <div class="p-4 sm:p-6 md:p-8">
         <div class="max-w-7xl mx-auto">
             <div class="bg-white/40 backdrop-blur-md overflow-hidden shadow-2xl sm:rounded-3xl border border-[#AB644B]/20">

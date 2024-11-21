@@ -1,15 +1,6 @@
 <div class="relative z-10 bg-gradient-to-br from-[#F2F2EB] via-[#D2DCE6] to-[#9CABB4] min-h-screen">
-    <x-nav sticky full-width class="bg-gradient-to-r from-[#401B1B] to-[#72383D] backdrop-blur-md border-b border-[#AB644B]/30 z-50">
-        <x-slot:brand>
-            <a href="{{ route('home') }}" class="flex items-center space-x-2 group">
-                <x-icon name="o-cube-transparent" class="w-12 h-12 text-[#F2F2EB] group-hover:text-[#AB644B] transition-all duration-300" />
-                <span class="font-bold text-3xl text-[#F2F2EB] font-['Poppins'] group-hover:text-[#AB644B] transition-all duration-300">
-                    Rosels Trading
-                </span>
-            </a>
-        </x-slot:brand>
-    </x-nav>
-
+    @include('livewire.ecommerce.components.nav-bar')
+    
     <div class="p-4 sm:p-6 md:p-8">
         <div class="max-w-7xl mx-auto">
             <!-- Back Button -->
@@ -66,7 +57,7 @@
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="flex space-x-3">
-                                                <button wire:click="$set('selectedOrder', {{ $order->id }})"
+                                                <button wire:click="viewOrderDetails({{ $order->id }})"
                                                         class="text-[#72383D] hover:text-[#401B1B] transition-colors duration-200">
                                                     View Details
                                                 </button>
@@ -86,6 +77,109 @@
                         </table>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div x-show="$wire.showOrderDetails" 
+         x-transition
+         class="fixed inset-0 z-50 overflow-y-auto" 
+         aria-labelledby="modal-title" 
+         role="dialog" 
+         aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" 
+                 aria-hidden="true"
+                 wire:click="$set('showOrderDetails', false)"></div>
+
+            <div class="inline-block align-bottom bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                @if($orderDetails)
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-6">
+                            <h3 class="text-2xl font-bold text-[#401B1B]">Order Details #{{ $orderDetails->id }}</h3>
+                            <button wire:click="$set('showOrderDetails', false)" class="text-[#72383D] hover:text-[#401B1B]">
+                                <x-icon name="o-x-mark" class="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <!-- Order Status -->
+                        <div class="mb-6">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-semibold text-[#401B1B]">Status:</span>
+                                <span class="px-3 py-1 rounded-full text-sm
+                                    @if($orderDetails->status === 'Pending')
+                                        bg-yellow-500/20 text-yellow-700
+                                    @elseif($orderDetails->status === 'loaned')
+                                        bg-blue-500/20 text-blue-700
+                                    @elseif($orderDetails->status === 'converted')
+                                        bg-green-500/20 text-green-700
+                                    @elseif($orderDetails->status === 'Cancelled')
+                                        bg-red-500/20 text-red-700
+                                    @else
+                                        bg-gray-500/20 text-gray-700
+                                    @endif">
+                                    {{ $orderDetails->status }}
+                                </span>
+                            </div>
+                            
+                            @if($orderDetails->status === 'disapproved' && $orderDetails->disapproval_reason)
+                                <div class="mt-2 p-3 bg-red-50 rounded-lg">
+                                    <p class="text-sm font-semibold text-red-700">Disapproval Reason:</p>
+                                    <p class="text-sm text-red-600">{{ $orderDetails->disapproval_reason }}</p>
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- Order Information -->
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <p class="text-sm text-[#72383D]">Order Date</p>
+                                <p class="font-semibold text-[#401B1B]">{{ $orderDetails->created_at->format('M d, Y') }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-[#72383D]">Payment Method</p>
+                                <p class="font-semibold text-[#401B1B]">{{ $orderDetails->payment_method }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-[#72383D]">Loan Duration</p>
+                                <p class="font-semibold text-[#401B1B]">{{ $orderDetails->loan_duration }} months</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-[#72383D]">Interest Rate</p>
+                                <p class="font-semibold text-[#401B1B]">{{ $orderDetails->interest_rate }}%</p>
+                            </div>
+                        </div>
+
+                        <!-- Products -->
+                        <div class="mb-6">
+                            <h4 class="font-semibold text-[#401B1B] mb-3">Ordered Products</h4>
+                            <div class="space-y-3">
+                                @foreach($orderDetails->preorderItems as $item)
+                                    <div class="flex justify-between items-center p-3 bg-white/50 rounded-lg">
+                                        <div>
+                                            <p class="font-medium text-[#401B1B]">{{ $item->product->product_name }}</p>
+                                            <p class="text-sm text-[#72383D]">Quantity: {{ $item->quantity }}</p>
+                                        </div>
+                                        <p class="font-semibold text-[#401B1B]">₱{{ number_format($item->price, 2) }}</p>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <!-- Payment Details -->
+                        <div class="border-t border-[#AB644B]/20 pt-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-[#72383D]">Total Amount:</span>
+                                <span class="font-bold text-xl text-[#401B1B]">₱{{ number_format($orderDetails->total_amount, 2) }}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-[#72383D]">Monthly Payment:</span>
+                                <span class="font-semibold text-[#401B1B]">₱{{ number_format($orderDetails->monthly_payment, 2) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

@@ -42,4 +42,14 @@ class Customer extends Model
     {
         return $this->hasMany(AccountReceivable::class);
     }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function paymentSubmissions()
+    {
+        return $this->hasMany(PaymentSubmission::class);
+    }
 }

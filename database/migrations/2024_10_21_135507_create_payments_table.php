@@ -15,6 +15,8 @@ return new class extends Migration
             $table->date('payment_date');
             $table->decimal('due_amount', 10, 2);
             $table->decimal('remaining_balance', 10, 2);
+            $table->enum('status', ['active', 'void'])->default('active');
+            $table->text('void_reason')->nullable();
             $table->timestamps();
         });
     }
