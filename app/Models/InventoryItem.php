@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 class InventoryItem extends Model
@@ -11,7 +12,18 @@ class InventoryItem extends Model
         'product_id',
         'serial_number',
         'status',
-        'preorder_id'
+        'preorder_id',
+        'picked_up_at',
+        'picked_up_by',
+        'pickup_verification',
+        'pickup_notes',
+        'bought_location',
+        'bought_date',
+    ];
+
+    protected $casts = [
+        'picked_up_at' => 'datetime',
+        'bought_date' => 'datetime',
     ];
 
     public static function generateSerialNumber($productId)
@@ -38,5 +50,10 @@ class InventoryItem extends Model
     public function preorder()
     {
         return $this->belongsTo(Preorder::class);
+    }
+
+    public function pickedUpBy()
+    {
+        return $this->belongsTo(User::class, 'picked_up_by');
     }
 }

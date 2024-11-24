@@ -9,6 +9,9 @@ use App\Models\AccountReceivable;
 use Illuminate\Support\Facades\DB;
 use App\Models\Sale;
 use App\Models\Notification;
+use Illuminate\Support\Str;
+use App\Notifications\StockInCompleted;
+use App\Notifications\FirstMonthlyPaymentDue;
 
 class Index extends Component
 {
@@ -18,9 +21,18 @@ class Index extends Component
     public $processingPreorder = null;
     public $selectedInventoryItem = null;
     public $availablePreorders = [];
+    public $showPickupModal = false;
+    public $pickupNotes;
+    public $boughtLocation;
+    public $boughtDate;
+    public $showRecordPickupModal = false;
+    public $showPickupDetailsModal = false;
+    public $selectedItem = null;
     
     protected $rules = [
         'serialNumber' => 'required|unique:inventory_items,serial_number',
+        'boughtLocation' => 'required',
+        'boughtDate' => 'required|date',
     ];
 
     public function openAddModal()
@@ -131,15 +143,25 @@ class Index extends Component
     public function render()
     {
         return view('livewire.inventory.index', [
-            'pendingPreorders' => Preorder::whereIn('status', ['approved', 'in_stock', 'loaned'])
-                ->with(['customer', 'preorderItems.product', 'inventoryItems'])
+            'pendingPreorders' => Preorder::whereIn('status', [
+                'approved', 
+                'in_stock', 
+                'picked_up',
+                'loaned'
+            ])
+            ->with([
+                'customer', 
+                'preorderItems.product', 
+                'inventoryItems',
+                'inventoryItems.pickedUpBy'
+            ])
+            ->get(),
+            'repossessedItems' => InventoryItem::where('status', 'repossessed')
+                ->with(['preorder.customer', 'preorder.preorderItems.product'])
                 ->get(),
             'reassignableItems' => InventoryItem::where('status', 'available_for_reassignment')
                 ->with(['product', 'preorder.customer'])
                 ->get(),
-            'repossessedItems' => InventoryItem::where('status', 'repossessed')
-                ->with(['product', 'preorder.customer'])
-                ->get()
         ]);
     }   
 
@@ -189,32 +211,45 @@ class Index extends Component
         session()->flash('message', 'Order has been marked as loaned and moved to Accounts Receivable.');
     }
 
+    public function openStockInModal($preorderId)
+    {
+        $this->selectedPreorder = Preorder::find($preorderId);
+        $this->showPickupModal = true;
+    }
+
     public function stockIn($preorderId)
     {
-        DB::transaction(function () use ($preorderId) {
-            $preorder = Preorder::findOrFail($preorderId);
-            
-            foreach ($preorder->preorderItems as $item) {
-                // Generate serial number for bought product
-                $serialNumber = InventoryItem::generateSerialNumber($item->product_id);
+        try {
+            $this->validate([
+                'boughtLocation' => 'required|string|min:3',
+                'boughtDate' => 'required|date',
+            ]);
+
+            DB::transaction(function () use ($preorderId) {
+                $preorder = Preorder::findOrFail($preorderId);
                 
-                // Create inventory item
-                InventoryItem::create([
-                    'product_id' => $item->product_id,
-                    'serial_number' => $serialNumber,
-                    'status' => 'available',
-                    'preorder_id' => $preorder->id
-                ]);
-            }
+                foreach ($preorder->preorderItems as $item) {
+                    $inventoryItem = InventoryItem::create([
+                        'product_id' => $item->product_id,
+                        'serial_number' => InventoryItem::generateSerialNumber($item->product_id),
+                        'status' => 'available',
+                        'preorder_id' => $preorder->id,
+                        'bought_location' => $this->boughtLocation,
+                        'bought_date' => $this->boughtDate
+                    ]);
 
-            // Update preorder status to indicate product is in stock
-            $preorder->update(['status' => 'in_stock']);
-            
-            // Notify customer that product is ready
-            // TODO: Implement notification system
-        });
+                    auth()->user()->notify(new StockInCompleted($inventoryItem));
+                }
 
-        session()->flash('message', 'Product stocked in successfully.');
+                $preorder->update(['status' => 'in_stock']);
+            });
+
+            $this->showPickupModal = false;
+            $this->reset(['pickupNotes', 'boughtLocation', 'boughtDate']);
+            session()->flash('message', 'Items have been stocked in successfully.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error processing stock-in: ' . $e->getMessage());
+        }
     }
 
     public function processLoan($preorderId)
@@ -222,8 +257,11 @@ class Index extends Component
         DB::transaction(function () use ($preorderId) {
             $preorder = Preorder::findOrFail($preorderId);
             
-            // Create Account Receivable only when customer takes the product
-            AccountReceivable::create([
+            $loanStartDate = now();
+            $loanEndDate = $loanStartDate->copy()->addMonths($preorder->loan_duration);
+            
+            // Create Account Receivable
+            $ar = AccountReceivable::create([
                 'preorder_id' => $preorder->id,
                 'customer_id' => $preorder->customer_id,
                 'monthly_payment' => $preorder->monthly_payment,
@@ -233,17 +271,23 @@ class Index extends Component
                 'payment_months' => $preorder->loan_duration,
                 'interest_rate' => $preorder->interest_rate,
                 'status' => 'ongoing',
+                'loan_start_date' => $loanStartDate,
+                'loan_end_date' => $loanEndDate,
             ]);
 
-            // Update inventory item status to loaned
+            // Update inventory item status
             $inventoryItem = InventoryItem::where('preorder_id', $preorder->id)->first();
             $inventoryItem->update(['status' => 'loaned']);
             
             // Update preorder status
             $preorder->update(['status' => 'loaned']);
+
+            // Send notification to customer
+            $customer = $preorder->customer;
+            $customer->notify(new FirstMonthlyPaymentDue($ar));
         });
 
-        session()->flash('message', 'Loan processed and product released to customer.');
+        session()->flash('message', 'Loan processed successfully.');
     }
 
     public function markAsRepossessed($preorderId)
@@ -318,5 +362,60 @@ class Index extends Component
         });
         
         session()->flash('message', 'Items marked as available for reassignment.');
+    }
+
+    protected function generateVerificationCode(): string
+    {
+        return strtoupper(Str::random(8));
+    }
+
+    public function openPickupModal($itemId)
+    {
+        $this->selectedInventoryItem = InventoryItem::find($itemId);
+        $this->showRecordPickupModal = true;
+    }
+
+    public function recordPickup($inventoryItemId)
+    {
+        try {
+            $this->validate([
+                'pickupNotes' => 'nullable|string',
+            ]);
+
+            DB::transaction(function () use ($inventoryItemId) {
+                $inventoryItem = InventoryItem::findOrFail($inventoryItemId);
+                
+                $inventoryItem->update([
+                    'picked_up_at' => now(),
+                    'picked_up_by' => auth()->id(),
+                    'pickup_verification' => $this->generateVerificationCode(),
+                    'pickup_notes' => $this->pickupNotes,
+                ]);
+
+                // Only update preorder status if ALL items are picked up
+                $allItemsPickedUp = $inventoryItem->preorder->inventoryItems()
+                    ->whereNull('picked_up_at')
+                    ->count() === 0;
+
+                if ($allItemsPickedUp) {
+                    $inventoryItem->preorder->update(['status' => 'picked_up']);
+                }
+            });
+
+            $this->showRecordPickupModal = false;
+            $this->reset(['pickupNotes']);
+            $this->dispatch('refresh')->self();
+            
+            session()->flash('message', 'Pickup details recorded successfully.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error recording pickup: ' . $e->getMessage());
+        }
+    }
+
+    public function showPickupDetails($itemId)
+    {
+        $this->selectedItem = InventoryItem::with('pickedUpBy')
+            ->findOrFail($itemId);
+        $this->showPickupDetailsModal = true;
     }
 }

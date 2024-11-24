@@ -45,6 +45,8 @@
                             <th class="px-4 py-3 text-left">Monthly Payment</th>
                             <th class="px-4 py-3 text-left">Total Paid</th>
                             <th class="px-4 py-3 text-left">Remaining Balance</th>
+                            <th class="px-4 py-3 text-left">Loan Duration</th>
+                            <th class="px-4 py-3 text-left">Next Payment Due</th>
                             <th class="px-4 py-3 text-left">Status</th>
                             <th class="px-4 py-3 text-left">Actions</th>
                         </tr>
@@ -57,6 +59,38 @@
                                 <td class="px-4 py-3 text-[#401B1B]">₱{{ number_format($ar->monthly_payment, 2) }}</td>
                                 <td class="px-4 py-3 text-[#401B1B]">₱{{ number_format($ar->total_paid, 2) }}</td>
                                 <td class="px-4 py-3 text-[#401B1B]">₱{{ number_format($ar->remaining_balance, 2) }}</td>
+                                <td class="px-4 py-3 text-[#401B1B]">
+                                    @if($ar->loan_start_date && $ar->loan_end_date)
+                                        <div>{{ $ar->loan_start_date->format('M d, Y') }} -</div>
+                                        <div>{{ $ar->loan_end_date->format('M d, Y') }}</div>
+                                        <div class="text-sm text-gray-600">
+                                            ({{ $ar->loan_start_date->diffInMonths($ar->loan_end_date) }} months)
+                                        </div>
+                                    @else
+                                        N/A
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3">
+                                    @if($ar->status === 'ongoing')
+                                        @php
+                                            $nextDueDate = $ar->getNextPaymentDueDate();
+                                        @endphp
+                                        @if($nextDueDate)
+                                            <div class="text-sm">
+                                                {{ $nextDueDate->format('M d, Y') }}
+                                                @if($nextDueDate->isPast())
+                                                    <span class="text-red-500 text-xs">(Overdue)</span>
+                                                @else
+                                                    <span class="text-gray-500 text-xs">({{ $nextDueDate->diffForHumans() }})</span>
+                                                @endif
+                                            </div>
+                                        @else
+                                            N/A
+                                        @endif
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                                 <td class="px-4 py-3">
                                     <span class="px-2 py-1 text-sm rounded-full {{ $ar->status === 'paid' ? 'bg-[#72383D] text-white' : 'bg-[#AB644B] text-white' }}">
                                         {{ ucfirst($ar->status) }}
@@ -65,8 +99,8 @@
                                 <td class="px-4 py-3">
                                     @if($ar->status === 'ongoing')
                                         <x-button wire:click="reassignProduct({{ $ar->id }})" 
-                                                  class="bg-[#9CABB4] hover:bg-[#72383D] text-white text-xs py-1 px-2 rounded transition duration-300"
-                                                  onclick="confirm('Are you sure you want to repossess this product?') || event.stopImmediatePropagation()">
+                                                class="bg-[#9CABB4] hover:bg-[#72383D] text-white text-xs py-1 px-2 rounded transition duration-300"
+                                                onclick="confirm('Are you sure you want to repossess this product?') || event.stopImmediatePropagation()">
                                             Repossess
                                         </x-button>
                                     @endif

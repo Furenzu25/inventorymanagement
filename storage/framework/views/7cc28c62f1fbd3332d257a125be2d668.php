@@ -45,16 +45,16 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white/30 divide-y divide-[#AB644B]/10">
-                                <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $orders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $order): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php $__currentLoopData = $orders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $order): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <tr class="hover:bg-white/50 transition-colors duration-200">
                                         <td class="px-6 py-4 whitespace-nowrap text-[#401B1B]">
                                             #<?php echo e($order->id); ?>
 
                                         </td>
                                         <td class="px-6 py-4 text-[#72383D]">
-                                            <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $order->preorderItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <?php $__currentLoopData = $order->preorderItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                 <div class="mb-1"><?php echo e($item->product->product_name); ?></div>
-                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </td>
                                         <td class="px-6 py-4">
                                             <span class="px-3 py-1 rounded-full text-sm
@@ -84,17 +84,17 @@
                                                     View Details
                                                 </button>
                                                 
-                                                <!--[if BLOCK]><![endif]--><?php if($order->status === 'Pending'): ?>
+                                                <?php if($order->status === 'Pending'): ?>
                                                     <button wire:click="cancelPreorder(<?php echo e($order->id); ?>)"
                                                             onclick="return confirm('Are you sure you want to cancel this order?')"
                                                             class="text-red-600 hover:text-red-800 transition-colors duration-200">
                                                         Cancel Order
                                                     </button>
-                                                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                                <?php endif; ?>
                                             </div>
                                         </td>
                                     </tr>
-                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </tbody>
                         </table>
                     </div>
@@ -116,7 +116,7 @@
                  wire:click="$set('showOrderDetails', false)"></div>
 
             <div class="inline-block align-bottom bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-                <!--[if BLOCK]><![endif]--><?php if($orderDetails): ?>
+                <?php if($orderDetails): ?>
                     <div class="p-6">
                         <div class="flex justify-between items-start mb-6">
                             <h3 class="text-2xl font-bold text-[#401B1B]">Order Details #<?php echo e($orderDetails->id); ?></h3>
@@ -165,12 +165,12 @@
                                 </span>
                             </div>
                             
-                            <!--[if BLOCK]><![endif]--><?php if($orderDetails->status === 'disapproved' && $orderDetails->disapproval_reason): ?>
+                            <?php if($orderDetails->status === 'disapproved' && $orderDetails->disapproval_reason): ?>
                                 <div class="mt-2 p-3 bg-red-50 rounded-lg">
                                     <p class="text-sm font-semibold text-red-700">Disapproval Reason:</p>
                                     <p class="text-sm text-red-600"><?php echo e($orderDetails->disapproval_reason); ?></p>
                                 </div>
-                            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                            <?php endif; ?>
                         </div>
 
                         <!-- Order Information -->
@@ -197,7 +197,7 @@
                         <div class="mb-6">
                             <h4 class="font-semibold text-[#401B1B] mb-3">Ordered Products</h4>
                             <div class="space-y-3">
-                                <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $orderDetails->preorderItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php $__currentLoopData = $orderDetails->preorderItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <div class="flex justify-between items-center p-3 bg-white/50 rounded-lg">
                                         <div>
                                             <p class="font-medium text-[#401B1B]"><?php echo e($item->product->product_name); ?></p>
@@ -205,7 +205,7 @@
                                         </div>
                                         <p class="font-semibold text-[#401B1B]">₱<?php echo e(number_format($item->price, 2)); ?></p>
                                     </div>
-                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </div>
                         </div>
 
@@ -221,8 +221,8 @@
                             </div>
                         </div>
                     </div>
-                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                <?php endif; ?>
             </div>
         </div>
     </div>
-</div><?php /**PATH C:\laragon\www\inventorymanagement\resources\views/livewire/ecommerce/customer-orders.blade.php ENDPATH**/ ?>
+</div><?php /**PATH C:\laragon\www\inventorymanagement\resources\views\livewire\ecommerce\customer-orders.blade.php ENDPATH**/ ?>

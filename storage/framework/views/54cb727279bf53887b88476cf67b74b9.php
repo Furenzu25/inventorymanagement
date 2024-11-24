@@ -106,6 +106,8 @@
                             <th class="px-4 py-3 text-left">Monthly Payment</th>
                             <th class="px-4 py-3 text-left">Total Paid</th>
                             <th class="px-4 py-3 text-left">Remaining Balance</th>
+                            <th class="px-4 py-3 text-left">Loan Duration</th>
+                            <th class="px-4 py-3 text-left">Next Payment Due</th>
                             <th class="px-4 py-3 text-left">Status</th>
                             <th class="px-4 py-3 text-left">Actions</th>
                         </tr>
@@ -118,6 +120,39 @@
                                 <td class="px-4 py-3 text-[#401B1B]">₱<?php echo e(number_format($ar->monthly_payment, 2)); ?></td>
                                 <td class="px-4 py-3 text-[#401B1B]">₱<?php echo e(number_format($ar->total_paid, 2)); ?></td>
                                 <td class="px-4 py-3 text-[#401B1B]">₱<?php echo e(number_format($ar->remaining_balance, 2)); ?></td>
+                                <td class="px-4 py-3 text-[#401B1B]">
+                                    <!--[if BLOCK]><![endif]--><?php if($ar->loan_start_date && $ar->loan_end_date): ?>
+                                        <div><?php echo e($ar->loan_start_date->format('M d, Y')); ?> -</div>
+                                        <div><?php echo e($ar->loan_end_date->format('M d, Y')); ?></div>
+                                        <div class="text-sm text-gray-600">
+                                            (<?php echo e($ar->loan_start_date->diffInMonths($ar->loan_end_date)); ?> months)
+                                        </div>
+                                    <?php else: ?>
+                                        N/A
+                                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                </td>
+                                <td class="px-4 py-3">
+                                    <!--[if BLOCK]><![endif]--><?php if($ar->status === 'ongoing'): ?>
+                                        <?php
+                                            $nextDueDate = $ar->getNextPaymentDueDate();
+                                        ?>
+                                        <!--[if BLOCK]><![endif]--><?php if($nextDueDate): ?>
+                                            <div class="text-sm">
+                                                <?php echo e($nextDueDate->format('M d, Y')); ?>
+
+                                                <!--[if BLOCK]><![endif]--><?php if($nextDueDate->isPast()): ?>
+                                                    <span class="text-red-500 text-xs">(Overdue)</span>
+                                                <?php else: ?>
+                                                    <span class="text-gray-500 text-xs">(<?php echo e($nextDueDate->diffForHumans()); ?>)</span>
+                                                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                            </div>
+                                        <?php else: ?>
+                                            N/A
+                                        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                    <?php else: ?>
+                                        -
+                                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                </td>
                                 <td class="px-4 py-3">
                                     <span class="px-2 py-1 text-sm rounded-full <?php echo e($ar->status === 'paid' ? 'bg-[#72383D] text-white' : 'bg-[#AB644B] text-white'); ?>">
                                         <?php echo e(ucfirst($ar->status)); ?>

@@ -27,15 +27,15 @@
 <?php endif; ?>
             </div>
 
-            <!--[if BLOCK]><![endif]--><?php if(session()->has('message')): ?>
+            <?php if(session()->has('message')): ?>
                 <div class="mb-4 p-4 bg-[#72383D]/10 border-l-4 border-[#72383D] text-[#401B1B] rounded">
                     <?php echo e(session('message')); ?>
 
                 </div>
-            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+            <?php endif; ?>
 
             <div class="bg-white/40 backdrop-blur-md overflow-hidden shadow-lg rounded-lg">
-                <!--[if BLOCK]><![endif]--><?php if($paymentSubmissions->isEmpty()): ?>
+                <?php if($paymentSubmissions->isEmpty()): ?>
                     <div class="p-8 text-center text-[#72383D]">
                         <p>No payment submissions found.</p>
                     </div>
@@ -51,7 +51,7 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white/50 divide-y divide-[#72383D]/10">
-                            <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $paymentSubmissions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $submission): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php $__currentLoopData = $paymentSubmissions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $submission): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <tr class="hover:bg-[#F2F2EB]/50">
                                     <td class="px-6 py-4 whitespace-nowrap text-[#401B1B]">
                                         <?php echo e($submission->payment_date->format('M d, Y')); ?>
@@ -83,20 +83,20 @@
                                             View Proof
                                         </a>
 
-                                        <!--[if BLOCK]><![endif]--><?php if($submission->status === 'rejected' && $submission->rejection_reason): ?>
+                                        <?php if($submission->status === 'rejected' && $submission->rejection_reason): ?>
                                             <button 
                                                 type="button"
                                                 @click="showReasonModal = true; currentReason = '<?php echo e(addslashes($submission->rejection_reason)); ?>'"
                                                 class="text-red-600 hover:text-red-800 underline">
                                                 View Reason
                                             </button>
-                                        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tbody>
                     </table>
-                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -107,7 +107,7 @@ $__split = function ($name, $params = []) {
 };
 [$__name, $__params] = $__split('customers.submit-payment', []);
 
-$__html = app('livewire')->mount($__name, $__params, 'lw-1333755874-0', $__slots ?? [], get_defined_vars());
+$__html = app('livewire')->mount($__name, $__params, 'lw-1634489894-1', $__slots ?? [], get_defined_vars());
 
 echo $__html;
 
@@ -163,4 +163,4 @@ if (isset($__slots)) unset($__slots);
             </div>
         </div>
     </div>
-</div> <?php /**PATH C:\laragon\www\inventorymanagement\resources\views/livewire/customers/payment-history.blade.php ENDPATH**/ ?>
+</div><?php /**PATH C:\laragon\www\inventorymanagement\resources\views\livewire\customers\payment-history.blade.php ENDPATH**/ ?>

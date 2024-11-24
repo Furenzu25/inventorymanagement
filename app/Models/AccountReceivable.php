@@ -20,7 +20,14 @@ class AccountReceivable extends Model
         'total_amount',
         'payment_months',
         'interest_rate',
-        'status'
+        'status',
+        'loan_start_date',
+        'loan_end_date'
+    ];
+
+    protected $casts = [
+        'loan_start_date' => 'datetime',
+        'loan_end_date' => 'datetime'
     ];
 
     public function customer()
@@ -83,6 +90,22 @@ class AccountReceivable extends Model
         }
         
         $this->save();
+    }
+
+    public function getNextPaymentDueDate()
+    {
+        if (!$this->loan_start_date) {
+            return null;
+        }
+
+        $lastPayment = $this->payments()->latest('payment_date')->first();
+        
+        if ($lastPayment) {
+            return $lastPayment->payment_date->addMonth();
+        }
+        
+        // If no payments yet, return the first payment due date (1 month after loan start)
+        return $this->loan_start_date->addMonth();
     }
 }
 

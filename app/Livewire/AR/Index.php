@@ -8,6 +8,7 @@ use App\Models\Preorder;
 use App\Models\Customer;
 use Illuminate\Support\Facades\DB;
 use App\Models\InventoryItem;
+use App\Models\Notification;
 
 class Index extends Component
 {
@@ -23,10 +24,22 @@ class Index extends Component
 
     public function render()
     {
-        $accountReceivables = AccountReceivable::with(['customer', 'preorder.preorderItems.product'])->get();
+        $accountReceivables = AccountReceivable::with(['customer', 'preorder.preorderItems.product'])
+            ->select([
+                'id', 
+                'customer_id', 
+                'preorder_id', 
+                'monthly_payment', 
+                'total_paid', 
+                'remaining_balance', 
+                'status', 
+                'loan_start_date', 
+                'loan_end_date'
+            ])
+            ->get();
 
         $totalAR = $accountReceivables->sum('total_paid');
-        $totalOutstanding = $accountReceivables->sum('remaining_balance');
+        $totalOutstanding = $this->getTotalOutstandingProperty();
 
         $preorders = Preorder::where('status', 'ready_for_pickup')->get();
 
@@ -86,20 +99,77 @@ class Index extends Component
         $ar = AccountReceivable::findOrFail($arId);
         
         DB::transaction(function () use ($ar) {
-            // Free up the inventory item
+            // Update the inventory item status to repossessed
             $inventoryItem = InventoryItem::where('preorder_id', $ar->preorder_id)->first();
             $inventoryItem->update([
-                'status' => 'available',
-                'preorder_id' => null
+                'status' => 'repossessed',
+                'repossessed_at' => now()
             ]);
             
-            // Mark the AR as defaulted
-            $ar->update(['status' => 'defaulted']);
+            // Update AR status and clear remaining balance
+            $ar->update([
+                'status' => 'defaulted',
+                'remaining_balance' => 0
+            ]);
             
             // Mark the preorder as repossessed
             $ar->preorder->update(['status' => 'repossessed']);
+
+            // Create notification using the correct table structure
+            DB::table('notifications')->insert([
+                'id' => \Illuminate\Support\Str::uuid(),
+                'type' => 'item_repossessed',
+                'notifiable_type' => 'App\Models\User',
+                'notifiable_id' => auth()->id(),
+                'data' => json_encode([
+                    'title' => 'Item Repossessed',
+                    'message' => "Product {$inventoryItem->product->product_name} (SN: {$inventoryItem->serial_number}) has been repossessed from {$ar->preorder->customer->name}",
+                    'status' => 'unread'
+                ]),
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
         });
         
-        session()->flash('message', 'Product has been repossessed and is available for reassignment.');
+        session()->flash('message', 'Product has been repossessed successfully.');
+    }
+
+    public function handleRepossession($accountId)
+    {
+        DB::transaction(function () use ($accountId) {
+            $ar = AccountReceivable::findOrFail($accountId);
+            
+            // Update inventory items status
+            $ar->preorder->inventoryItems()->update([
+                'status' => 'repossessed',
+                'repossession_date' => now()
+            ]);
+            
+            // Update AR status and clear remaining balance
+            $ar->update([
+                'status' => 'repossessed',
+                'remaining_balance' => 0,  // Clear the remaining balance
+                'repossession_date' => now()
+            ]);
+            
+            // Update preorder status
+            $ar->preorder->update(['status' => 'repossessed']);
+            
+            // Create notification
+            Notification::create([
+                'title' => 'Item Repossessed',
+                'message' => "Products from Order #{$ar->preorder->id} have been repossessed from {$ar->preorder->customer->name}",
+                'status' => 'unread',
+                'type' => 'item_repossessed'
+            ]);
+        });
+
+        session()->flash('message', 'Item has been repossessed successfully.');
+    }
+
+    public function getTotalOutstandingProperty()
+    {
+        return AccountReceivable::where('status', 'ongoing')  // Only count ongoing ARs
+            ->sum('remaining_balance');
     }
 }
