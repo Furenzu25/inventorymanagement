@@ -60,8 +60,7 @@
                                 <td class="px-4 py-3 text-[#401B1B]"><?php echo e($preorder->status); ?></td>
                                 <td class="px-4 py-3">
                                     <!--[if BLOCK]><![endif]--><?php if($preorder->inventoryItems->isNotEmpty()): ?>
-                                        <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $preorder->inventoryItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                            <?php if (isset($component)) { $__componentOriginal602b228a887fab12f0012a3179e5b533 = $component; } ?>
+                                        <?php if (isset($component)) { $__componentOriginal602b228a887fab12f0012a3179e5b533 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal602b228a887fab12f0012a3179e5b533 = $attributes; } ?>
 <?php $component = Mary\View\Components\Button::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('button'); ?>
@@ -70,9 +69,9 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Mary\View\Components\Button::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['wire:click' => 'showPickupDetails('.e($item->id).')','class' => 'bg-[#AB644B] hover:bg-[#72383D] text-white text-xs py-1 px-2 rounded transition duration-300 shadow-sm']); ?>
-                                                View Details
-                                             <?php echo $__env->renderComponent(); ?>
+<?php $component->withAttributes(['wire:click' => 'showPickupDetails('.e($preorder->id).')','class' => 'bg-[#AB644B] hover:bg-[#72383D] text-white text-xs py-1 px-2 rounded transition duration-300 shadow-sm']); ?>
+                                            View Details
+                                         <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal602b228a887fab12f0012a3179e5b533)): ?>
 <?php $attributes = $__attributesOriginal602b228a887fab12f0012a3179e5b533; ?>
@@ -82,7 +81,6 @@
 <?php $component = $__componentOriginal602b228a887fab12f0012a3179e5b533; ?>
 <?php unset($__componentOriginal602b228a887fab12f0012a3179e5b533); ?>
 <?php endif; ?>
-                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
                                     <?php else: ?>
                                         <span class="text-gray-500">No pickup details</span>
                                     <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
@@ -163,6 +161,10 @@
                                     <?php elseif($preorder->status === 'loaned'): ?>
                                         <span class="px-3 py-1 text-sm rounded-full bg-green-100 text-green-800">
                                             Loan Active
+                                        </span>
+                                    <?php elseif($preorder->status === 'arrived'): ?>
+                                        <span class="px-3 py-1 text-sm rounded-full bg-yellow-100 text-yellow-800">
+                                            Ready for Pickup
                                         </span>
                                     <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                 </td>
@@ -278,6 +280,39 @@
 <?php $component = $__componentOriginal602b228a887fab12f0012a3179e5b533; ?>
 <?php unset($__componentOriginal602b228a887fab12f0012a3179e5b533); ?>
 <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Stocked Out Items Section -->
+            <h2 class="text-xl font-semibold mb-4 mt-8 text-[#401B1B]">Stocked Out Items</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gradient-to-r from-[#72383D] to-[#AB644B] text-white">
+                            <th class="px-4 py-3 text-left">Order ID</th>
+                            <th class="px-4 py-3 text-left">Customer</th>
+                            <th class="px-4 py-3 text-left">Product</th>
+                            <th class="px-4 py-3 text-left">Serial Number</th>
+                            <th class="px-4 py-3 text-left">Stocked Out Date</th>
+                            <th class="px-4 py-3 text-left">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $stockedOutItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <tr class="border-b border-[#D2DCE6] hover:bg-[#F2F2EB] transition-colors duration-200">
+                                <td class="px-4 py-3 text-[#401B1B]">#<?php echo e($item->preorder->id); ?></td>
+                                <td class="px-4 py-3 text-[#401B1B]"><?php echo e($item->preorder->customer->name); ?></td>
+                                <td class="px-4 py-3 text-[#401B1B]"><?php echo e($item->product->product_name); ?></td>
+                                <td class="px-4 py-3 text-[#401B1B]"><?php echo e($item->serial_number); ?></td>
+                                <td class="px-4 py-3 text-[#401B1B]"><?php echo e($item->updated_at->format('M d, Y')); ?></td>
+                                <td class="px-4 py-3">
+                                    <span class="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-800">
+                                        Stocked Out
+                                    </span>
                                 </td>
                             </tr>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
@@ -567,21 +602,25 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
 <?php $component->withAttributes(['wire:model' => 'showPickupDetailsModal']); ?>
         <div class="p-6 bg-white">
             <h2 class="text-lg font-semibold text-gray-700 mb-4">Pickup Details</h2>
-            <!--[if BLOCK]><![endif]--><?php if($selectedItem): ?>
-                <div class="space-y-3">
-                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <p class="font-semibold text-gray-700">Verification: <?php echo e($selectedItem->pickup_verification); ?></p>
-                        <p class="text-gray-600">Bought at: <?php echo e($selectedItem->bought_location); ?></p>
-                        <p class="text-gray-600">Bought on: <?php echo e($selectedItem->bought_date?->format('M d, Y H:i')); ?></p>
-                        <p class="text-gray-600">Picked up: <?php echo e($selectedItem->picked_up_at?->format('M d, Y H:i') ?? 'Not picked up'); ?></p>
-                        <!--[if BLOCK]><![endif]--><?php if($selectedItem->picked_up_by): ?>
-                            <p class="text-gray-600">By: <?php echo e(optional($selectedItem->pickedUpBy)->name); ?></p>
-                        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
-                        <!--[if BLOCK]><![endif]--><?php if($selectedItem->pickup_notes): ?>
-                            <p class="text-gray-500 text-sm">Notes: <?php echo e($selectedItem->pickup_notes); ?></p>
-                        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+            <!--[if BLOCK]><![endif]--><?php if($selectedPreorder): ?>
+                <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $selectedPreorder->inventoryItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <div class="space-y-3 mb-4">
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <p class="font-semibold text-gray-700">Product: <?php echo e($item->product->product_name); ?></p>
+                            <p class="font-semibold text-gray-700">Serial Number: <?php echo e($item->serial_number); ?></p>
+                            <p class="font-semibold text-gray-700">Verification: <?php echo e($item->pickup_verification); ?></p>
+                            <p class="text-gray-600">Bought at: <?php echo e($item->bought_location); ?></p>
+                            <p class="text-gray-600">Bought on: <?php echo e($item->bought_date?->format('M d, Y H:i')); ?></p>
+                            <p class="text-gray-600">Picked up: <?php echo e($item->picked_up_at?->format('M d, Y H:i') ?? 'Not picked up'); ?></p>
+                            <!--[if BLOCK]><![endif]--><?php if($item->picked_up_by): ?>
+                                <p class="text-gray-600">By: <?php echo e(optional($item->pickedUpBy)->name); ?></p>
+                            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                            <!--[if BLOCK]><![endif]--><?php if($item->pickup_notes): ?>
+                                <p class="text-gray-500 text-sm">Notes: <?php echo e($item->pickup_notes); ?></p>
+                            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                        </div>
                     </div>
-                </div>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
             <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
         </div>
      <?php echo $__env->renderComponent(); ?>

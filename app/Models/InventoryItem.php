@@ -19,11 +19,13 @@ class InventoryItem extends Model
         'pickup_notes',
         'bought_location',
         'bought_date',
+        'stocked_out_date',
     ];
 
     protected $casts = [
         'picked_up_at' => 'datetime',
         'bought_date' => 'datetime',
+        'stocked_out_date' => 'datetime',
     ];
 
     public static function generateSerialNumber($productId)

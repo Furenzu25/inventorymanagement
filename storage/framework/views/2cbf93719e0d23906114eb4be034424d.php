@@ -37,51 +37,56 @@
         @click.away="open = false"
         class="absolute right-0 mt-2 w-96 bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg shadow-lg overflow-hidden z-50 border border-[#72383D]/20"
     >
-        <div class="p-4">
-            <h3 class="text-lg font-semibold text-[#401B1B] mb-4">Notifications</h3>
-            <?php $__empty_1 = true; $__currentLoopData = $notifications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $notification): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                <div class="mb-4 p-3 <?php echo e(is_null($notification->read_at) ? 'bg-white/50' : 'bg-white/30'); ?> rounded-lg border border-[#72383D]/10">
-                    <h4 class="font-semibold text-[#401B1B]">
-                        <?php echo e($notification->data['title']); ?>
+        <div class="sticky top-0 bg-[#F2F2EB] p-4 border-b border-[#72383D]/10 z-10">
+            <h3 class="text-lg font-semibold text-[#401B1B]">Notifications</h3>
+        </div>
 
-                    </h4>
-                    <p class="text-sm text-[#72383D]">
-                        <?php echo e($notification->data['message']); ?>
+        <div class="max-h-[400px] overflow-y-auto">
+            <div class="p-4">
+                <?php $__empty_1 = true; $__currentLoopData = $notifications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $notification): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                    <div class="mb-4 p-3 <?php echo e(is_null($notification->read_at) ? 'bg-white/50' : 'bg-white/30'); ?> rounded-lg border border-[#72383D]/10">
+                        <h4 class="font-semibold text-[#401B1B]">
+                            <?php echo e($notification->data['title']); ?>
 
-                    </p>
-                    <div class="mt-2 flex justify-between items-center">
-                        <span class="text-xs text-[#72383D]/70">
-                            <?php echo e($notification->created_at->diffForHumans()); ?>
+                        </h4>
+                        <p class="text-sm text-[#72383D]">
+                            <?php echo e($notification->data['message']); ?>
 
-                        </span>
-                        <?php if($notification->type === 'App\\Notifications\\NewPaymentSubmission'): ?>
+                        </p>
+                        <div class="mt-2 flex justify-between items-center">
+                            <span class="text-xs text-[#72383D]/70">
+                                <?php echo e($notification->created_at->diffForHumans()); ?>
+
+                            </span>
+                            <?php if($notification->type === 'App\\Notifications\\NewPaymentSubmission'): ?>
+                                <button 
+                                    wire:click.stop="viewPayment('<?php echo e($notification->data['payment_submission_id'] ?? ''); ?>')"
+                                    class="text-xs bg-[#72383D] text-white px-3 py-1 rounded-full hover:bg-[#401B1B] transition-colors duration-200"
+                                >
+                                    Review Payment
+                                </button>
+                            <?php elseif($notification->type === 'App\\Notifications\\AdminPreorderNotification'): ?>
+                                <button 
+                                    wire:click.stop="viewPreorder('<?php echo e($notification->data['preorder_submission_id']); ?>')"
+                                    class="text-xs bg-[#72383D] text-white px-3 py-1 rounded-full hover:bg-[#401B1B] transition-colors duration-200"
+                                >
+                                    View Preorder
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                        <?php if(is_null($notification->read_at)): ?>
                             <button 
-                                wire:click.stop="viewPayment('<?php echo e($notification->data['payment_submission_id'] ?? ''); ?>')"
-                                class="text-xs bg-[#72383D] text-white px-3 py-1 rounded-full hover:bg-[#401B1B] transition-colors duration-200"
+                                wire:click.stop="markAsRead('<?php echo e($notification->id); ?>')"
+                                class="text-xs text-[#72383D] hover:text-[#401B1B] mt-2"
                             >
-                                Review Payment
-                            </button>
-                        <?php elseif($notification->type === 'App\\Notifications\\AdminPreorderNotification'): ?>
-                            <button 
-                                wire:click.stop="viewPreorder('<?php echo e($notification->data['preorder_submission_id']); ?>')"
-                                class="text-xs bg-[#72383D] text-white px-3 py-1 rounded-full hover:bg-[#401B1B] transition-colors duration-200"
-                            >
-                                View Preorder
+                                Mark as read
                             </button>
                         <?php endif; ?>
                     </div>
-                    <?php if(is_null($notification->read_at)): ?>
-                        <button 
-                            wire:click.stop="markAsRead('<?php echo e($notification->id); ?>')"
-                            class="text-xs text-[#72383D] hover:text-[#401B1B] mt-2"
-                        >
-                            Mark as read
-                        </button>
-                    <?php endif; ?>
-                </div>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                <p class="text-[#72383D]">No notifications</p>
-            <?php endif; ?>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                    <p class="text-[#72383D]">No notifications</p>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 </div><?php /**PATH C:\laragon\www\inventorymanagement\resources\views\livewire\admin\notification-bell.blade.php ENDPATH**/ ?>

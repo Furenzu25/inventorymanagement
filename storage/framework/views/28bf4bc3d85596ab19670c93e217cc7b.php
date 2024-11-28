@@ -46,11 +46,11 @@
                 <!--[if BLOCK]><![endif]--><?php $__empty_1 = true; $__currentLoopData = $notifications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $notification): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                     <div class="mb-4 p-3 <?php echo e(is_null($notification->read_at) ? 'bg-white/50' : 'bg-white/30'); ?> rounded-lg border border-[#72383D]/10">
                         <h4 class="font-semibold text-[#401B1B]">
-                            <?php echo e($notification->data['title']); ?>
+                            <?php echo e($notification->data['title'] ?? 'No Title'); ?>
 
                         </h4>
                         <p class="text-sm text-[#72383D]">
-                            <?php echo e($notification->data['message']); ?>
+                            <?php echo e($notification->data['message'] ?? 'No Message'); ?>
 
                         </p>
                         <div class="mt-2 flex justify-between items-center">

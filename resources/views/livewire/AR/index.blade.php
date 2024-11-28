@@ -40,26 +40,39 @@
                 <table class="w-full">
                     <thead>
                         <tr class="bg-gradient-to-r from-[#401B1B] to-[#72383D] text-white">
-                            <th class="px-4 py-3 text-left">Customer</th>
-                            <th class="px-4 py-3 text-left">Product</th>
-                            <th class="px-4 py-3 text-left">Monthly Payment</th>
-                            <th class="px-4 py-3 text-left">Total Paid</th>
-                            <th class="px-4 py-3 text-left">Remaining Balance</th>
-                            <th class="px-4 py-3 text-left">Loan Duration</th>
-                            <th class="px-4 py-3 text-left">Next Payment Due</th>
-                            <th class="px-4 py-3 text-left">Status</th>
-                            <th class="px-4 py-3 text-left">Actions</th>
+                            <th class="px-4 py-2 text-left">Order ID</th>
+                            <th class="px-4 py-2 text-left">Customer</th>
+                            <th class="px-4 py-2 text-left">Product</th>
+                            <th class="px-4 py-2 text-left">Monthly Payment</th>
+                            <th class="px-4 py-2 text-left">Total Paid</th>
+                            <th class="px-4 py-2 text-left">Remaining Balance</th>
+                            <th class="px-4 py-2 text-left">Loan Duration</th>
+                            <th class="px-4 py-2 text-left">Next Payment Due</th>
+                            <th class="px-4 py-2 text-left">Status</th>
+                            <th class="px-4 py-2 text-left">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($accountReceivables as $ar)
                             <tr class="border-b border-[#D2DCE6] hover:bg-[#F2F2EB] transition-colors duration-200">
-                                <td class="px-4 py-3 text-[#401B1B]">{{ $ar->customer->name }}</td>
-                                <td class="px-4 py-3 text-[#401B1B]">{{ $ar->preorder->preorderItems->map(function($item) { return $item->product->product_name; })->implode(', ') }}</td>
-                                <td class="px-4 py-3 text-[#401B1B]">₱{{ number_format($ar->monthly_payment, 2) }}</td>
-                                <td class="px-4 py-3 text-[#401B1B]">₱{{ number_format($ar->total_paid, 2) }}</td>
-                                <td class="px-4 py-3 text-[#401B1B]">₱{{ number_format($ar->remaining_balance, 2) }}</td>
-                                <td class="px-4 py-3 text-[#401B1B]">
+                                <td class="px-4 py-2 text-[#401B1B]">
+                                    #{{ $ar->preorder_id }}
+                                </td>
+                                <td class="px-4 py-2 text-[#401B1B]">{{ $ar->customer->name }}</td>
+                                <td class="px-4 py-3">
+                                    @foreach($ar->preorder->preorderItems as $item)
+                                        <div class="text-[#401B1B] font-medium">
+                                            {{ $item->product->product_name }}
+                                            @if(!$loop->last)
+                                                <br>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </td>
+                                <td class="px-4 py-2 text-[#401B1B]">₱{{ number_format($ar->monthly_payment, 2) }}</td>
+                                <td class="px-4 py-2 text-[#401B1B]">₱{{ number_format($ar->total_paid, 2) }}</td>
+                                <td class="px-4 py-2 text-[#401B1B]">₱{{ number_format($ar->remaining_balance, 2) }}</td>
+                                <td class="px-4 py-2 text-[#401B1B]">
                                     @if($ar->loan_start_date && $ar->loan_end_date)
                                         <div>{{ $ar->loan_start_date->format('M d, Y') }} -</div>
                                         <div>{{ $ar->loan_end_date->format('M d, Y') }}</div>
@@ -70,33 +83,33 @@
                                         N/A
                                     @endif
                                 </td>
-                                <td class="px-4 py-3">
+                                <td class="px-4 py-2">
                                     @if($ar->status === 'ongoing')
                                         @php
                                             $nextDueDate = $ar->getNextPaymentDueDate();
                                         @endphp
                                         @if($nextDueDate)
-                                            <div class="text-sm">
+                                            <div class="text-[#401B1B]">
                                                 {{ $nextDueDate->format('M d, Y') }}
                                                 @if($nextDueDate->isPast())
                                                     <span class="text-red-500 text-xs">(Overdue)</span>
                                                 @else
-                                                    <span class="text-gray-500 text-xs">({{ $nextDueDate->diffForHumans() }})</span>
+                                                    <span class="text-[#72383D] text-xs">({{ $nextDueDate->diffForHumans() }})</span>
                                                 @endif
                                             </div>
                                         @else
-                                            N/A
+                                            <span class="text-[#401B1B]">N/A</span>
                                         @endif
                                     @else
-                                        -
+                                        <span class="text-[#401B1B]">-</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3">
+                                <td class="px-4 py-2">
                                     <span class="px-2 py-1 text-sm rounded-full {{ $ar->status === 'paid' ? 'bg-[#72383D] text-white' : 'bg-[#AB644B] text-white' }}">
                                         {{ ucfirst($ar->status) }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3">
+                                <td class="px-4 py-2">
                                     @if($ar->status === 'ongoing')
                                         <x-button wire:click="reassignProduct({{ $ar->id }})" 
                                                 class="bg-[#9CABB4] hover:bg-[#72383D] text-white text-xs py-1 px-2 rounded transition duration-300"

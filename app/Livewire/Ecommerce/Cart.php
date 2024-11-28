@@ -14,6 +14,7 @@ use App\Models\InventoryItem;
 use App\Notifications\PreorderStatusNotification;
 use App\Models\User;
 use App\Notifications\AdminPreorderNotification;
+use App\Models\CustomerNotification;
 
 class Cart extends Component
 {
@@ -48,20 +49,18 @@ class Cart extends Component
 
     public function submitPreorder()
     {
-        $this->validate();
-
-        $user = Auth::user();
-        
-        if (!$user->customer) {
-            session()->flash('error', 'You need to be associated with a customer account to submit a preorder.');
-            return redirect()->route('home');
+        if (empty($this->cartItems)) {
+            session()->flash('error', 'Your cart is empty. Please add items before submitting a pre-order.');
+            return;
         }
 
-        $totalAmount = collect($this->cartItems)->sum(function ($item) {
-            return $item['price'] * $item['quantity'];
-        });
+        $user = auth()->user();
+        if (!$user->customer) {
+            session()->flash('error', 'Please complete your customer profile before placing an order.');
+            return;
+        }
 
-        $preorder = null;
+        $totalAmount = $this->calculateTotal();
 
         DB::transaction(function () use ($user, $totalAmount, &$preorder) {
             $preorder = Preorder::create([
@@ -86,11 +85,12 @@ class Cart extends Component
         });
 
         // Send notification to customer
-        $user->notify(new PreorderStatusNotification(
-            $preorder,
-            'Pending',
-            "Your pre-order #{$preorder->id} has been submitted successfully. Total amount: ₱" . number_format($totalAmount, 2)
-        ));
+        CustomerNotification::create([
+            'customer_id' => $user->customer->id,
+            'title' => 'Pre-order Submitted',
+            'message' => "Your pre-order #{$preorder->id} has been submitted successfully. Total amount: ₱" . number_format($totalAmount, 2),
+            'type' => 'preorder_status'
+        ]);
 
         // Send notification to admin users
         $adminUsers = User::where('is_admin', true)->get();

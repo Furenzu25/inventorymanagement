@@ -195,11 +195,14 @@ class Index extends Component
 
     private function calculateMonthlyPayment($totalAmount, $loanDuration, $interestRate)
     {
-        $monthlyInterestRate = $interestRate / 12 / 100;
-        $numberOfPayments = $loanDuration;
+        // Calculate base monthly payment
+        $baseMonthlyPayment = $totalAmount / $loanDuration;
         
-        $monthlyPayment = $totalAmount * ($monthlyInterestRate * pow(1 + $monthlyInterestRate, $numberOfPayments)) 
-                        / (pow(1 + $monthlyInterestRate, $numberOfPayments) - 1);
+        // Calculate monthly interest amount (5% of total amount)
+        $monthlyInterest = $totalAmount * ($interestRate / 100) / $loanDuration;
+        
+        // Total monthly payment is base payment plus interest
+        $monthlyPayment = $baseMonthlyPayment + $monthlyInterest;
         
         return round($monthlyPayment, 2);
     }

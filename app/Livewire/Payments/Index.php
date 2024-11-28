@@ -261,38 +261,53 @@ class Index extends Component
     public function recordPayment()
     {
         $this->validate([
-            'selectedAR' => 'required|exists:account_receivables,id',
             'payment.amount_paid' => 'required|numeric|min:0',
             'payment.payment_date' => 'required|date',
+            'payment.notes' => 'nullable|string'
         ]);
 
         DB::transaction(function () {
-            $ar = AccountReceivable::find($this->selectedAR);
+            $ar = AccountReceivable::findOrFail($this->selectedAR);
             
-            $payment = Payment::create([
-                'account_receivable_id' => $this->selectedAR, // Use the ID directly
+            // Calculate interest portion based on remaining balance
+            $interestRate = $ar->interest_rate / 12 / 100; // Monthly interest rate
+            $interestPortion = $ar->remaining_balance * $interestRate;
+            $principalPortion = $this->payment['amount_paid'] - $interestPortion;
+            
+            // Update AR totals
+            $ar->total_paid += $this->payment['amount_paid'];
+            $ar->remaining_balance -= $principalPortion; // Only reduce principal portion
+            
+            // Create payment record
+            Payment::create([
+                'account_receivable_id' => $ar->id,
                 'amount_paid' => $this->payment['amount_paid'],
                 'payment_date' => $this->payment['payment_date'],
-                'due_amount' => $ar->monthly_payment,
-                'remaining_balance' => $ar->remaining_balance - $this->payment['amount_paid'],
-                'status' => 'active'
+                'notes' => $this->payment['notes'] ?? '',
+                'interest_portion' => $interestPortion,
+                'principal_portion' => $principalPortion
             ]);
 
-            // Update AR balances
-            $ar->total_paid += $this->payment['amount_paid'];
-            $ar->remaining_balance -= $this->payment['amount_paid'];
-            
-            // Check if fully paid
-            if ($ar->remaining_balance <= 0) {
-                $ar->status = 'completed';
-            }
-            
-            $ar->save();
+            // Create sale record for the payment
+            Sale::create([
+                'account_receivable_id' => $ar->id,
+                'customer_id' => $ar->customer_id,
+                'preorder_id' => $ar->preorder_id,
+                'total_amount' => $this->payment['amount_paid'],
+                'interest_earned' => $interestPortion,
+                'completion_date' => $this->payment['payment_date'],
+                'payment_method' => 'Monthly Payment',
+                'status' => $ar->remaining_balance <= 0 ? 'completed' : 'ongoing',
+                'type' => 'payment',
+                'notes' => 'Monthly payment for AR #' . $ar->id
+            ]);
+
+            // Update AR status if needed
+            $ar->updateStatus();
         });
 
         $this->recordPaymentOpen = false;
         $this->reset(['selectedAR', 'payment', 'selectedARDetails']);
-        
         $this->refreshStats();
         session()->flash('message', 'Payment recorded successfully.');
     }

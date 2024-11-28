@@ -12,6 +12,10 @@ use App\Models\Notification;
 
 class Index extends Component
 {
+    public $search = '';
+    public $sortField = 'created_at';
+    public $sortDirection = 'desc';
+    
     public $headers = [
         ['key' => 'customer', 'label' => 'Customer'],
         ['key' => 'product', 'label' => 'Product'],
@@ -24,30 +28,22 @@ class Index extends Component
 
     public function render()
     {
-        $accountReceivables = AccountReceivable::with(['customer', 'preorder.preorderItems.product'])
-            ->select([
-                'id', 
-                'customer_id', 
-                'preorder_id', 
-                'monthly_payment', 
-                'total_paid', 
-                'remaining_balance', 
-                'status', 
-                'loan_start_date', 
-                'loan_end_date'
-            ])
-            ->get();
+        $accountReceivables = AccountReceivable::with(['preorder.preorderItems.product', 'customer'])
+            ->when($this->search, function ($query) {
+                $query->whereHas('customer', function ($q) {
+                    $q->where('name', 'like', '%' . $this->search . '%');
+                });
+            })
+            ->orderBy($this->sortField, $this->sortDirection)
+            ->paginate(10);
 
         $totalAR = $accountReceivables->sum('total_paid');
         $totalOutstanding = $this->getTotalOutstandingProperty();
-
-        $preorders = Preorder::where('status', 'ready_for_pickup')->get();
 
         return view('livewire.AR.index', [
             'accountReceivables' => $accountReceivables,
             'totalAR' => $totalAR,
             'totalOutstanding' => $totalOutstanding,
-            'preorders' => $preorders,
         ]);
     }
 

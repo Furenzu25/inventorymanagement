@@ -40,14 +40,12 @@
                                 <td class="px-4 py-3 text-[#401B1B]">{{ $preorder->status }}</td>
                                 <td class="px-4 py-3">
                                     @if($preorder->inventoryItems->isNotEmpty())
-                                        @foreach($preorder->inventoryItems as $item)
-                                            <x-button 
-                                                wire:click="showPickupDetails({{ $item->id }})" 
-                                                class="bg-[#AB644B] hover:bg-[#72383D] text-white text-xs py-1 px-2 rounded transition duration-300 shadow-sm"
-                                            >
-                                                View Details
-                                            </x-button>
-                                        @endforeach
+                                        <x-button 
+                                            wire:click="showPickupDetails({{ $preorder->id }})" 
+                                            class="bg-[#AB644B] hover:bg-[#72383D] text-white text-xs py-1 px-2 rounded transition duration-300 shadow-sm"
+                                        >
+                                            View Details
+                                        </x-button>
                                     @else
                                         <span class="text-gray-500">No pickup details</span>
                                     @endif
@@ -83,6 +81,10 @@
                                     @elseif($preorder->status === 'loaned')
                                         <span class="px-3 py-1 text-sm rounded-full bg-green-100 text-green-800">
                                             Loan Active
+                                        </span>
+                                    @elseif($preorder->status === 'arrived')
+                                        <span class="px-3 py-1 text-sm rounded-full bg-yellow-100 text-yellow-800">
+                                            Ready for Pickup
                                         </span>
                                     @endif
                                 </td>
@@ -161,6 +163,39 @@
                                     <x-button wire:click="assignToNewCustomer({{ $item->id }})" class="bg-[#72383D] hover:bg-[#401B1B] text-white transition duration-300">
                                         Assign to Customer
                                     </x-button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Stocked Out Items Section -->
+            <h2 class="text-xl font-semibold mb-4 mt-8 text-[#401B1B]">Stocked Out Items</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gradient-to-r from-[#72383D] to-[#AB644B] text-white">
+                            <th class="px-4 py-3 text-left">Order ID</th>
+                            <th class="px-4 py-3 text-left">Customer</th>
+                            <th class="px-4 py-3 text-left">Product</th>
+                            <th class="px-4 py-3 text-left">Serial Number</th>
+                            <th class="px-4 py-3 text-left">Stocked Out Date</th>
+                            <th class="px-4 py-3 text-left">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($stockedOutItems as $item)
+                            <tr class="border-b border-[#D2DCE6] hover:bg-[#F2F2EB] transition-colors duration-200">
+                                <td class="px-4 py-3 text-[#401B1B]">#{{ $item->preorder->id }}</td>
+                                <td class="px-4 py-3 text-[#401B1B]">{{ $item->preorder->customer->name }}</td>
+                                <td class="px-4 py-3 text-[#401B1B]">{{ $item->product->product_name }}</td>
+                                <td class="px-4 py-3 text-[#401B1B]">{{ $item->serial_number }}</td>
+                                <td class="px-4 py-3 text-[#401B1B]">{{ $item->updated_at->format('M d, Y') }}</td>
+                                <td class="px-4 py-3">
+                                    <span class="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-800">
+                                        Stocked Out
+                                    </span>
                                 </td>
                             </tr>
                         @endforeach
@@ -301,21 +336,25 @@
     <x-modal wire:model="showPickupDetailsModal">
         <div class="p-6 bg-white">
             <h2 class="text-lg font-semibold text-gray-700 mb-4">Pickup Details</h2>
-            @if($selectedItem)
-                <div class="space-y-3">
-                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <p class="font-semibold text-gray-700">Verification: {{ $selectedItem->pickup_verification }}</p>
-                        <p class="text-gray-600">Bought at: {{ $selectedItem->bought_location }}</p>
-                        <p class="text-gray-600">Bought on: {{ $selectedItem->bought_date?->format('M d, Y H:i') }}</p>
-                        <p class="text-gray-600">Picked up: {{ $selectedItem->picked_up_at?->format('M d, Y H:i') ?? 'Not picked up' }}</p>
-                        @if($selectedItem->picked_up_by)
-                            <p class="text-gray-600">By: {{ optional($selectedItem->pickedUpBy)->name }}</p>
-                        @endif
-                        @if($selectedItem->pickup_notes)
-                            <p class="text-gray-500 text-sm">Notes: {{ $selectedItem->pickup_notes }}</p>
-                        @endif
+            @if($selectedPreorder)
+                @foreach($selectedPreorder->inventoryItems as $item)
+                    <div class="space-y-3 mb-4">
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <p class="font-semibold text-gray-700">Product: {{ $item->product->product_name }}</p>
+                            <p class="font-semibold text-gray-700">Serial Number: {{ $item->serial_number }}</p>
+                            <p class="font-semibold text-gray-700">Verification: {{ $item->pickup_verification }}</p>
+                            <p class="text-gray-600">Bought at: {{ $item->bought_location }}</p>
+                            <p class="text-gray-600">Bought on: {{ $item->bought_date?->format('M d, Y H:i') }}</p>
+                            <p class="text-gray-600">Picked up: {{ $item->picked_up_at?->format('M d, Y H:i') ?? 'Not picked up' }}</p>
+                            @if($item->picked_up_by)
+                                <p class="text-gray-600">By: {{ optional($item->pickedUpBy)->name }}</p>
+                            @endif
+                            @if($item->pickup_notes)
+                                <p class="text-gray-500 text-sm">Notes: {{ $item->pickup_notes }}</p>
+                            @endif
+                        </div>
                     </div>
-                </div>
+                @endforeach
             @endif
         </div>
     </x-modal>

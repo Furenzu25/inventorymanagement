@@ -3,20 +3,24 @@
 namespace App\Livewire\Ecommerce;
 
 use Livewire\Component;
-use App\Traits\WithNotificationCount;
+use App\Models\CustomerNotification;
 
 class CustomerNotifications extends Component
 {
-    use WithNotificationCount;
+    public $unreadCount = 0;
+
+    public function mount()
+    {
+        $this->updateUnreadCount();
+    }
 
     public function render()
     {
         $notifications = collect([]);
         
-        if (auth()->check()) {
-            $notifications = auth()->user()
-                ->notifications()
-                ->latest()
+        if (auth()->check() && auth()->user()->customer) {
+            $notifications = CustomerNotification::where('customer_id', auth()->user()->customer->id)
+                ->orderBy('created_at', 'desc')
                 ->take(5)
                 ->get();
         }
@@ -28,28 +32,37 @@ class CustomerNotifications extends Component
 
     public function markAsRead($notificationId)
     {
-        if (auth()->check()) {
-            $notification = auth()->user()
-                ->notifications()
-                ->find($notificationId);
+        if (auth()->check() && auth()->user()->customer) {
+            $notification = CustomerNotification::where('customer_id', auth()->user()->customer->id)
+                ->where('id', $notificationId)
+                ->first();
                 
             if ($notification) {
-                $notification->markAsRead();
+                $notification->update(['is_read' => true]);
+                $this->updateUnreadCount();
+                $this->dispatch('notification-updated');
             }
-            
-            $this->dispatch('notification-updated');
         }
     }
 
     public function markAllAsRead()
     {
-        if (auth()->check()) {
-            auth()->user()
-                ->notifications()
-                ->whereNull('read_at')
-                ->update(['read_at' => now()]);
-                
+        if (auth()->check() && auth()->user()->customer) {
+            CustomerNotification::where('customer_id', auth()->user()->customer->id)
+                ->where('is_read', false)
+                ->update(['is_read' => true]);
+            
+            $this->updateUnreadCount();
             $this->dispatch('notification-updated');
+        }
+    }
+
+    private function updateUnreadCount()
+    {
+        if (auth()->check() && auth()->user()->customer) {
+            $this->unreadCount = CustomerNotification::where('customer_id', auth()->user()->customer->id)
+                ->where('is_read', false)
+                ->count();
         }
     }
 }

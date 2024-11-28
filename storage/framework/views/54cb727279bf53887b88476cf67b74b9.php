@@ -101,26 +101,41 @@
                 <table class="w-full">
                     <thead>
                         <tr class="bg-gradient-to-r from-[#401B1B] to-[#72383D] text-white">
-                            <th class="px-4 py-3 text-left">Customer</th>
-                            <th class="px-4 py-3 text-left">Product</th>
-                            <th class="px-4 py-3 text-left">Monthly Payment</th>
-                            <th class="px-4 py-3 text-left">Total Paid</th>
-                            <th class="px-4 py-3 text-left">Remaining Balance</th>
-                            <th class="px-4 py-3 text-left">Loan Duration</th>
-                            <th class="px-4 py-3 text-left">Next Payment Due</th>
-                            <th class="px-4 py-3 text-left">Status</th>
-                            <th class="px-4 py-3 text-left">Actions</th>
+                            <th class="px-4 py-2 text-left">Order ID</th>
+                            <th class="px-4 py-2 text-left">Customer</th>
+                            <th class="px-4 py-2 text-left">Product</th>
+                            <th class="px-4 py-2 text-left">Monthly Payment</th>
+                            <th class="px-4 py-2 text-left">Total Paid</th>
+                            <th class="px-4 py-2 text-left">Remaining Balance</th>
+                            <th class="px-4 py-2 text-left">Loan Duration</th>
+                            <th class="px-4 py-2 text-left">Next Payment Due</th>
+                            <th class="px-4 py-2 text-left">Status</th>
+                            <th class="px-4 py-2 text-left">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $accountReceivables; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ar): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <tr class="border-b border-[#D2DCE6] hover:bg-[#F2F2EB] transition-colors duration-200">
-                                <td class="px-4 py-3 text-[#401B1B]"><?php echo e($ar->customer->name); ?></td>
-                                <td class="px-4 py-3 text-[#401B1B]"><?php echo e($ar->preorder->preorderItems->map(function($item) { return $item->product->product_name; })->implode(', ')); ?></td>
-                                <td class="px-4 py-3 text-[#401B1B]">₱<?php echo e(number_format($ar->monthly_payment, 2)); ?></td>
-                                <td class="px-4 py-3 text-[#401B1B]">₱<?php echo e(number_format($ar->total_paid, 2)); ?></td>
-                                <td class="px-4 py-3 text-[#401B1B]">₱<?php echo e(number_format($ar->remaining_balance, 2)); ?></td>
-                                <td class="px-4 py-3 text-[#401B1B]">
+                                <td class="px-4 py-2 text-[#401B1B]">
+                                    #<?php echo e($ar->preorder_id); ?>
+
+                                </td>
+                                <td class="px-4 py-2 text-[#401B1B]"><?php echo e($ar->customer->name); ?></td>
+                                <td class="px-4 py-3">
+                                    <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $ar->preorder->preorderItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <div class="text-[#401B1B] font-medium">
+                                            <?php echo e($item->product->product_name); ?>
+
+                                            <!--[if BLOCK]><![endif]--><?php if(!$loop->last): ?>
+                                                <br>
+                                            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                        </div>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                                </td>
+                                <td class="px-4 py-2 text-[#401B1B]">₱<?php echo e(number_format($ar->monthly_payment, 2)); ?></td>
+                                <td class="px-4 py-2 text-[#401B1B]">₱<?php echo e(number_format($ar->total_paid, 2)); ?></td>
+                                <td class="px-4 py-2 text-[#401B1B]">₱<?php echo e(number_format($ar->remaining_balance, 2)); ?></td>
+                                <td class="px-4 py-2 text-[#401B1B]">
                                     <!--[if BLOCK]><![endif]--><?php if($ar->loan_start_date && $ar->loan_end_date): ?>
                                         <div><?php echo e($ar->loan_start_date->format('M d, Y')); ?> -</div>
                                         <div><?php echo e($ar->loan_end_date->format('M d, Y')); ?></div>
@@ -131,35 +146,35 @@
                                         N/A
                                     <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                 </td>
-                                <td class="px-4 py-3">
+                                <td class="px-4 py-2">
                                     <!--[if BLOCK]><![endif]--><?php if($ar->status === 'ongoing'): ?>
                                         <?php
                                             $nextDueDate = $ar->getNextPaymentDueDate();
                                         ?>
                                         <!--[if BLOCK]><![endif]--><?php if($nextDueDate): ?>
-                                            <div class="text-sm">
+                                            <div class="text-[#401B1B]">
                                                 <?php echo e($nextDueDate->format('M d, Y')); ?>
 
                                                 <!--[if BLOCK]><![endif]--><?php if($nextDueDate->isPast()): ?>
                                                     <span class="text-red-500 text-xs">(Overdue)</span>
                                                 <?php else: ?>
-                                                    <span class="text-gray-500 text-xs">(<?php echo e($nextDueDate->diffForHumans()); ?>)</span>
+                                                    <span class="text-[#72383D] text-xs">(<?php echo e($nextDueDate->diffForHumans()); ?>)</span>
                                                 <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                             </div>
                                         <?php else: ?>
-                                            N/A
+                                            <span class="text-[#401B1B]">N/A</span>
                                         <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                     <?php else: ?>
-                                        -
+                                        <span class="text-[#401B1B]">-</span>
                                     <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                 </td>
-                                <td class="px-4 py-3">
+                                <td class="px-4 py-2">
                                     <span class="px-2 py-1 text-sm rounded-full <?php echo e($ar->status === 'paid' ? 'bg-[#72383D] text-white' : 'bg-[#AB644B] text-white'); ?>">
                                         <?php echo e(ucfirst($ar->status)); ?>
 
                                     </span>
                                 </td>
-                                <td class="px-4 py-3">
+                                <td class="px-4 py-2">
                                     <!--[if BLOCK]><![endif]--><?php if($ar->status === 'ongoing'): ?>
                                         <?php if (isset($component)) { $__componentOriginal602b228a887fab12f0012a3179e5b533 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal602b228a887fab12f0012a3179e5b533 = $attributes; } ?>

@@ -12,6 +12,7 @@ use App\Models\Notification;
 use Illuminate\Support\Str;
 use App\Notifications\StockInCompleted;
 use App\Notifications\FirstMonthlyPaymentDue;
+use App\Models\CustomerNotification;
 
 class Index extends Component
 {
@@ -28,12 +29,21 @@ class Index extends Component
     public $showRecordPickupModal = false;
     public $showPickupDetailsModal = false;
     public $selectedItem = null;
+    public $stockedOutItems = [];
     
     protected $rules = [
         'serialNumber' => 'required|unique:inventory_items,serial_number',
         'boughtLocation' => 'required',
         'boughtDate' => 'required|date',
     ];
+
+    public function mount()
+    {
+        $this->stockedOutItems = InventoryItem::with(['preorder.customer', 'product'])
+            ->where('status', 'stocked_out')
+            ->orderBy('updated_at', 'desc')
+            ->get();
+    }
 
     public function openAddModal()
     {
@@ -46,25 +56,41 @@ class Index extends Component
             $preorder = Preorder::findOrFail($preorderId);
             
             foreach ($preorder->preorderItems as $item) {
-                // Generate unique serial number for each product
-                $serialNumber = InventoryItem::generateSerialNumber($item->product_id);
-                
-                // Create inventory item
-                InventoryItem::create([
-                    'product_id' => $item->product_id,
-                    'serial_number' => $serialNumber,
-                    'status' => 'ready_for_pickup',
-                    'preorder_id' => $preorder->id
+                // Create inventory items based on quantity ordered
+                for ($i = 0; $i < $item->quantity; $i++) {
+                    // Generate unique serial number for each product
+                    $serialNumber = InventoryItem::generateSerialNumber($item->product_id);
+                    
+                    // Create inventory item
+                    InventoryItem::create([
+                        'product_id' => $item->product_id,
+                        'serial_number' => $serialNumber,
+                        'status' => 'ready_for_pickup',
+                        'preorder_id' => $preorder->id
+                    ]);
+                }
+
+                // Create notification for the customer
+                DB::table('notifications')->insert([
+                    'id' => \Illuminate\Support\Str::uuid(),
+                    'type' => 'order_arrived',
+                    'notifiable_type' => 'App\Models\User',
+                    'notifiable_id' => $preorder->customer->user_id,
+                    'data' => json_encode([
+                        'title' => 'Order Arrived',
+                        'message' => "Your order for {$item->product->product_name} (Qty: {$item->quantity}) has arrived and is ready for pickup.",
+                        'status' => 'unread',
+                        'preorder_id' => $preorder->id
+                    ]),
+                    'created_at' => now(),
+                    'updated_at' => now()
                 ]);
             }
 
-            // Update preorder status
-            $preorder->update(['status' => 'ready_for_pickup']);
-            
-            // You can implement notification system here
+            $preorder->update(['status' => 'arrived']);
         });
 
-        session()->flash('message', 'Product(s) processed and serial numbers generated. Ready for pickup.');
+        session()->flash('message', 'Order processed successfully. Customer has been notified.');
     }
 
     public function addToInventory()
@@ -142,6 +168,8 @@ class Index extends Component
 
     public function render()
     {
+        $this->refreshStockedOutItems();
+        
         return view('livewire.inventory.index', [
             'pendingPreorders' => Preorder::whereIn('status', [
                 'approved', 
@@ -162,8 +190,12 @@ class Index extends Component
             'reassignableItems' => InventoryItem::where('status', 'available_for_reassignment')
                 ->with(['product', 'preorder.customer'])
                 ->get(),
+            'stockedOutItems' => InventoryItem::with(['preorder.customer', 'product'])
+                ->where('status', 'stocked_out')
+                ->orderBy('updated_at', 'desc')
+                ->get()
         ]);
-    }   
+    }
 
     public function assignAvailableProduct($inventoryItemId, $preorderId)
     {
@@ -229,16 +261,26 @@ class Index extends Component
                 $preorder = Preorder::findOrFail($preorderId);
                 
                 foreach ($preorder->preorderItems as $item) {
-                    $inventoryItem = InventoryItem::create([
-                        'product_id' => $item->product_id,
-                        'serial_number' => InventoryItem::generateSerialNumber($item->product_id),
-                        'status' => 'available',
-                        'preorder_id' => $preorder->id,
-                        'bought_location' => $this->boughtLocation,
-                        'bought_date' => $this->boughtDate
-                    ]);
+                    // Create multiple inventory items based on quantity
+                    for ($i = 0; $i < $item->quantity; $i++) {
+                        $inventoryItem = InventoryItem::create([
+                            'product_id' => $item->product_id,
+                            'serial_number' => InventoryItem::generateSerialNumber($item->product_id),
+                            'status' => 'ready_for_pickup',
+                            'preorder_id' => $preorder->id,
+                            'bought_location' => $this->boughtLocation,
+                            'bought_date' => $this->boughtDate,
+                            'notes' => $this->pickupNotes
+                        ]);
+                    }
 
-                    auth()->user()->notify(new StockInCompleted($inventoryItem));
+                    // Create notification for the customer
+                    CustomerNotification::create([
+                        'customer_id' => $preorder->customer_id,
+                        'title' => 'Order Ready for Pickup',
+                        'message' => "Your order for {$item->product->product_name} has arrived and is ready for pickup.",
+                        'type' => 'order_arrived'
+                    ]);
                 }
 
                 $preorder->update(['status' => 'in_stock']);
@@ -246,7 +288,7 @@ class Index extends Component
 
             $this->showPickupModal = false;
             $this->reset(['pickupNotes', 'boughtLocation', 'boughtDate']);
-            session()->flash('message', 'Items have been stocked in successfully.');
+            session()->flash('message', 'Items have been stocked in successfully and customer has been notified.');
         } catch (\Exception $e) {
             session()->flash('error', 'Error processing stock-in: ' . $e->getMessage());
         }
@@ -257,16 +299,30 @@ class Index extends Component
         DB::transaction(function () use ($preorderId) {
             $preorder = Preorder::findOrFail($preorderId);
             
+            // Check if all items have been picked up
+            $hasUnpickedItems = $preorder->inventoryItems()
+                ->whereNull('picked_up_at')
+                ->exists();
+
+            if ($hasUnpickedItems) {
+                session()->flash('error', 'All items must be picked up before processing the loan.');
+                return;
+            }
+
             $loanStartDate = now();
             $loanEndDate = $loanStartDate->copy()->addMonths($preorder->loan_duration);
             
+            // Calculate total loan amount including interest
+            $totalLoanAmount = $preorder->monthly_payment * $preorder->loan_duration;
+            $totalInterest = $totalLoanAmount - $preorder->total_amount;
+            
             // Create Account Receivable
-            $ar = AccountReceivable::create([
+            AccountReceivable::create([
                 'preorder_id' => $preorder->id,
                 'customer_id' => $preorder->customer_id,
                 'monthly_payment' => $preorder->monthly_payment,
                 'total_paid' => 0,
-                'remaining_balance' => $preorder->total_amount,
+                'remaining_balance' => $totalLoanAmount,
                 'total_amount' => $preorder->total_amount,
                 'payment_months' => $preorder->loan_duration,
                 'interest_rate' => $preorder->interest_rate,
@@ -275,19 +331,13 @@ class Index extends Component
                 'loan_end_date' => $loanEndDate,
             ]);
 
-            // Update inventory item status
-            $inventoryItem = InventoryItem::where('preorder_id', $preorder->id)->first();
-            $inventoryItem->update(['status' => 'loaned']);
-            
-            // Update preorder status
+            // Update preorder and inventory status
             $preorder->update(['status' => 'loaned']);
-
-            // Send notification to customer
-            $customer = $preorder->customer;
-            $customer->notify(new FirstMonthlyPaymentDue($ar));
+            InventoryItem::where('preorder_id', $preorder->id)
+                ->update(['status' => 'loaned']);
         });
 
-        session()->flash('message', 'Loan processed successfully.');
+        session()->flash('message', 'Loan processed successfully. Account Receivable has been created.');
     }
 
     public function markAsRepossessed($preorderId)
@@ -412,10 +462,18 @@ class Index extends Component
         }
     }
 
-    public function showPickupDetails($itemId)
+    public function showPickupDetails($preorderId)
     {
-        $this->selectedItem = InventoryItem::with('pickedUpBy')
-            ->findOrFail($itemId);
+        $this->selectedPreorder = Preorder::with(['inventoryItems.product', 'inventoryItems.pickedUpBy'])
+            ->findOrFail($preorderId);
         $this->showPickupDetailsModal = true;
+    }
+
+    public function refreshStockedOutItems()
+    {
+        $this->stockedOutItems = InventoryItem::with(['preorder.customer', 'product'])
+            ->where('status', 'stocked_out')
+            ->orderBy('updated_at', 'desc')
+            ->get();
     }
 }

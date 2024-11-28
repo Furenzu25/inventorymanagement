@@ -39,12 +39,13 @@ class Index extends Component
     public function render()
     {
         return view('livewire.sales.index', [
-            'sales' => Sale::with(['customer', 'accountReceivable', 'preorder'])
-                ->when($this->search, function($query) {
-                    $query->whereHas('customer', function($q) {
+            'sales' => Sale::query()
+                ->when($this->search, function ($query) {
+                    $query->whereHas('customer', function ($q) {
                         $q->where('name', 'like', '%' . $this->search . '%');
                     });
                 })
+                ->orderBy('type', 'desc')
                 ->orderBy($this->sortField, $this->sortDirection)
                 ->paginate(10)
         ]);
