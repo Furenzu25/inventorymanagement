@@ -1,112 +1,72 @@
-<div class="bg-gradient-to-br from-[#F2F2EB] via-[#D2DCE6] to-[#9CABB4] min-h-screen" x-data="{ showReasonModal: false, currentReason: '' }">
+<div class="relative z-10 bg-gradient-to-br from-[#F2F2EB] via-[#D2DCE6] to-[#9CABB4] min-h-screen">
     @include('livewire.ecommerce.components.nav-bar')
     
-    <div class="p-8">
+    <div class="p-4 sm:p-6 md:p-8">
         <div class="max-w-7xl mx-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold text-[#401B1B]">Payment History</h1>
-                <x-button 
-                    wire:click="$dispatch('openPaymentModal')"
-                    class="bg-gradient-to-r from-[#72383D] to-[#AB644B] text-white"
-                    label="Submit New Payment"
-                />
-            </div>
+            <div class="bg-white/40 backdrop-blur-md overflow-hidden shadow-2xl sm:rounded-3xl border border-[#AB644B]/20">
+                <div class="p-8">
+                    <h2 class="text-3xl font-bold text-[#401B1B] mb-8">Payment History</h2>
 
-            @if(session()->has('message'))
-                <div class="mb-4 p-4 bg-[#72383D]/10 border-l-4 border-[#72383D] text-[#401B1B] rounded">
-                    {{ session('message') }}
-                </div>
-            @endif
+                    @forelse($accountReceivables as $ar)
+                        <div class="mb-8 bg-white/50 rounded-xl p-6">
+                            <h3 class="text-xl font-semibold text-[#401B1B] mb-4">
+                                {{ $ar->preorder->preorderItems->first()->product->product_name }}
+                            </h3>
+                            
+                            <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+                                <div>
+                                    <p class="text-[#72383D]">Total Amount: ₱{{ number_format($ar->total_amount, 2) }}</p>
+                                    <p class="text-[#72383D]">Monthly Payment: ₱{{ number_format($ar->monthly_payment, 2) }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[#72383D]">Remaining Balance: ₱{{ number_format($ar->remaining_balance, 2) }}</p>
+                                    <p class="text-[#72383D]">Status: {{ ucfirst($ar->status) }}</p>
+                                </div>
+                            </div>
 
-            <div class="bg-white/40 backdrop-blur-md overflow-hidden shadow-lg rounded-lg">
-                @if($paymentSubmissions->isEmpty())
-                    <div class="p-8 text-center text-[#72383D]">
-                        <p>No payment submissions found.</p>
-                    </div>
-                @else
-                    <table class="min-w-full divide-y divide-[#72383D]/10">
-                        <thead class="bg-[#F2F2EB]/50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-[#401B1B] uppercase">Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-[#401B1B] uppercase">Product</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-[#401B1B] uppercase">Amount</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-[#401B1B] uppercase">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-[#401B1B] uppercase">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white/50 divide-y divide-[#72383D]/10">
-                            @foreach($paymentSubmissions as $submission)
-                                <tr class="hover:bg-[#F2F2EB]/50">
-                                    <td class="px-6 py-4 whitespace-nowrap text-[#401B1B]">
-                                        {{ $submission->payment_date->format('M d, Y') }}
-                                    </td>
-                                    <td class="px-6 py-4 text-[#401B1B]">
-                                        {{ $submission->accountReceivable->preorder->preorderItems->first()->product->product_name }}
-                                    </td>
-                                    <td class="px-6 py-4 text-[#72383D] font-medium">
-                                        ₱{{ number_format($submission->amount, 2) }}
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <span class="px-2 py-1 rounded-full text-xs font-medium
-                                            {{ $submission->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                            {{ $submission->status === 'approved' ? 'bg-green-100 text-green-800' : '' }}
-                                            {{ $submission->status === 'rejected' ? 'bg-red-100 text-red-800' : '' }}">
-                                            {{ ucfirst($submission->status) }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 flex space-x-4">
-                                        <a href="{{ Storage::url($submission->payment_proof) }}" 
-                                           target="_blank"
-                                           class="text-[#72383D] hover:text-[#401B1B] underline">
-                                            View Proof
-                                        </a>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-[#72383D]/10">
+                                    <thead class="bg-[#F2F2EB]/50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-[#401B1B] uppercase">Date</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-[#401B1B] uppercase">Amount Paid</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-[#401B1B] uppercase">Balance After Payment</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white/50 divide-y divide-[#72383D]/10">
+                                        @forelse($ar->payments as $payment)
+                                            <tr class="hover:bg-[#F2F2EB]/50">
+                                                <td class="px-6 py-4 whitespace-nowrap text-[#401B1B]">
+                                                    {{ $payment->payment_date->format('M d, Y') }}
+                                                </td>
+                                                <td class="px-6 py-4 text-[#72383D] font-medium">
+                                                    ₱{{ number_format($payment->amount_paid, 2) }}
+                                                </td>
+                                                <td class="px-6 py-4 text-[#72383D]">
+                                                    ₱{{ number_format($payment->remaining_balance, 2) }}
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="3" class="px-6 py-4 text-center text-[#72383D]">
+                                                    No payments recorded yet
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    @empty
+                        <p class="text-[#72383D] text-center text-lg">No payment history found</p>
+                    @endforelse
 
-                                        @if($submission->status === 'rejected' && $submission->rejection_reason)
-                                            <button 
-                                                type="button"
-                                                @click="showReasonModal = true; currentReason = '{{ addslashes($submission->rejection_reason) }}'"
-                                                class="text-red-600 hover:text-red-800 underline">
-                                                View Reason
-                                            </button>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @endif
-            </div>
-        </div>
-    </div>
-
-    <livewire:customers.submit-payment />
-
-    @push('scripts')
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    @endpush
-
-    <div x-show="showReasonModal"
-         x-cloak
-         class="fixed inset-0 z-50 overflow-y-auto"
-         @click.away="showReasonModal = false">
-        <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="fixed inset-0 backdrop-blur-sm bg-black/50 transition-opacity"></div>
-            
-            <div class="relative bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg max-w-lg w-full border-2 border-[#72383D]/20 shadow-xl">
-                <div class="p-6">
-                    <h3 class="text-2xl font-bold text-[#401B1B] mb-6">Rejection Reason</h3>
-                    
-                    <div class="bg-white/50 p-4 rounded-lg">
-                        <p class="text-[#72383D]" x-text="currentReason"></p>
-                    </div>
-
-                    <div class="mt-6 flex justify-end">
-                        <x-button 
-                            @click="showReasonModal = false"
-                            class="bg-[#72383D] hover:bg-[#401B1B] text-white"
-                            label="Close"
-                        />
-                    </div>
+                    @if($paymentSubmissions->isNotEmpty())
+                        <div class="mt-8">
+                            <h3 class="text-xl font-semibold text-[#401B1B] mb-4">Pending Submissions</h3>
+                            @include('livewire.customers.payment-history._pending_submissions')
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

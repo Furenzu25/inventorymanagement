@@ -75,8 +75,12 @@ endif;
 unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                 </div>
 
-                                <button wire:click="submitPreorder" 
-                                    class="w-full bg-gradient-to-r from-[#72383D] to-[#AB644B] text-white py-2 px-4 rounded-md hover:from-[#401B1B] hover:to-[#72383D] transition-all duration-300">
+                                <button 
+                                    wire:click="submitPreorder" 
+                                    <?php if(empty($cartItems)): ?> disabled <?php endif; ?>
+                                    class="w-full bg-gradient-to-r from-[#72383D] to-[#AB644B] text-white py-2 px-4 rounded-md 
+                                        hover:from-[#401B1B] hover:to-[#72383D] transition-all duration-300
+                                        <?php echo e(empty($cartItems) ? 'opacity-50 cursor-not-allowed' : ''); ?>">
                                     Submit Pre-order
                                 </button>
                             </div>
@@ -89,4 +93,11 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
         </div>
     </div>
 </div>
+
+<!--[if BLOCK]><![endif]--><?php if(session()->has('error')): ?>
+    <div class="mt-4 text-red-600 text-sm">
+        <?php echo e(session('error')); ?>
+
+    </div>
+<?php endif; ?><!--[if ENDBLOCK]><![endif]-->
 <?php /**PATH C:\laragon\www\inventorymanagement\resources\views/livewire/ecommerce/cart.blade.php ENDPATH**/ ?>

@@ -60,7 +60,7 @@ class Cart extends Component
             return;
         }
 
-        $totalAmount = $this->calculateTotal();
+        $totalAmount = $this->getTotal();
 
         DB::transaction(function () use ($user, $totalAmount, &$preorder) {
             $preorder = Preorder::create([
