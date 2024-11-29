@@ -15,7 +15,7 @@ class AdminAndCustomerSeeder extends Seeder
         $admin = User::create([
             'name' => 'Admin User',
             'email' => 'admin@example.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('123'),
             'email_verified_at' => now(),
         ]);
         $admin->setAsAdmin();
@@ -24,7 +24,7 @@ class AdminAndCustomerSeeder extends Seeder
         $user = User::create([
             'name' => 'John Doe',
             'email' => 'john@example.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('123'),
             'email_verified_at' => now(),
         ]);
 
@@ -44,7 +44,7 @@ class AdminAndCustomerSeeder extends Seeder
             $user = User::create([
                 'name' => "Test User {$i}",
                 'email' => "test{$i}@example.com",
-                'password' => Hash::make('password'),
+                'password' => Hash::make('123'),
                 'email_verified_at' => now(),
             ]);
 
