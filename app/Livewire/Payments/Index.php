@@ -269,18 +269,13 @@ class Index extends Component
             'payment.payment_date' => 'required|date',
             'payment.notes' => 'nullable|string'
         ]);
-
+    
         DB::transaction(function () {
             $ar = AccountReceivable::findOrFail($this->selectedAR);
             
-            // Calculate interest portion based on remaining balance
-            $interestRate = $ar->interest_rate / 12 / 100; // Monthly interest rate
-            $interestPortion = $ar->remaining_balance * $interestRate;
-            $principalPortion = $this->payment['amount_paid'] - $interestPortion;
-            
             // Update AR totals
             $ar->total_paid += $this->payment['amount_paid'];
-            $ar->remaining_balance -= $principalPortion; // Only reduce principal portion
+            $ar->remaining_balance -= $this->payment['amount_paid'];
             
             // Create payment record
             Payment::create([
@@ -288,28 +283,26 @@ class Index extends Component
                 'amount_paid' => $this->payment['amount_paid'],
                 'payment_date' => $this->payment['payment_date'],
                 'notes' => $this->payment['notes'] ?? '',
-                'interest_portion' => $interestPortion,
-                'principal_portion' => $principalPortion
+                'due_amount' => $ar->monthly_payment
             ]);
-
+    
             // Create sale record for the payment
             Sale::create([
                 'account_receivable_id' => $ar->id,
                 'customer_id' => $ar->customer_id,
                 'preorder_id' => $ar->preorder_id,
                 'total_amount' => $this->payment['amount_paid'],
-                'interest_earned' => $interestPortion,
-                'completion_date' => $this->payment['payment_date'],
+                'completion_date' => now()->setTimezone('Asia/Manila'),
                 'payment_method' => 'Monthly Payment',
                 'status' => $ar->remaining_balance <= 0 ? 'completed' : 'ongoing',
                 'type' => 'payment',
                 'notes' => 'Monthly payment for AR #' . $ar->id
             ]);
-
+    
             // Update AR status if needed
             $ar->updateStatus();
         });
-
+    
         $this->recordPaymentOpen = false;
         $this->reset(['selectedAR', 'payment', 'selectedARDetails']);
         $this->refreshStats();
