@@ -8,6 +8,7 @@ use App\Models\PaymentSubmission;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Notifications\NewPaymentSubmission;
+use Illuminate\Support\Facades\DB;
 
 class SubmitPayment extends Component
 {
@@ -20,6 +21,10 @@ class SubmitPayment extends Component
     public $paymentDate;
     public $accountReceivables;
     public $dueAmount = 0;
+    public $showApprovalModal = false;
+    public $submissionModalOpen = false;
+    public $viewingSubmission = null;
+    public $rejectionReason = '';
 
     protected $rules = [
         'selectedAR' => 'required|exists:account_receivables,id',
@@ -28,9 +33,7 @@ class SubmitPayment extends Component
         'paymentDate' => 'required|date',
     ];
 
-    protected $listeners = [
-        'openPaymentModal' => 'openModal'
-    ];
+    protected $listeners = ['open-payment-modal' => 'openPaymentModal'];
 
     public function mount()
     {
@@ -38,23 +41,16 @@ class SubmitPayment extends Component
         $this->paymentDate = now()->format('Y-m-d');
     }
 
-    public function openModal()
+    public function openPaymentModal($arId)
     {
-        $this->reset(['selectedAR', 'amount', 'paymentProof', 'dueAmount']);
-        $this->showModal = true;
-    }
-
-    public function updatedSelectedAR($value)
-    {
-        if ($value) {
-            $ar = $this->accountReceivables->find($value);
-            if ($ar) {
-                $this->dueAmount = $ar->monthly_payment;
-                $this->amount = $this->dueAmount;
-            }
-        } else {
-            $this->dueAmount = 0;
-            $this->amount = null;
+        $ar = $this->accountReceivables->find($arId);
+        
+        if ($ar) {
+            $this->selectedAR = $arId;
+            $this->dueAmount = $ar->monthly_payment;
+            $this->amount = $this->dueAmount;
+            $this->paymentDate = now()->format('Y-m-d');
+            $this->showModal = true;
         }
     }
 
@@ -87,6 +83,45 @@ class SubmitPayment extends Component
         $this->dispatch('refreshNotifications')->to('admin.notification-bell');
         
         return redirect()->route('customer.payments');
+    }
+
+    public function approveSubmission()
+    {
+        DB::transaction(function () {
+            // ... existing approval code ...
+        });
+
+        $this->showApprovalModal = false;
+        $this->submissionModalOpen = false;  // Close the submission modal
+        $this->viewingSubmission = null;
+        
+        $this->loadPaymentSubmissions();  // Refresh the submissions list
+        $this->refreshStats();
+        session()->flash('message', 'Payment has been approved successfully.');
+    }
+
+    public function rejectSubmission()
+    {
+        // Validate the rejection reason
+        $this->validate([
+            'rejectionReason' => 'required|min:10'
+        ]);
+
+        $this->viewingSubmission->update([
+            'status' => 'rejected',
+            'rejection_reason' => $this->rejectionReason
+        ]);
+        
+        // Notify customer
+        $this->viewingSubmission->customer->user->notify(new PaymentRejected($this->viewingSubmission));
+
+        $this->showRejectionModal = false;
+        $this->submissionModalOpen = false;  // Close the submission modal
+        $this->viewingSubmission = null;
+        $this->rejectionReason = ''; // Reset the reason
+        
+        $this->loadPaymentSubmissions();  // Refresh the submissions list
+        session()->flash('message', 'Payment has been rejected.');
     }
 
     public function render()

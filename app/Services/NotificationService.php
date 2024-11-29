@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Notifications\PreorderStatusNotification;
 use App\Notifications\PaymentDueNotification;
 use App\Notifications\LowInventoryNotification;
+use App\Models\CustomerNotification;
 
 class NotificationService
 {
@@ -58,23 +59,41 @@ class NotificationService
     // Customer notifications
     public static function preorderDisapproved(Preorder $preorder, $reason)
     {
-        if ($preorder->customer->user) {
-            $preorder->customer->user->notify(new PreorderStatusNotification(
-                $preorder,
-                'Pre-order Disapproved',
-                "Your pre-order #{$preorder->id} has been disapproved. Reason: {$reason}"
-            ));
-        }
+        CustomerNotification::create([
+            'customer_id' => $preorder->customer_id,
+            'title' => 'Pre-order Disapproved',
+            'message' => "Your pre-order #{$preorder->id} has been disapproved. Reason: {$reason}",
+            'type' => 'preorder_disapproval'
+        ]);
     }
 
     public static function preorderApproved(Preorder $preorder)
     {
-        if ($preorder->customer->user) {
-            $preorder->customer->user->notify(new PreorderStatusNotification(
-                $preorder,
-                'Pre-order Approved',
-                "Your pre-order #{$preorder->id} has been approved!"
-            ));
-        }
+        CustomerNotification::create([
+            'customer_id' => $preorder->customer_id,
+            'title' => 'Pre-order Approved',
+            'message' => "Your pre-order #{$preorder->id} has been approved!",
+            'type' => 'preorder_approval'
+        ]);
+    }
+
+    public static function paymentApproved($submission)
+    {
+        CustomerNotification::create([
+            'customer_id' => $submission->customer_id,
+            'title' => 'Payment Approved',
+            'message' => "Your payment of ₱" . number_format($submission->amount, 2) . " has been approved.",
+            'type' => 'payment_approved'
+        ]);
+    }
+
+    public static function paymentRejected($submission)
+    {
+        CustomerNotification::create([
+            'customer_id' => $submission->customer_id,
+            'title' => 'Payment Rejected',
+            'message' => "Your payment of ₱" . number_format($submission->amount, 2) . " has been rejected. Reason: {$submission->rejection_reason}",
+            'type' => 'payment_rejected'
+        ]);
     }
 }

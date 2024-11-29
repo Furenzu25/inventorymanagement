@@ -13,6 +13,7 @@ use App\Models\InventoryItem;
 use App\Models\PaymentSubmission;
 use App\Notifications\PaymentApproved;
 use App\Notifications\PaymentRejected;
+use App\Services\NotificationService;
 
 class Index extends Component
 {
@@ -139,37 +140,40 @@ class Index extends Component
             $ar->save();
 
             // Notify customer
-            $this->viewingSubmission->customer->user->notify(new PaymentApproved($this->viewingSubmission));
+            NotificationService::paymentApproved($this->viewingSubmission);
         });
 
         $this->showApprovalModal = false;
+        $this->submissionModalOpen = false;
         $this->viewingSubmission = null;
         
+        $this->loadPaymentSubmissions();
         $this->refreshStats();
         session()->flash('message', 'Payment has been approved successfully.');
     }
 
     public function rejectSubmission()
     {
-        // Validate the rejection reason
         $this->validate([
             'rejectionReason' => 'required|min:10'
-        ], [
-            'rejectionReason.required' => 'Please provide a reason for rejection.',
-            'rejectionReason.min' => 'The rejection reason must be at least 10 characters.'
         ]);
 
-        $this->viewingSubmission->update([
-            'status' => 'rejected',
-            'rejection_reason' => $this->rejectionReason
-        ]);
-        
-        // Notify customer
-        $this->viewingSubmission->customer->user->notify(new PaymentRejected($this->viewingSubmission));
+        DB::transaction(function () {
+            $this->viewingSubmission->update([
+                'status' => 'rejected',
+                'rejection_reason' => $this->rejectionReason
+            ]);
+            
+            // Notify customer
+            NotificationService::paymentRejected($this->viewingSubmission);
+        });
 
         $this->showRejectionModal = false;
+        $this->submissionModalOpen = false;
         $this->viewingSubmission = null;
-        $this->rejectionReason = ''; // Reset the reason
+        $this->rejectionReason = '';
+        
+        $this->loadPaymentSubmissions();
         session()->flash('message', 'Payment has been rejected.');
     }
 

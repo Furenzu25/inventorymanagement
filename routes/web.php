@@ -23,6 +23,7 @@ use App\Livewire\Ecommerce\CustomerOrders;
 use App\Livewire\Ecommerce\Profile;
 use App\Livewire\Admin\AdminOrders;
 use App\Livewire\Landing;
+use App\Livewire\Customers\SubmitPayment;
 
 // Public routes
 Route::get('/', \App\Livewire\Landing::class)->name('landing');
@@ -68,6 +69,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/my-orders', CustomerOrders::class)->name('customer.orders');
     Route::get('/customer/payments', \App\Livewire\Customers\PaymentHistory::class)->name('customer.payments');
     Route::get('/profile', \App\Livewire\Ecommerce\Profile::class)->name('profile');
+    Route::get('/customer/payments/submit', SubmitPayment::class)->name('payment.submit');
 
     // Admin routes
     Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->group(function () {

@@ -8,6 +8,8 @@ use App\Models\CustomerNotification;
 class CustomerNotifications extends Component
 {
     public $unreadCount = 0;
+    public $selectedReason = '';
+    public $showReasonModal = false;
 
     public function mount()
     {
@@ -64,5 +66,11 @@ class CustomerNotifications extends Component
                 ->where('is_read', false)
                 ->count();
         }
+    }
+
+    public function showDisapprovalReason($reason)
+    {
+        $this->selectedReason = $reason;
+        $this->showReasonModal = true;
     }
 }

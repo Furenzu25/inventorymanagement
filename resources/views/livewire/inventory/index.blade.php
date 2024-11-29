@@ -284,53 +284,75 @@
         </div>
     </x-modal>
 
-    <!-- Pickup Recording Modal -->
-    <x-modal wire:model="showRecordPickupModal">
-        <div class="bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] p-6 rounded-lg border-2 border-[#72383D]">
-            <h2 class="text-[#401B1B] text-2xl font-bold mb-6">Record Pickup Details</h2>
+    <!-- Record Pickup Modal -->
+    <div x-data="{ show: @entangle('showRecordPickupModal') }" 
+         x-show="show" 
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-black/30 backdrop-blur-md transition-opacity"
+                 @click="show = false"></div>
             
-            <div class="space-y-4">
-                @if ($errors->any())
-                    <div class="bg-red-50 text-red-500 p-4 rounded-lg mb-4">
-                        <ul class="list-disc list-inside">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
+            <!-- Modal Content -->
+            <div class="relative z-[51] bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg max-w-lg w-full border-2 border-[#72383D]/20 shadow-xl">
+                <div class="p-6">
+                    <h2 class="text-2xl font-bold text-[#401B1B] mb-6">Record Pickup Details</h2>
+                    
+                    <div class="space-y-4">
+                        @if ($errors->any())
+                            <div class="bg-[#AB644B]/10 text-[#AB644B] p-4 rounded-lg mb-4">
+                                <ul class="list-disc list-inside">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        <!-- Pickup Notes -->
+                        <div>
+                            <label class="block text-[#401B1B] font-semibold mb-2">Pickup Notes</label>
+                            <textarea
+                                wire:model.defer="pickupNotes"
+                                class="w-full rounded-lg border-[#72383D]/20 bg-white/50 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30"
+                                rows="3"
+                                placeholder="Enter any additional notes about the pickup..."
+                            ></textarea>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="flex justify-end space-x-3 mt-6">
+                            <button 
+                                wire:click="$set('showRecordPickupModal', false)"
+                                class="px-4 py-2 bg-[#9CABB4] hover:bg-[#72383D] text-white rounded-lg transition duration-300"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                wire:click="recordPickup({{ $selectedInventoryItem?->id }})"
+                                class="px-4 py-2 bg-gradient-to-r from-[#72383D] to-[#AB644B] hover:from-[#401B1B] hover:to-[#72383D] text-white rounded-lg transition duration-300"
+                            >
+                                <span wire:loading.remove wire:target="recordPickup">Confirm Pickup</span>
+                                <span wire:loading wire:target="recordPickup">Processing...</span>
+                            </button>
+                        </div>
                     </div>
-                @endif
 
-                <!-- Pickup Notes -->
-                <div>
-                    <label class="block text-[#401B1B] font-semibold mb-2">
-                        Pickup Notes
-                    </label>
-                    <textarea
-                        wire:model.defer="pickupNotes"
-                        class="w-full rounded-md bg-[#1F2937] text-white border-[#72383D] focus:border-[#401B1B] focus:ring focus:ring-[#401B1B]/20"
-                        rows="3"
-                        placeholder="Enter any additional notes about the pickup..."
-                    ></textarea>
-                </div>
-
-                <div class="flex justify-end gap-3 mt-6">
-                    <x-button 
-                        wire:click="$set('showRecordPickupModal', false)" 
-                        class="bg-[#9CABB4] hover:bg-[#72383D] text-white transition duration-300"
+                    <!-- Close Button -->
+                    <button 
+                        type="button"
+                        wire:click="$set('showRecordPickupModal', false)"
+                        class="absolute top-4 right-4 text-[#72383D] hover:text-[#401B1B] transition-colors duration-300"
                     >
-                        Cancel
-                    </x-button>
-                    <x-button 
-                        wire:click="recordPickup({{ $selectedInventoryItem?->id }})"
-                        class="bg-[#72383D] hover:bg-[#401B1B] text-white transition duration-300"
-                    >
-                        <span wire:loading.remove wire:target="recordPickup">Confirm Pickup</span>
-                        <span wire:loading wire:target="recordPickup">Processing...</span>
-                    </x-button>
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
-    </x-modal>
+    </div>
 
     <!-- Pickup Details Modal -->
     <x-modal wire:model="showPickupDetailsModal">
