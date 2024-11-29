@@ -10,6 +10,10 @@ use App\Models\Product;
 use Livewire\WithPagination;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Models\InventoryItem;
+use App\Models\AccountReceivable;
+use App\Models\CustomerNotification;
+use App\Services\NotificationService;
 
 class Index extends Component
 {
@@ -30,6 +34,9 @@ class Index extends Component
     public $preorderItems = [];
     public $customers;
     public $products;
+    public $showDisapprovalModal = false;
+    public $disapprovalReason = '';
+    public $selectedPreorderId;
 
     protected $rules = [
         'preorder.customer_id' => 'required|exists:customers,id',
@@ -140,21 +147,13 @@ class Index extends Component
 
     public function render()
     {
-        $preorders = Preorder::with(['customer', 'preorderItems.product'])
-            ->where(function ($query) {
-                $query->whereHas('customer', function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%');
-                })->orWhereHas('preorderItems.product', function ($q) {
-                    $q->where('product_name', 'like', '%' . $this->search . '%');
-                });
-            })
-            ->orderBy($this->sortBy['column'], $this->sortBy['direction'])
-            ->paginate(10);
-
-        $this->loadCustomersAndProducts();
-
         return view('livewire.preorders.index', [
-            'preorders' => $preorders,
+            'preorders' => Preorder::with([
+                'customer:id,name,email',
+                'preorderItems.product:id,product_name,price'
+            ])
+            ->latest()
+            ->paginate(10)
         ]);
     }
 
@@ -196,19 +195,87 @@ class Index extends Component
 
     private function calculateMonthlyPayment($totalAmount, $loanDuration, $interestRate)
     {
-        $monthlyInterestRate = $interestRate / 12 / 100;
-        $numberOfPayments = $loanDuration;
+        // Calculate base monthly payment
+        $baseMonthlyPayment = $totalAmount / $loanDuration;
         
-        $monthlyPayment = $totalAmount * ($monthlyInterestRate * pow(1 + $monthlyInterestRate, $numberOfPayments)) 
-                        / (pow(1 + $monthlyInterestRate, $numberOfPayments) - 1);
+        // Calculate monthly interest amount (5% of total amount)
+        $monthlyInterest = $totalAmount * ($interestRate / 100) / $loanDuration;
+        
+        // Total monthly payment is base payment plus interest
+        $monthlyPayment = $baseMonthlyPayment + $monthlyInterest;
         
         return round($monthlyPayment, 2);
     }
 
     public function approvePreorder($id)
     {
-        $preorder = Preorder::findOrFail($id);
-        $preorder->update(['status' => 'Approved']);
+        DB::transaction(function () use ($id) {
+            $preorder = Preorder::findOrFail($id);
+            $preorder->update(['status' => Preorder::STATUS_APPROVED]);
+
+            // Create customer notification
+            NotificationService::preorderApproved($preorder);
+
+            // Rest of your approval logic...
+        });
+        
         session()->flash('message', 'Pre-order approved successfully.');
+    }
+
+    public function cancelPreorder($preorderId)
+    {
+        DB::transaction(function () use ($preorderId) {
+            $preorder = Preorder::findOrFail($preorderId);
+            
+            // Get the inventory item associated with this preorder
+            $inventoryItem = InventoryItem::where('preorder_id', $preorderId)->first();
+            
+            if ($inventoryItem) {
+                // Free up the inventory item for reassignment
+                $inventoryItem->update([
+                    'status' => 'available',
+                    'preorder_id' => null
+                ]);
+            }
+            
+            // Mark the preorder as cancelled
+            $preorder->update(['status' => 'cancelled']);
+            
+            session()->flash('message', 'Pre-order cancelled successfully. Product is now available for reassignment.');
+        });
+    }
+
+    public function openDisapprovalModal($id)
+    {
+        $this->selectedPreorderId = $id;
+        $this->disapprovalReason = '';
+        $this->showDisapprovalModal = true;
+    }
+
+    public function disapprovePreorder()
+    {
+        $this->validate([
+            'disapprovalReason' => 'required|min:10',
+        ], [
+            'disapprovalReason.required' => 'Please provide a reason for disapproval.',
+            'disapprovalReason.min' => 'The reason must be at least 10 characters.',
+        ]);
+
+        DB::transaction(function () {
+            $preorder = Preorder::findOrFail($this->selectedPreorderId);
+            
+            $preorder->update([
+                'status' => Preorder::STATUS_DISAPPROVED,
+                'disapproval_reason' => $this->disapprovalReason
+            ]);
+
+            // Use NotificationService instead of direct creation
+            NotificationService::preorderDisapproved($preorder, $this->disapprovalReason);
+        });
+
+        $this->showDisapprovalModal = false;
+        $this->reset(['disapprovalReason', 'selectedPreorderId']);
+        
+        session()->flash('message', 'Pre-order has been disapproved.');
     }
 }

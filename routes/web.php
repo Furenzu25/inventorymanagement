@@ -6,6 +6,7 @@ use App\Livewire\Products\Index as ProductsIndex;
 use App\Livewire\Preorders\Index as PreordersIndex;
 use App\Livewire\AR\Index as ARIndex;
 use App\Livewire\Payments\Index as PaymentsIndex;
+use App\Livewire\Inventory\Index as InventoryIndex;
 use App\Livewire\Payments\History;
 use App\Livewire\Auth\Login;
 use App\Livewire\Dashboard\Index as DashboardIndex;
@@ -18,11 +19,14 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AdminController;
 use App\Livewire\Ecommerce\Home as EcommerceHome;
+use App\Livewire\Ecommerce\CustomerOrders;
+use App\Livewire\Ecommerce\Profile;
+use App\Livewire\Admin\AdminOrders;
+use App\Livewire\Landing;
+use App\Livewire\Customers\SubmitPayment;
 
 // Public routes
-Route::get('/', function () {
-    return redirect()->route('login');
-});
+Route::get('/', \App\Livewire\Landing::class)->name('landing');
 Route::get('/login', Login::class)->name('login');
 Route::get('/register', Register::class)->name('register');
 Route::get('/forgot-password', ForgotPassword::class)->name('password.request');
@@ -53,13 +57,20 @@ Route::middleware(['auth'])->group(function () {
         $request->user()->sendEmailVerificationNotification();
         return back()->with('message', 'Verification link sent!');
     })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+
+    Route::get('/sales', App\Livewire\Sales\Index::class)->name('sales.index');
+    Route::get('/profile', Profile::class)->name('profile');
 });
 
 // Protected routes (require auth and email verification)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/home', EcommerceHome::class)->name('home');
-    Route::get('/cart', \App\Livewire\Cart::class)->name('cart');
-    
+    Route::get('/cart', \App\Livewire\Ecommerce\Cart::class)->name('cart');
+    Route::get('/my-orders', CustomerOrders::class)->name('customer.orders');
+    Route::get('/customer/payments', \App\Livewire\Customers\PaymentHistory::class)->name('customer.payments');
+    Route::get('/profile', \App\Livewire\Ecommerce\Profile::class)->name('profile');
+    Route::get('/customer/payments/submit', SubmitPayment::class)->name('payment.submit');
+
     // Admin routes
     Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->group(function () {
         Route::get('/dashboard', \App\Livewire\Dashboard\Index::class)->name('dashboard');
@@ -69,6 +80,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/ar', ARIndex::class)->name('ar.index');
         Route::get('/payments', PaymentsIndex::class)->name('payments.index');
         Route::get('/payments/history/{account_receivable?}', History::class)->name('payments.history');
+        Route::get('/inventory', InventoryIndex::class)->name('inventory.index');
+        Route::get('/admin/orders', AdminOrders::class)->name('admin.orders');
     });
 });
 

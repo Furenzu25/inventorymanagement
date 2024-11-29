@@ -20,7 +20,14 @@ class AccountReceivable extends Model
         'total_amount',
         'payment_months',
         'interest_rate',
-        'status'
+        'status',
+        'loan_start_date',
+        'loan_end_date'
+    ];
+
+    protected $casts = [
+        'loan_start_date' => 'datetime',
+        'loan_end_date' => 'datetime'
     ];
 
     public function customer()
@@ -55,6 +62,62 @@ class AccountReceivable extends Model
         $this->save();
 
         return $this->monthly_payment;
+    }
+
+    public function updateStatus()
+    {
+        if ($this->remaining_balance <= 0) {
+            $this->status = 'completed';
+            
+            // Update all inventory items for this preorder to stocked_out
+            InventoryItem::where('preorder_id', $this->preorder_id)
+                ->where('status', 'loaned')
+                ->update([
+                    'status' => 'stocked_out',
+                    'stocked_out_date' => now(),
+                    'updated_at' => now()
+                ]);
+
+            // Update preorder status to completed
+            $this->preorder->update(['status' => 'completed']);
+
+            // Create sale record if it doesn't exist
+            if (!Sale::where('account_receivable_id', $this->id)->exists()) {
+                $totalInterest = $this->total_paid - $this->total_amount;
+                Sale::create([
+                    'account_receivable_id' => $this->id,
+                    'customer_id' => $this->customer_id,
+                    'preorder_id' => $this->preorder_id,
+                    'total_amount' => $this->total_paid,
+                    'interest_earned' => $totalInterest,
+                    'completion_date' => now(),
+                    'payment_method' => 'Monthly Payment',
+                    'status' => 'completed',
+                    'type' => 'payment',
+                    'notes' => 'Converted from Account Receivable #' . $this->id
+                ]);
+            }
+        } else {
+            $this->status = 'ongoing';
+        }
+        
+        $this->save();
+    }
+
+    public function getNextPaymentDueDate()
+    {
+        if (!$this->loan_start_date) {
+            return null;
+        }
+
+        $lastPayment = $this->payments()->latest('payment_date')->first();
+        
+        if ($lastPayment) {
+            return $lastPayment->payment_date->addMonth();
+        }
+        
+        // If no payments yet, return the first payment due date (1 month after loan start)
+        return $this->loan_start_date->addMonth();
     }
 }
 

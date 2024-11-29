@@ -1,60 +1,83 @@
-<div class="flex items-center justify-center min-h-screen bg-gradient-to-r from-[#2c3e50] via-[#3498db] to-[#2ecc71]">
-    <div class="w-full max-w-md">
-        <div class="bg-white shadow-2xl rounded-lg overflow-hidden">
-            <div class="p-4 sm:p-6 md:p-8">
-                <div class="mb-6 text-center">
-                    <svg class="mx-auto h-12 w-auto mb-4 text-[#3498db]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M21 16V8.00002C20.9996 7.6493 20.9071 7.30483 20.7315 7.00119C20.556 6.69754 20.3037 6.44539 20 6.27002L13 2.27002C12.696 2.09449 12.3511 2.00208 12 2.00208C11.6489 2.00208 11.304 2.09449 11 2.27002L4 6.27002C3.69626 6.44539 3.44398 6.69754 3.26846 7.00119C3.09294 7.30483 3.00036 7.6493 3 8.00002V16C3.00036 16.3508 3.09294 16.6952 3.26846 16.9989C3.44398 17.3025 3.69626 17.5547 4 17.73L11 21.73C11.304 21.9056 11.6489 21.998 12 21.998C12.3511 21.998 12.696 21.9056 13 21.73L20 17.73C20.3037 17.5547 20.556 17.3025 20.7315 16.9989C20.9071 16.6952 20.9996 16.3508 21 16Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <h2 class="text-3xl font-bold tracking-tight" style="background: linear-gradient(45deg, #3498db, #2ecc71); -webkit-background-clip: text; background-clip: text; color: transparent;">Create an Account</h2>
-                    <p class="text-gray-600 mt-2 text-[17px]">Join Rosels Trading today</p>
+<div class="flex items-center justify-center min-h-screen p-6 bg-gradient-to-br from-[#401B1B] from-20% via-[#72383D] via-40% via-[#AB644B] via-60% via-[#9CABB4] via-80% to-[#F2F2EB]">    <div class="w-full max-w-md">
+        <div class="auth-card bg-white/90 backdrop-blur-sm shadow-lg rounded-lg overflow-hidden">
+            <div class="p-8">
+                <div class="mb-8 text-center">
+                    <h2 class="company-name text-3xl font-bold mb-2">Rosels Trading</h2>
+                    <p class="text-[#72383D]">Create your account</p>
                 </div>
-                <form wire:submit.prevent="register">
-                    <div class="space-y-4">
+
+                <form wire:submit.prevent="register" class="space-y-6">
+                    <div>
                         <x-input 
                             label="Name" 
                             wire:model.defer="name" 
                             type="text" 
                             placeholder="Enter your name"
-                            class="text-[17px]"
+                            class="w-full border-[#72383D]/20 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30"
                         />
+                        @error('name') 
+                            <span class="text-[#AB644B] text-sm mt-1">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div>
                         <x-input 
                             label="Email" 
                             wire:model.defer="email" 
                             type="email" 
                             placeholder="Enter your email"
-                            class="text-[17px]"
+                            class="w-full border-[#72383D]/20 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30"
                         />
+                        @error('email') 
+                            <span class="text-[#AB644B] text-sm mt-1">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div>
                         <x-input 
                             label="Password" 
                             wire:model.defer="password" 
                             type="password" 
                             placeholder="Enter your password"
-                            class="text-[17px]"
+                            class="w-full border-[#72383D]/20 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30"
                         />
+                        @error('password') 
+                            <span class="text-[#AB644B] text-sm mt-1">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div>
                         <x-input 
                             label="Confirm Password" 
                             wire:model.defer="password_confirmation" 
                             type="password" 
                             placeholder="Confirm your password"
-                            class="text-[17px]"
+                            class="w-full border-[#72383D]/20 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30"
                         />
                     </div>
-                    <div class="mt-6">
+
+                    <div>
                         <x-button 
                             type="submit" 
                             label="Register" 
-                            class="w-full bg-[#3498db] hover:bg-[#2980b9] text-white text-[17px] font-semibold"
+                            class="w-full bg-gradient-to-r from-[#72383D] to-[#AB644B] hover:from-[#401B1B] hover:to-[#72383D] text-white transition duration-300 shadow-md"
                             spinner
                         />
                     </div>
                 </form>
             </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 text-center">
-                <p class="text-[15px] text-gray-600">
-                    Already have an account? 
-                    <a href="{{ route('login') }}" class="font-semibold text-[#3498db] hover:text-[#2980b9]">Sign in</a>
-                </p>
+
+            <div class="bg-[#F2F2EB]/50 px-8 py-4">
+                <div class="text-center text-sm">
+                    <a href="{{ route('login') }}" class="text-[#72383D] hover:text-[#401B1B] transition-colors">
+                        <i class="fas fa-sign-in-alt mr-1"></i> Already have an account? Sign in
+                    </a>
+                    <div class="mt-4">
+                        <a href="{{ route('landing') }}" class="text-[#72383D] hover:text-[#401B1B] transition-colors">
+                            <i class="fas fa-home mr-1"></i> Back to Landing Page
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

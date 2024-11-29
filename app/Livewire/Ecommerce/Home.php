@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\Auth;
 
 class Home extends Component
 {
-    public $showEditProfileModal = false;
-
-    protected $listeners = ['openEditProfileModal', 'cart-updated' => 'updateCartCount'];
-
-    public $cart = [];
     public $cartCount = 0;
+    public $accountReceivables;
+    protected $listeners = [
+        'cart-updated' => 'updateCartCount',
+        'profile-updated' => '$refresh',
+    ];
 
     public function render()
     {
@@ -29,39 +29,6 @@ class Home extends Component
         return redirect()->route('login');
     }
 
-    public function openEditProfileModal()
-    {
-        $this->showEditProfileModal = true;
-    }
-
-    public function addToCart($productId)
-    {
-        $product = Product::findOrFail($productId);
-        $cart = session('cart', []);
-        
-        $existingItemKey = array_search($productId, array_column($cart, 'id'));
-        
-        if ($existingItemKey !== false) {
-            $cart[$existingItemKey]['quantity']++;
-        } else {
-            $cart[] = [
-                'id' => $product->id,
-                'name' => $product->product_name,
-                'price' => $product->price,
-                'quantity' => 1,
-            ];
-        }
-
-        session(['cart' => $cart]);
-        $this->updateCartCount();
-        $this->dispatch('cart-updated');
-    }
-
-    public function getCartCountProperty()
-    {
-        return count($this->cart);
-    }
-
     public function updateCartCount()
     {
         $cart = session('cart', []);
@@ -71,5 +38,28 @@ class Home extends Component
     public function mount()
     {
         $this->updateCartCount();
+        if (Auth::check()) {
+            Auth::user()->load('customer');
+            $this->accountReceivables = Auth::user()->customer?->accountReceivables ?? collect();
+        }
+    }
+
+    public function editProfile()
+    {
+        return redirect()->route('profile');
+    }
+
+    public function getProductDetails($productId)
+    {
+        $product = Product::findOrFail($productId);
+        return [
+            'product_name' => $product->product_name,
+            'product_model' => $product->product_model,
+            'product_brand' => $product->product_brand,
+            'product_category' => $product->product_category,
+            'storage_capacity' => $product->storage_capacity,
+            'product_description' => $product->product_description,
+            'product_details' => $product->product_details
+        ];
     }
 }

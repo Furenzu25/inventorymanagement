@@ -1,66 +1,122 @@
-<div>
-    <x-header title="Account Receivables Management">
-    </x-header>
+<div class="bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] min-h-screen p-6">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+        <x-header title="Account Receivables Management" class="text-[#401B1B] text-3xl font-bold" />
+        <div class="flex space-x-2 mt-4 md:mt-0">
+            <x-input 
+                icon="o-magnifying-glass" 
+                placeholder="Search AR..." 
+                wire:model.live="search" 
+                class="pl-10 w-full bg-[#F2F2EB]/50 border-[#72383D]/20 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30 rounded-md shadow-sm"
+            />
+            
+        </div>
+    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <x-stat
             value="{{ number_format($totalAR, 2) }}"
             icon="o-currency-dollar"
-            class="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white shadow-lg"
+            class="bg-gradient-to-br from-[#401B1B] to-[#72383D] text-white shadow-lg rounded-lg"
         >
             <x-slot:title>
-                <span class="text-yellow-100">Total AR</span>
+                <span class="text-[#F2F2EB] font-semibold">Total AR</span>
             </x-slot:title>
         </x-stat>
 
         <x-stat
             value="{{ number_format($totalOutstanding, 2) }}"
             icon="o-exclamation-circle"
-            class="bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg"
+            class="bg-gradient-to-br from-[#72383D] to-[#AB644B] text-white shadow-lg rounded-lg"
         >
             <x-slot:title>
-                <span class="text-red-100">Total Outstanding</span>
+                <span class="text-[#F2F2EB] font-semibold">Total Outstanding</span>
             </x-slot:title>
         </x-stat>
     </div>
 
-    <div class="bg-white shadow-md rounded-lg overflow-hidden">
-        <div class="p-4">
-            <div class="flex justify-between items-center mb-4">
-                <x-input icon="o-magnifying-glass" placeholder="Search AR..." wire:model.live="search" />
-                <div class="flex space-x-2">
-                    <x-button icon="o-adjustments-horizontal" label="Filter" class="bg-gray-200 hover:bg-gray-300 text-gray-700" />
-                    <x-button icon="o-arrows-up-down" label="Sort" class="bg-gray-200 hover:bg-gray-300 text-gray-700" />
-                </div>
-            </div>
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="p-6">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
-                        <tr class="bg-gray-100">
-                            <th class="px-4 py-2 text-left text-gray-600">Customer</th>
-                            <th class="px-4 py-2 text-left text-gray-600">Product</th>
-                            <th class="px-4 py-2 text-left text-gray-600">Monthly Payment</th>
-                            <th class="px-4 py-2 text-left text-gray-600">Total Paid</th>
-                            <th class="px-4 py-2 text-left text-gray-600">Remaining Balance</th>
-                            <th class="px-4 py-2 text-left text-gray-600">Status</th>
-                            <th class="px-4 py-2 text-left text-gray-600">Actions</th>
+                        <tr class="bg-gradient-to-r from-[#401B1B] to-[#72383D] text-white">
+                            <th class="px-4 py-2 text-left">Order ID</th>
+                            <th class="px-4 py-2 text-left">Customer</th>
+                            <th class="px-4 py-2 text-left">Product</th>
+                            <th class="px-4 py-2 text-left">Monthly Payment</th>
+                            <th class="px-4 py-2 text-left">Total Paid</th>
+                            <th class="px-4 py-2 text-left">Remaining Balance</th>
+                            <th class="px-4 py-2 text-left">Loan Duration</th>
+                            <th class="px-4 py-2 text-left">Next Payment Due</th>
+                            <th class="px-4 py-2 text-left">Status</th>
+                            <th class="px-4 py-2 text-left">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($accountReceivables as $ar)
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="px-4 py-3">{{ $ar->customer->name }}</td>
-                                <td class="px-4 py-3">{{ $ar->preorder->preorderItems->map(function($item) { return $item->product->product_name; })->implode(', ') }}</td>
-                                <td class="px-4 py-3">₱{{ number_format($ar->monthly_payment, 2) }}</td>
-                                <td class="px-4 py-3">₱{{ number_format($ar->total_paid, 2) }}</td>
-                                <td class="px-4 py-3">₱{{ number_format($ar->remaining_balance, 2) }}</td>
+                            <tr class="border-b border-[#D2DCE6] hover:bg-[#F2F2EB] transition-colors duration-200">
+                                <td class="px-4 py-2 text-[#401B1B]">
+                                    #{{ $ar->preorder_id }}
+                                </td>
+                                <td class="px-4 py-2 text-[#401B1B]">{{ $ar->customer->name }}</td>
                                 <td class="px-4 py-3">
-                                    <span class="px-2 py-1 text-sm rounded-full {{ $ar->status === 'paid' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800' }}">
+                                    @foreach($ar->preorder->preorderItems as $item)
+                                        <div class="text-[#401B1B] font-medium">
+                                            {{ $item->product->product_name }}
+                                            @if(!$loop->last)
+                                                <br>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </td>
+                                <td class="px-4 py-2 text-[#401B1B]">₱{{ number_format($ar->monthly_payment, 2) }}</td>
+                                <td class="px-4 py-2 text-[#401B1B]">₱{{ number_format($ar->total_paid, 2) }}</td>
+                                <td class="px-4 py-2 text-[#401B1B]">₱{{ number_format($ar->remaining_balance, 2) }}</td>
+                                <td class="px-4 py-2 text-[#401B1B]">
+                                    @if($ar->loan_start_date && $ar->loan_end_date)
+                                        <div>{{ $ar->loan_start_date->format('M d, Y') }} -</div>
+                                        <div>{{ $ar->loan_end_date->format('M d, Y') }}</div>
+                                        <div class="text-sm text-gray-600">
+                                            ({{ $ar->loan_start_date->diffInMonths($ar->loan_end_date) }} months)
+                                        </div>
+                                    @else
+                                        N/A
+                                    @endif
+                                </td>
+                                <td class="px-4 py-2">
+                                    @if($ar->status === 'ongoing')
+                                        @php
+                                            $nextDueDate = $ar->getNextPaymentDueDate();
+                                        @endphp
+                                        @if($nextDueDate)
+                                            <div class="text-[#401B1B]">
+                                                {{ $nextDueDate->format('M d, Y') }}
+                                                @if($nextDueDate->isPast())
+                                                    <span class="text-red-500 text-xs">(Overdue)</span>
+                                                @else
+                                                    <span class="text-[#72383D] text-xs">({{ $nextDueDate->diffForHumans() }})</span>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <span class="text-[#401B1B]">N/A</span>
+                                        @endif
+                                    @else
+                                        <span class="text-[#401B1B]">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-2">
+                                    <span class="px-2 py-1 text-sm rounded-full {{ $ar->status === 'paid' ? 'bg-[#72383D] text-white' : 'bg-[#AB644B] text-white' }}">
                                         {{ ucfirst($ar->status) }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3">
-                                    <a href="{{ route('payments.history', $ar->id) }}" class="text-indigo-600 hover:text-indigo-900">View Payment History</a>
+                                <td class="px-4 py-2">
+                                    @if($ar->status === 'ongoing')
+                                        <x-button wire:click="reassignProduct({{ $ar->id }})" 
+                                                class="bg-[#9CABB4] hover:bg-[#72383D] text-white text-xs py-1 px-2 rounded transition duration-300"
+                                                onclick="confirm('Are you sure you want to repossess this product?') || event.stopImmediatePropagation()">
+                                            Repossess
+                                        </x-button>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -68,41 +124,5 @@
                 </table>
             </div>
         </div>
-    </div>
-
-    <div class="mt-8">
-        <h2 class="text-lg font-semibold mb-4">Convert Preorders to AR</h2>
-        @if($preorders->isNotEmpty())
-            <div class="bg-white shadow-md rounded-lg overflow-hidden">
-                <div class="p-4">
-                    <table class="w-full">
-                        <thead>
-                            <tr class="bg-gray-100">
-                                <th class="px-4 py-2 text-left text-gray-600">Preorder ID</th>
-                                <th class="px-4 py-2 text-left text-gray-600">Customer</th>
-                                <th class="px-4 py-2 text-left text-gray-600">Total Amount</th>
-                                <th class="px-4 py-2 text-left text-gray-600">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($preorders as $preorder)
-                                <tr class="border-b hover:bg-gray-50">
-                                    <td class="px-4 py-3">{{ $preorder->id }}</td>
-                                    <td class="px-4 py-3">{{ $preorder->customer->name }}</td>
-                                    <td class="px-4 py-3">₱{{ number_format($preorder->total_amount, 2) }}</td>
-                                    <td class="px-4 py-3">
-                                        <x-button wire:click="createARFromPreorder({{ $preorder->id }})" class="bg-green-500 hover:bg-green-600 text-white text-xs py-1 px-2 rounded">
-                                            Convert to AR
-                                        </x-button>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        @else
-            <p class="text-gray-600">No preorders available for conversion.</p>
-        @endif
     </div>
 </div>

@@ -3,7 +3,7 @@
         'name' => 'laravel/laravel',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'da42a96aceacf40ec1f53be200bfb8f1c619bf56',
+        'reference' => '6c85135c8f191872579643d0e5975e1589131a72',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -409,6 +409,15 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
+        'itsgoingd/clockwork' => array(
+            'pretty_version' => 'v5.3.0',
+            'version' => '5.3.0.0',
+            'reference' => '11ac18bcca18e66376fa888d1e4d45e1206d9ac4',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../itsgoingd/clockwork',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'jfcherng/php-color-output' => array(
             'pretty_version' => '3.0.0',
             'version' => '3.0.0.0',
@@ -463,7 +472,7 @@
         'laravel/laravel' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'da42a96aceacf40ec1f53be200bfb8f1c619bf56',
+            'reference' => '6c85135c8f191872579643d0e5975e1589131a72',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

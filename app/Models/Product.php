@@ -15,6 +15,7 @@ class Product extends Model
         'product_brand',
         'product_category',
         'product_description',
+        'product_details',
         'storage_capacity',
         'price',
         'image',
@@ -23,5 +24,10 @@ class Product extends Model
     public function preorders()
     {
         return $this->hasMany(Preorder::class);
+    }
+
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class);
     }
 }

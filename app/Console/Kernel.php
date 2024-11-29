@@ -16,4 +16,9 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         SetUserAsAdmin::class,
     ];
+
+    protected function schedule(Schedule $schedule)
+    {
+        $schedule->command('check:payment-dues')->daily();
+    }
 }

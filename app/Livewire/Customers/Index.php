@@ -9,14 +9,18 @@ use Livewire\WithFileUploads;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Payment;
+use Illuminate\Support\Facades\DB;
+use App\Models\Sale;
 
 class Index extends Component
 {
     use WithPagination;
     use WithFileUploads;
 
-    #[Rule('nullable|image|max:5120')] // 5MB Max
     public $validIdImage;
+    public $oldImage;
+    public $existingImage;
+    public $imageUploaded = false;
 
     public $search = '';
     public $drawer = false;
@@ -38,62 +42,90 @@ class Index extends Component
         'email' => '',
         'valid_id' => '',
         'valid_id_image' => '',
-        'created_at' => '',
     ];
 
     public $editReason = '';
-    public $imageUploaded = false;
     public $selectedImage = null;
 
-    public function create()
-    {
-        $this->resetCustomer();
-        $this->customerId = null;
-        $this->validIdImage = null;
-        $this->modalOpen = true;
-        $this->imageUploaded = false;
-    }
+    public $deleteModalOpen = false;
+    public $customerToDelete = null;
 
-    public function edit($id)
+    public function edit($customerId)
     {
-        $this->resetValidation();
-        $customer = Customer::findOrFail($id);
+        $customer = Customer::findOrFail($customerId);
+        $this->customerId = $customerId;
         $this->customer = $customer->toArray();
-        $this->customerId = $id;
+        $this->existingImage = $customer->valid_id_image;
+        $this->oldImage = $customer->valid_id_image;
         $this->modalOpen = true;
-        $this->imageUploaded = false;
-        session()->flash('info', 'Please provide a valid reason for editing.');
     }
 
     public function delete($id)
     {
-        $customer = Customer::findOrFail($id);
-        $customer->delete();
-        session()->flash('message', 'Customer deleted successfully.');
+        $this->customerToDelete = $id;
+        $this->deleteModalOpen = true;
     }
 
-    public function store()
+    public function confirmDelete()
     {
-        $this->validate();
-
-        if ($this->customerId) {
-            $customer = Customer::findOrFail($this->customerId);
-            $customer->update($this->customer);
-            $message = 'Customer updated successfully.';
-        } else {
-            $customer = Customer::create($this->customer);
-            $message = 'Customer created successfully.';
+        try {
+            $customer = Customer::findOrFail($this->customerToDelete);
+            
+            DB::beginTransaction();
+            
+            // Delete all related inventory items first
+            foreach ($customer->preorders as $preorder) {
+                // Delete inventory items
+                $preorder->inventoryItems()->delete();
+                
+                // Delete preorder items
+                $preorder->preorderItems()->delete();
+                
+                // Delete related sales
+                if ($preorder->accountReceivable) {
+                    $preorder->accountReceivable->sales()->delete();
+                }
+            }
+            
+            // Delete all related payments and account receivables
+            foreach ($customer->accountReceivables as $ar) {
+                // Delete payments
+                $ar->payments()->delete();
+                
+                // Delete the account receivable
+                $ar->delete();
+            }
+            
+            // Delete all preorders
+            $customer->preorders()->delete();
+            
+            // Delete customer images
+            if ($customer->valid_id_image) {
+                Storage::disk('public')->delete($customer->valid_id_image);
+            }
+            if ($customer->profile_image) {
+                Storage::disk('public')->delete($customer->profile_image);
+            }
+            
+            // Finally delete the customer
+            $customer->delete();
+            
+            DB::commit();
+            
+            session()->flash('message', 'Customer and all related records deleted successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'An error occurred while deleting the customer: ' . $e->getMessage());
         }
 
-        if ($this->validIdImage) {
-            $imagePath = $this->validIdImage->store('valid_ids', 'public');
-            $customer->valid_id_image = $imagePath;
-            $customer->save();
-        }
+        $this->deleteModalOpen = false;
+        $this->customerToDelete = null;
+    }
 
-        $this->modalOpen = false;
-        $this->resetCustomer();
-        session()->flash('message', $message);
+    public function cancelDelete()
+    {
+        $this->deleteModalOpen = false;
+        $this->customerToDelete = null;
     }
 
     public function showCustomerDetails($customerId)
@@ -110,15 +142,15 @@ class Index extends Component
 
     public function render()
     {
-        $customers = Customer::query()
-            ->when($this->search, function ($query) {
-                $query->where('name', 'like', '%' . $this->search . '%');
-            })
-            ->orderBy($this->sortBy['column'], $this->sortBy['direction'])
-            ->paginate(10);
         return view('livewire.customers.index', [
-            'customers' => $customers,
-        ])->layout('components.layouts.app', ['title' => 'Customers']);
+            'customers' => Customer::query()
+                ->when($this->search, function($query) {
+                    $query->where('name', 'like', '%' . $this->search . '%')
+                        ->orWhere('email', 'like', '%' . $this->search . '%')
+                        ->orWhere('phone_number', 'like', '%' . $this->search . '%');
+                })
+                ->paginate(10)
+        ]);
     }
 
     public function closeModal()
@@ -136,23 +168,39 @@ class Index extends Component
             'customer.phone_number' => 'required|string|max:20',
             'customer.reference_contactperson' => 'required|string|max:255',
             'customer.reference_contactperson_phonenumber' => 'required|string|max:20',
-            'customer.email' => 'required|email|max:255',
+            'customer.email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('customers', 'email')->ignore($this->customerId)
+            ],
             'customer.valid_id' => 'required|string|max:255',
-            'validIdImage' => 'nullable|image|max:5120', // 5MB Max
+            'validIdImage' => 'nullable|image|max:5120', // Only for updates
         ];
     }
 
     private function resetCustomer()
     {
-        $this->reset(['customer', 'customerId', 'validIdImage', 'editReason', 'imageUploaded']);
+        $this->customer = [
+            'name' => '',
+            'birthday' => '',
+            'address' => '',
+            'phone_number' => '',
+            'reference_contactperson' => '',
+            'reference_contactperson_phonenumber' => '',
+            'email' => '',
+            'valid_id' => '',
+            'valid_id_image' => '',
+        ];
+        $this->validIdImage = null;
+        $this->oldImage = null;
+        $this->existingImage = null;
+        $this->imageUploaded = false;
+        $this->customerId = null;
     }
 
     public function updatedValidIdImage()
     {
-        $this->validate([
-            'validIdImage' => 'image|max:5120', // 5MB Max
-        ]);
-
         $this->imageUploaded = true;
     }
 
@@ -176,7 +224,7 @@ class Index extends Component
     public function viewPayment($customerId)
     {
         $customer = Customer::findOrFail($customerId);
-        $this->selectedCustomerPayments = Payment::whereHas('sale', function ($query) use ($customerId) {
+        $this->selectedCustomerPayments = Payment::whereHas('accountReceivable', function ($query) use ($customerId) {
             $query->where('customer_id', $customerId);
         })->latest()->get()->map(function ($payment) {
             return [
