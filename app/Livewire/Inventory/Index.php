@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 use App\Notifications\StockInCompleted;
 use App\Notifications\FirstMonthlyPaymentDue;
 use App\Models\CustomerNotification;
+use App\Services\NotificationService;
 
 class Index extends Component
 {
@@ -30,6 +31,8 @@ class Index extends Component
     public $showPickupDetailsModal = false;
     public $selectedItem = null;
     public $stockedOutItems = [];
+    public $showItemDetails = false;
+    public $showAssignCustomerModal = false;
     
     protected $rules = [
         'serialNumber' => 'required|unique:inventory_items,serial_number',
@@ -43,6 +46,7 @@ class Index extends Component
             ->where('status', 'stocked_out')
             ->orderBy('updated_at', 'desc')
             ->get();
+        $this->availablePreorders = collect([]);
     }
 
     public function openAddModal()
@@ -188,7 +192,7 @@ class Index extends Component
                 ->with(['preorder.customer', 'preorder.preorderItems.product'])
                 ->get(),
             'reassignableItems' => InventoryItem::where('status', 'available_for_reassignment')
-                ->with(['product', 'preorder.customer'])
+                ->with(['product'])
                 ->get(),
             'stockedOutItems' => InventoryItem::with(['preorder.customer', 'product'])
                 ->where('status', 'stocked_out')
@@ -335,9 +339,12 @@ class Index extends Component
             $preorder->update(['status' => 'loaned']);
             InventoryItem::where('preorder_id', $preorder->id)
                 ->update(['status' => 'loaned']);
+
+            // Add notification for customer
+            NotificationService::loanActivated($preorder);
         });
 
-        session()->flash('message', 'Loan processed successfully. Account Receivable has been created.');
+        session()->flash('message', 'Loan processed successfully. Account Receivable has been created and customer has been notified.');
     }
 
     public function markAsRepossessed($preorderId)
@@ -475,5 +482,68 @@ class Index extends Component
             ->where('status', 'stocked_out')
             ->orderBy('updated_at', 'desc')
             ->get();
+    }
+
+    public function viewItemDetails($itemId)
+    {
+        $this->selectedItem = InventoryItem::with(['product'])
+            ->findOrFail($itemId);
+        
+        // Initialize availablePreorders as a collection
+        $this->availablePreorders = Preorder::where('status', 'Approved')
+            ->whereHas('preorderItems', function ($query) {
+                $query->whereHas('product', function ($q) {
+                    $q->where('id', $this->selectedItem->product_id);
+                });
+            })
+            ->whereDoesntHave('inventoryItems')
+            ->get();
+        
+        $this->showItemDetails = true;
+    }
+
+    public function openAssignModal($itemId)
+    {
+        $this->selectedItem = InventoryItem::find($itemId);
+        $this->availablePreorders = Preorder::with('customer')
+            ->where('status', 'Pending')
+            ->get();
+        $this->showAssignCustomerModal = true;
+    }
+
+    public function selectItemForAssignment($itemId)
+    {
+        $this->selectedItem = InventoryItem::with(['product', 'preorder.customer'])->find($itemId);
+        $this->showAssignCustomerModal = true;
+    }
+
+    public function assignToCustomer($preorderId)
+    {
+        try {
+            DB::transaction(function () use ($preorderId) {
+                $preorder = Preorder::findOrFail($preorderId);
+                
+                $this->selectedItem->update([
+                    'status' => 'reserved',
+                    'preorder_id' => $preorder->id,
+                    'repossession_date' => null,
+                    'cancellation_date' => null
+                ]);
+                
+                $preorder->update(['status' => 'in_stock']);
+                
+                CustomerNotification::create([
+                    'customer_id' => $preorder->customer_id,
+                    'title' => 'Order Ready for Pickup',
+                    'message' => "Your order for {$this->selectedItem->product->product_name} has arrived and is ready for pickup.",
+                    'type' => 'order_arrived'
+                ]);
+                
+                $this->showAssignCustomerModal = false;
+                session()->flash('message', 'Item successfully assigned to customer.');
+            });
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error assigning item: ' . $e->getMessage());
+        }
     }
 }

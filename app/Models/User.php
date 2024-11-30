@@ -66,4 +66,10 @@ class User extends Authenticatable implements MustVerifyEmail
         $customerData['user_id'] = $this->id;
         return $this->customer()->create($customerData);
     }
+
+    public function unreadMessages()
+    {
+        return $this->hasMany(Message::class, 'receiver_id')
+                    ->whereNull('read_at');
+    }
 }

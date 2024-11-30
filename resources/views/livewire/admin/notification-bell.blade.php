@@ -1,4 +1,4 @@
-<div wire:poll.30s class="relative" x-data="{ open: @entangle('showNotifications') }">
+<div wire:poll.30s class="relative" x-data="{ open: false }">
     <button 
         class="relative p-2" 
         @click="open = !open"
@@ -16,6 +16,7 @@
         x-transition
         @click.away="open = false"
         class="absolute right-0 mt-2 w-96 bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg shadow-lg overflow-hidden z-50 border border-[#72383D]/20"
+        style="display: none;"
     >
         <div class="sticky top-0 bg-[#F2F2EB] p-4 border-b border-[#72383D]/10 z-10">
             <h3 class="text-lg font-semibold text-[#401B1B]">Notifications</h3>

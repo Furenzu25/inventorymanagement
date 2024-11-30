@@ -139,22 +139,6 @@
             </div>
         </div>
     </div>
-    <?php
-$__split = function ($name, $params = []) {
-    return [$name, $params];
-};
-[$__name, $__params] = $__split('customers.submit-payment', []);
-
-$__html = app('livewire')->mount($__name, $__params, 'lw-1333755874-0', $__slots ?? [], get_defined_vars());
-
-echo $__html;
-
-unset($__html);
-unset($__name);
-unset($__params);
-unset($__split);
-if (isset($__slots)) unset($__slots);
-?>
     <?php $__env->startPush('scripts'); ?>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <?php $__env->stopPush(); ?>

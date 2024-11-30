@@ -154,8 +154,8 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         App\Providers\VoltServiceProvider::class,
+        App\Providers\BroadcastServiceProvider::class,
     ],
 
 ];
-
 

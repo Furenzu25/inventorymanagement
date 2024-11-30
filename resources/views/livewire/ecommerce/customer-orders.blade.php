@@ -39,17 +39,29 @@
                                         <td class="px-6 py-4">
                                             <span class="px-3 py-1 rounded-full text-sm
                                                 @if($order->status === 'Pending')
-                                                    bg-yellow-500/20 text-yellow-700
+                                                    bg-yellow-100 text-yellow-800
+                                                @elseif($order->status === 'approved')
+                                                    bg-blue-100 text-blue-800
+                                                @elseif($order->status === 'in_stock')
+                                                    bg-indigo-100 text-indigo-800
+                                                @elseif($order->status === 'picked_up')
+                                                    bg-purple-100 text-purple-800
                                                 @elseif($order->status === 'loaned')
-                                                    bg-blue-500/20 text-blue-700
-                                                @elseif($order->status === 'converted')
-                                                    bg-green-500/20 text-green-700
+                                                    bg-green-100 text-green-800
+                                                @elseif($order->status === 'arrived')
+                                                    bg-cyan-100 text-cyan-800
                                                 @elseif($order->status === 'Cancelled')
-                                                    bg-red-500/20 text-red-700
+                                                    bg-red-100 text-red-800
+                                                @elseif($order->status === 'disapproved')
+                                                    bg-rose-100 text-rose-800
+                                                @elseif($order->status === 'repossessed')
+                                                    bg-orange-100 text-orange-800
+                                                @elseif($order->status === 'completed')
+                                                    bg-emerald-100 text-emerald-800
                                                 @else
-                                                    bg-gray-500/20 text-gray-700
+                                                    bg-gray-100 text-gray-800
                                                 @endif">
-                                                {{ $order->status }}
+                                                {{ ucfirst($order->status) }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-[#72383D]">
@@ -62,9 +74,9 @@
                                                     View Details
                                                 </button>
                                                 
-                                                @if($order->status === 'Pending')
+                                                @if(in_array($order->status, ['Pending', 'approved', 'in_stock', 'arrived']))
                                                     <button wire:click="cancelPreorder({{ $order->id }})"
-                                                            onclick="return confirm('Are you sure you want to cancel this order?')"
+                                                            onclick="return confirm('Are you sure you want to cancel this order? This action cannot be undone.')"
                                                             class="text-red-600 hover:text-red-800 transition-colors duration-200">
                                                         Cancel Order
                                                     </button>
@@ -109,17 +121,29 @@
                                 <span class="font-semibold text-[#401B1B]">Status:</span>
                                 <span class="px-3 py-1 rounded-full text-sm
                                     @if($orderDetails->status === 'Pending')
-                                        bg-yellow-500/20 text-yellow-700
+                                        bg-yellow-100 text-yellow-800
+                                    @elseif($orderDetails->status === 'approved')
+                                        bg-blue-100 text-blue-800
+                                    @elseif($orderDetails->status === 'in_stock')
+                                        bg-indigo-100 text-indigo-800
+                                    @elseif($orderDetails->status === 'picked_up')
+                                        bg-purple-100 text-purple-800
                                     @elseif($orderDetails->status === 'loaned')
-                                        bg-blue-500/20 text-blue-700
-                                    @elseif($orderDetails->status === 'converted')
-                                        bg-green-500/20 text-green-700
+                                        bg-green-100 text-green-800
+                                    @elseif($orderDetails->status === 'arrived')
+                                        bg-cyan-100 text-cyan-800
                                     @elseif($orderDetails->status === 'Cancelled')
-                                        bg-red-500/20 text-red-700
+                                        bg-red-100 text-red-800
+                                    @elseif($orderDetails->status === 'disapproved')
+                                        bg-rose-100 text-rose-800
+                                    @elseif($orderDetails->status === 'repossessed')
+                                        bg-orange-100 text-orange-800
+                                    @elseif($orderDetails->status === 'completed')
+                                        bg-emerald-100 text-emerald-800
                                     @else
-                                        bg-gray-500/20 text-gray-700
+                                        bg-gray-100 text-gray-800
                                     @endif">
-                                    {{ $orderDetails->status }}
+                                    {{ ucfirst($orderDetails->status) }}
                                 </span>
                             </div>
                             

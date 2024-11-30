@@ -3,8 +3,9 @@
     <div x-data="{ open: <?php if ((object) ('showModal') instanceof \Livewire\WireDirective) : ?>window.Livewire.find('<?php echo e($__livewire->getId()); ?>').entangle('<?php echo e('showModal'->value()); ?>')<?php echo e('showModal'->hasModifier('live') ? '.live' : ''); ?><?php else : ?>window.Livewire.find('<?php echo e($__livewire->getId()); ?>').entangle('<?php echo e('showModal'); ?>')<?php endif; ?>.live }" 
          x-show="open" 
          x-cloak
+         @keydown.escape.window="$wire.closeModal()"
          class="fixed inset-0 z-50 overflow-y-auto">
-        <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="flex items-center justify-center min-h-screen px-4" @click.self="$wire.closeModal()">
             <div class="fixed inset-0 backdrop-blur-sm bg-black/50 transition-opacity"></div>
             
             <div class="relative bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg max-w-lg w-full border-2 border-[#72383D]/20 shadow-xl">
@@ -151,7 +152,7 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Mary\View\Components\Button::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['type' => 'button','wire:click' => '$set(\'showModal\', false)','class' => 'bg-[#9CABB4] hover:bg-[#72383D] text-white transition duration-300']); ?>
+<?php $component->withAttributes(['type' => 'button','@click' => '$wire.closeModal()','class' => 'bg-[#9CABB4] hover:bg-[#72383D] text-white transition duration-300']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal602b228a887fab12f0012a3179e5b533)): ?>
@@ -189,7 +190,7 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                     <!-- Close Button -->
                     <button 
                         type="button"
-                        wire:click="$set('showModal', false)"
+                        @click="$wire.closeModal()"
                         class="absolute top-4 right-4 text-[#72383D] hover:text-[#401B1B] transition-colors duration-300"
                     >
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

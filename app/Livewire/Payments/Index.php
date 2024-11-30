@@ -116,12 +116,13 @@ class Index extends Component
     {
         DB::transaction(function () {
             // Create payment record
-            Payment::create([
+            $payment = Payment::create([
                 'account_receivable_id' => $this->viewingSubmission->account_receivable_id,
                 'amount_paid' => $this->viewingSubmission->amount,
                 'payment_date' => $this->viewingSubmission->payment_date,
                 'due_amount' => $this->viewingSubmission->due_amount,
-                'remaining_balance' => $this->viewingSubmission->accountReceivable->remaining_balance - $this->viewingSubmission->amount
+                'remaining_balance' => $this->viewingSubmission->accountReceivable->remaining_balance - $this->viewingSubmission->amount,
+                'status' => 'active'
             ]);
 
             // Update submission status
@@ -138,6 +139,20 @@ class Index extends Component
             }
             
             $ar->save();
+
+            // Create corresponding sale record
+            Sale::create([
+                'account_receivable_id' => $ar->id,
+                'customer_id' => $ar->customer_id,
+                'preorder_id' => $ar->preorder_id,
+                'total_amount' => $this->viewingSubmission->amount,
+                'completion_date' => $this->viewingSubmission->payment_date,
+                'payment_method' => 'Monthly Payment',
+                'status' => $ar->remaining_balance <= 0 ? 'completed' : 'ongoing',
+                'type' => 'customer_payment',
+                'payment_reference' => $this->viewingSubmission->reference_number,
+                'notes' => 'Payment made by customer'
+            ]);
 
             // Notify customer
             NotificationService::paymentApproved($this->viewingSubmission);
@@ -265,47 +280,49 @@ class Index extends Component
     public function recordPayment()
     {
         $this->validate([
+            'selectedAR' => 'required',
             'payment.amount_paid' => 'required|numeric|min:0',
-            'payment.payment_date' => 'required|date',
-            'payment.notes' => 'nullable|string'
+            'payment.payment_date' => 'required|date'
         ]);
-    
+
         DB::transaction(function () {
-            $ar = AccountReceivable::findOrFail($this->selectedAR);
+            $ar = AccountReceivable::find($this->selectedAR);
             
-            // Update AR totals
-            $ar->total_paid += $this->payment['amount_paid'];
-            $ar->remaining_balance -= $this->payment['amount_paid'];
-            
-            // Create payment record
-            Payment::create([
-                'account_receivable_id' => $ar->id,
+            // Create payment with exact date from input
+            $payment = Payment::create([
+                'account_receivable_id' => $this->selectedAR,
                 'amount_paid' => $this->payment['amount_paid'],
-                'payment_date' => $this->payment['payment_date'],
-                'notes' => $this->payment['notes'] ?? '',
-                'due_amount' => $ar->monthly_payment
+                'payment_date' => $this->payment['payment_date'], // Use exact date from input
+                'due_amount' => $ar->monthly_payment,
+                'status' => 'active'
             ]);
-    
-            // Create sale record for the payment
+
+            // Create corresponding sale record with same exact date
             Sale::create([
                 'account_receivable_id' => $ar->id,
                 'customer_id' => $ar->customer_id,
                 'preorder_id' => $ar->preorder_id,
                 'total_amount' => $this->payment['amount_paid'],
-                'completion_date' => now()->setTimezone('Asia/Manila'),
+                'completion_date' => $this->payment['payment_date'], // Use exact same date
                 'payment_method' => 'Monthly Payment',
-                'status' => $ar->remaining_balance <= 0 ? 'completed' : 'ongoing',
-                'type' => 'payment',
-                'notes' => 'Monthly payment for AR #' . $ar->id
+                'status' => 'completed',
+                'type' => 'customer_payment',
+                'notes' => 'Payment recorded by admin'
             ]);
-    
-            // Update AR status if needed
-            $ar->updateStatus();
+
+            // Update AR balances
+            $ar->total_paid += $this->payment['amount_paid'];
+            $ar->remaining_balance -= $this->payment['amount_paid'];
+            
+            if ($ar->remaining_balance <= 0) {
+                $ar->status = 'completed';
+            }
+            
+            $ar->save();
         });
-    
+
         $this->recordPaymentOpen = false;
-        $this->reset(['selectedAR', 'payment', 'selectedARDetails']);
-        $this->refreshStats();
+        $this->reset(['payment', 'selectedAR', 'selectedARDetails']);
         session()->flash('message', 'Payment recorded successfully.');
     }
 

@@ -5,7 +5,16 @@
         <div class="max-w-7xl mx-auto">
             <div class="bg-white/40 backdrop-blur-md overflow-hidden shadow-2xl sm:rounded-3xl border border-[#AB644B]/20">
                 <div class="p-8 sm:p-12">
-                    <h2 class="text-3xl font-bold text-[#401B1B] mb-8">Your Cart</h2>
+                    <div class="flex justify-between items-center mb-8">
+                        <h2 class="text-3xl font-bold text-[#401B1B]">Your Cart</h2>
+                        @if(!empty($cartItems) && count($cartItems) > 0)
+                            <a href="{{ route('home') }}" 
+                               class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#72383D] to-[#AB644B] text-white rounded-md hover:from-[#401B1B] hover:to-[#72383D] transition-all duration-300">
+                                <i class="fas fa-arrow-left mr-2"></i>
+                                Continue Shopping
+                            </a>
+                        @endif
+                    </div>
                     
                     @if(!empty($cartItems) && count($cartItems) > 0)
                         <div class="space-y-6">
@@ -72,7 +81,14 @@
                             </div>
                         </div>
                     @else
-                        <p class="text-[#72383D] text-center text-lg">Your cart is empty.</p>
+                        <div class="text-center space-y-6">
+                            <p class="text-[#72383D] text-lg">Your cart is empty.</p>
+                            <a href="{{ route('home') }}" 
+                               class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#72383D] to-[#AB644B] text-white rounded-md hover:from-[#401B1B] hover:to-[#72383D] transition-all duration-300">
+                                <i class="fas fa-shopping-bag mr-2"></i>
+                                Start Shopping
+                            </a>
+                        </div>
                     @endif
                 </div>
             </div>

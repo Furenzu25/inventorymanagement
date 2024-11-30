@@ -43,6 +43,7 @@ return array(
     'Symfony\\Component\\Clock\\' => array($vendorDir . '/symfony/clock'),
     'Ramsey\\Uuid\\' => array($vendorDir . '/ramsey/uuid/src'),
     'Ramsey\\Collection\\' => array($vendorDir . '/ramsey/collection/src'),
+    'Pusher\\' => array($vendorDir . '/pusher/pusher-php-server/src'),
     'Psy\\' => array($vendorDir . '/psy/psysh/src'),
     'Psr\\SimpleCache\\' => array($vendorDir . '/psr/simple-cache/src'),
     'Psr\\Log\\' => array($vendorDir . '/psr/log/src'),
@@ -98,5 +99,6 @@ return array(
     'Brick\\Math\\' => array($vendorDir . '/brick/math/src'),
     'BladeUI\\Icons\\' => array($vendorDir . '/blade-ui-kit/blade-icons/src'),
     'BladeUI\\Heroicons\\' => array($vendorDir . '/blade-ui-kit/blade-heroicons/src'),
+    'Asantibanez\\LivewireCharts\\' => array($vendorDir . '/asantibanez/livewire-charts/src'),
     'App\\' => array($baseDir . '/app', $vendorDir . '/laravel/pint/app'),
 );

@@ -12,6 +12,7 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root {
@@ -167,5 +168,21 @@ if (isset($__slots)) unset($__slots);
             });
         });
     </script>
+
+    <?php echo $__env->yieldPushContent('scripts'); ?>
+
+    <!-- Floating Chat Button -->
+    <div class="fixed bottom-6 right-6 z-50">
+        <a href="<?php echo e(route('admin.messages')); ?>"
+           class="flex items-center justify-center w-14 h-14 bg-gradient-to-r from-[#72383D] to-[#AB644B] text-white rounded-full shadow-lg hover:from-[#401B1B] hover:to-[#72383D] transition-all duration-300">
+            <i class="fas fa-comments text-2xl"></i>
+            <?php if(auth()->user()->unreadMessages()->count() > 0): ?>
+                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                    <?php echo e(auth()->user()->unreadMessages()->count()); ?>
+
+                </span>
+            <?php endif; ?>
+        </a>
+    </div>
 </body>
 </html><?php /**PATH C:\laragon\www\inventorymanagement\resources\views/components/layouts/app.blade.php ENDPATH**/ ?>

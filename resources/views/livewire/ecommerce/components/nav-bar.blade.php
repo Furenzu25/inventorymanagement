@@ -110,4 +110,17 @@
     </div>
 
     <livewire:customers.submit-payment />
+
+    <!-- Floating Chat Button -->
+    <div class="fixed bottom-6 right-6 z-50">
+        <a href="{{ route('messages') }}"
+           class="flex items-center justify-center w-14 h-14 bg-gradient-to-r from-[#72383D] to-[#AB644B] text-white rounded-full shadow-lg hover:from-[#401B1B] hover:to-[#72383D] transition-all duration-300">
+            <i class="fas fa-comments text-2xl"></i>
+            @if(auth()->user()->unreadMessages()->count() > 0)
+                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                    {{ auth()->user()->unreadMessages()->count() }}
+                </span>
+            @endif
+        </a>
+    </div>
 </div>

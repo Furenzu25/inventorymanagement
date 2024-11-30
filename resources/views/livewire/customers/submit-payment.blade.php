@@ -3,8 +3,9 @@
     <div x-data="{ open: @entangle('showModal').live }" 
          x-show="open" 
          x-cloak
+         @keydown.escape.window="$wire.closeModal()"
          class="fixed inset-0 z-50 overflow-y-auto">
-        <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="flex items-center justify-center min-h-screen px-4" @click.self="$wire.closeModal()">
             <div class="fixed inset-0 backdrop-blur-sm bg-black/50 transition-opacity"></div>
             
             <div class="relative bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg max-w-lg w-full border-2 border-[#72383D]/20 shadow-xl">
@@ -94,7 +95,7 @@
                             <div class="flex justify-end space-x-3">
                                 <x-button 
                                     type="button"
-                                    wire:click="$set('showModal', false)"
+                                    @click="$wire.closeModal()"
                                     class="bg-[#9CABB4] hover:bg-[#72383D] text-white transition duration-300"
                                     label="Cancel"
                                 />
@@ -110,7 +111,7 @@
                     <!-- Close Button -->
                     <button 
                         type="button"
-                        wire:click="$set('showModal', false)"
+                        @click="$wire.closeModal()"
                         class="absolute top-4 right-4 text-[#72383D] hover:text-[#401B1B] transition-colors duration-300"
                     >
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

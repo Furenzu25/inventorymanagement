@@ -8,6 +8,8 @@ use App\Traits\WithCartCount;
 use App\Traits\WithNotificationCount;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use App\Models\User;
 
 class CustomerOrders extends Component
 {
@@ -41,23 +43,49 @@ class CustomerOrders extends Component
         $this->showOrderDetails = true;
     }
 
-    public function cancelPreorder($preorderId)
+    public function cancelPreorder($orderId)
     {
-        DB::transaction(function () use ($preorderId) {
-            $preorder = Preorder::where('id', $preorderId)
-                               ->where('customer_id', Auth::user()->customer->id)
-                               ->firstOrFail();
+        DB::transaction(function () use ($orderId) {
+            $preorder = Preorder::where('id', $orderId)
+                ->where('customer_id', Auth::user()->customer->id)
+                ->firstOrFail();
             
-            // Only allow cancellation for certain statuses
-            if (!in_array($preorder->status, ['Pending', 'approved'])) {
+            // Update to match the statuses shown in the blade template
+            if (!in_array($preorder->status, ['Pending', 'approved', 'in_stock', 'arrived'])) {
                 session()->flash('error', 'This order cannot be cancelled at its current stage.');
                 return;
-            }   
+            }
+            
+            // Update inventory items if they exist
+            if ($preorder->inventoryItems()->exists()) {
+                $preorder->inventoryItems()->update([
+                    'status' => 'available_for_reassignment',
+                    'cancellation_date' => now(),
+                    'preorder_id' => null
+                ]);
+            }
             
             $preorder->update([
                 'status' => 'Cancelled',
                 'cancellation_date' => now(),
-                'cancelled_by' => 'customer'
+                'cancelled_by' => 'customer',
+                'cancellation_reason' => $this->cancellationReason
+            ]);
+
+            // Create notification for admin
+            DB::table('notifications')->insert([
+                'id' => Str::uuid(),
+                'type' => 'order_cancelled',
+                'notifiable_type' => 'App\Models\User',
+                'notifiable_id' => User::where('is_admin', true)->first()->id,
+                'data' => json_encode([
+                    'title' => 'Order Cancelled',
+                    'message' => "Order #{$preorder->id} has been cancelled by customer {$preorder->customer->name}. Reason: {$this->cancellationReason}",
+                    'status' => 'unread',
+                    'preorder_id' => $preorder->id
+                ]),
+                'created_at' => now(),
+                'updated_at' => now()
             ]);
             
             session()->flash('message', 'Your order has been cancelled successfully.');

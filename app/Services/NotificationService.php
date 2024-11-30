@@ -96,4 +96,14 @@ class NotificationService
             'type' => 'payment_rejected'
         ]);
     }
+
+    public static function loanActivated($preorder)
+    {
+        CustomerNotification::create([
+            'customer_id' => $preorder->customer_id,
+            'title' => 'Loan Activated',
+            'message' => "Your loan for {$preorder->preorderItems->first()->product->product_name} is now active. Your monthly payment of ₱" . number_format($preorder->monthly_payment, 2) . " will be due every " . now()->format('jS') . " of the month.",
+            'type' => 'loan_activated'
+        ]);
+    }
 }

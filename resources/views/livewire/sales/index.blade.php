@@ -19,6 +19,8 @@
         </div>
     </div>
 
+    
+
     <!-- Search Section -->
     <div class="bg-white/80 rounded-xl shadow-lg p-6 mb-8">
         <div class="flex items-center">
@@ -74,9 +76,8 @@
                                 <td class="px-6 py-4">
                                     <div class="text-[#72383D]">₱{{ number_format($sale->interest_earned, 2) }}</div>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <div class="text-[#401B1B]">{{ $sale->completion_date->setTimezone('Asia/Manila')->format('M d, Y') }}</div>
-                                    <div class="text-[#72383D] text-sm">{{ $sale->completion_date->setTimezone('Asia/Manila')->diffForHumans() }}</div>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-[#401B1B]">
+                                    {{ $sale->completion_date->format('M d, Y') }}
                                 </td>
                                 <td class="px-6 py-4">
                                     <span class="px-3 py-1 text-xs font-medium rounded-full 
