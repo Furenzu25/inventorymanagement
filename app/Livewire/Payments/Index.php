@@ -19,6 +19,9 @@ class Index extends Component
 {
     use WithPagination;
 
+    protected $paginationTheme = 'tailwind';
+
+    public $perPage = 10;
     public $search = '';
     public $paymentHistoryOpen = false;
     public $recordPaymentOpen = false;
@@ -64,7 +67,6 @@ class Index extends Component
     public function mount()
     {
         $this->loadAccountReceivables();
-        $this->payment['payment_date'] = date('Y-m-d');
         $this->loadPaymentSubmissions();
         $this->refreshStats();
 
@@ -115,6 +117,9 @@ class Index extends Component
     public function approveSubmission()
     {
         DB::transaction(function () {
+            // Calculate interest earned as 5% of payment amount
+            $interestEarned = $this->viewingSubmission->amount * 0.05;
+
             // Create payment record
             $payment = Payment::create([
                 'account_receivable_id' => $this->viewingSubmission->account_receivable_id,
@@ -133,19 +138,34 @@ class Index extends Component
             $ar->total_paid += $this->viewingSubmission->amount;
             $ar->remaining_balance -= $this->viewingSubmission->amount;
             
-            // Check if fully paid
+            $wasCompleted = false;
             if ($ar->remaining_balance <= 0) {
                 $ar->status = 'completed';
+                $wasCompleted = true;
             }
             
             $ar->save();
 
-            // Create corresponding sale record
+            // If AR was completed, update inventory status
+            if ($wasCompleted) {
+                // Update inventory items
+                InventoryItem::where('preorder_id', $ar->preorder_id)
+                    ->update([
+                        'status' => 'stocked_out',
+                        'updated_at' => now()
+                    ]);
+                
+                // Emit event for inventory component
+                $this->dispatch('arCompleted', $ar->id);
+            }
+
+            // Create corresponding sale record with fixed 5% interest
             Sale::create([
                 'account_receivable_id' => $ar->id,
                 'customer_id' => $ar->customer_id,
                 'preorder_id' => $ar->preorder_id,
                 'total_amount' => $this->viewingSubmission->amount,
+                'interest_earned' => round($interestEarned, 2), // 5% of payment amount
                 'completion_date' => $this->viewingSubmission->payment_date,
                 'payment_method' => 'Monthly Payment',
                 'status' => $ar->remaining_balance <= 0 ? 'completed' : 'ongoing',
@@ -153,9 +173,6 @@ class Index extends Component
                 'payment_reference' => $this->viewingSubmission->reference_number,
                 'notes' => 'Payment made by customer'
             ]);
-
-            // Notify customer
-            NotificationService::paymentApproved($this->viewingSubmission);
         });
 
         $this->showApprovalModal = false;
@@ -280,50 +297,66 @@ class Index extends Component
     public function recordPayment()
     {
         $this->validate([
-            'selectedAR' => 'required',
+            'selectedAR' => 'required|exists:account_receivables,id',
             'payment.amount_paid' => 'required|numeric|min:0',
-            'payment.payment_date' => 'required|date'
+            'payment.payment_date' => 'required|date',
         ]);
 
-        DB::transaction(function () {
-            $ar = AccountReceivable::find($this->selectedAR);
-            
-            // Create payment with exact date from input
-            $payment = Payment::create([
-                'account_receivable_id' => $this->selectedAR,
-                'amount_paid' => $this->payment['amount_paid'],
-                'payment_date' => $this->payment['payment_date'], // Use exact date from input
-                'due_amount' => $ar->monthly_payment,
-                'status' => 'active'
-            ]);
+        try {
+            DB::transaction(function () {
+                $ar = AccountReceivable::findOrFail($this->selectedAR);
+                
+                // Create the payment record
+                $payment = Payment::create([
+                    'account_receivable_id' => $ar->id,
+                    'customer_id' => $ar->customer_id,
+                    'amount_paid' => $this->payment['amount_paid'],
+                    'payment_date' => $this->payment['payment_date'],
+                    'status' => 'active',
+                    // ... other payment fields ...
+                ]);
 
-            // Create corresponding sale record with same exact date
-            Sale::create([
-                'account_receivable_id' => $ar->id,
-                'customer_id' => $ar->customer_id,
-                'preorder_id' => $ar->preorder_id,
-                'total_amount' => $this->payment['amount_paid'],
-                'completion_date' => $this->payment['payment_date'], // Use exact same date
-                'payment_method' => 'Monthly Payment',
-                'status' => 'completed',
-                'type' => 'customer_payment',
-                'notes' => 'Payment recorded by admin'
-            ]);
+                // Update AR balances
+                $ar->total_paid += $this->payment['amount_paid'];
+                $ar->remaining_balance -= $this->payment['amount_paid'];
+                
+                if ($ar->remaining_balance <= 0) {
+                    $ar->status = 'paid';
+                }
+                
+                $ar->save();
 
-            // Update AR balances
-            $ar->total_paid += $this->payment['amount_paid'];
-            $ar->remaining_balance -= $this->payment['amount_paid'];
-            
-            if ($ar->remaining_balance <= 0) {
-                $ar->status = 'completed';
-            }
-            
-            $ar->save();
-        });
+                // Create corresponding sale record
+                Sale::create([
+                    'customer_id' => $ar->customer_id,
+                    'preorder_id' => $ar->preorder_id,
+                    'account_receivable_id' => $ar->id,
+                    'total_amount' => $this->payment['amount_paid'],
+                    'interest_earned' => $this->calculateInterestEarned($ar, $this->payment['amount_paid']),
+                    'completion_date' => $this->payment['payment_date'],
+                    'payment_method' => 'Monthly Payment',
+                    'status' => 'completed',
+                    'type' => 'customer_payment',
+                    'payment_reference' => $payment->reference_number ?? null,
+                    'notes' => 'Monthly payment recorded'
+                ]);
+            });
 
-        $this->recordPaymentOpen = false;
-        $this->reset(['payment', 'selectedAR', 'selectedARDetails']);
-        session()->flash('message', 'Payment recorded successfully.');
+            $this->reset(['payment']);
+            $this->recordPaymentOpen = false;
+            session()->flash('message', 'Payment recorded successfully.');
+            
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error recording payment: ' . $e->getMessage());
+        }
+    }
+
+    private function calculateInterestEarned($ar, $paymentAmount)
+    {
+        // Fixed 5% interest rate
+        $interestRate = 0.05; // 5% as decimal
+        $interestEarned = $paymentAmount * $interestRate;
+        return round($interestEarned, 2);
     }
 
     public function render()
@@ -554,9 +587,9 @@ class Index extends Component
 
     public function getPaymentsProperty()
     {
-        return Payment::with('customer')
+        return Payment::with(['accountReceivable.customer', 'accountReceivable.preorder.preorderItems.product'])
             ->when($this->search, function($query) {
-                $query->whereHas('customer', function($q) {
+                $query->whereHas('accountReceivable.customer', function($q) {
                     $q->where('name', 'like', '%' . $this->search . '%');
                 });
             })
@@ -579,7 +612,7 @@ class Index extends Component
                         break;
                 }
             })
-            ->paginate(10);
+            ->paginate($this->perPage);
     }
 
     public function updatedCustomerSearch()
@@ -661,5 +694,20 @@ class Index extends Component
             ->sum('amount_paid');
             
         $this->pendingCount = PaymentSubmission::where('status', 'pending')->count();
+    }
+
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFilterStatus()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSortBy()
+    {
+        $this->resetPage();
     }
 }

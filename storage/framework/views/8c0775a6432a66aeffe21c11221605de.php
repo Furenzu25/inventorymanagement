@@ -227,7 +227,7 @@
                                 <td class="px-4 py-3">
                                     <div class="flex justify-start space-x-2">
                                         <button 
-                                            wire:click="showItemDetails(<?php echo e($item->id); ?>)"
+                                            wire:click="viewRepossessedDetails(<?php echo e($item->id); ?>)"
                                             class="px-4 py-2 bg-[#72383D] hover:bg-[#401B1B] text-white text-sm rounded-lg transition duration-300 min-w-[100px]"
                                         >
                                             View Details
@@ -684,42 +684,67 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                     <div class="flex justify-between items-start mb-6">
                         <h2 class="text-2xl font-bold text-[#401B1B]">Assign Item to Customer</h2>
                         <button @click="show = false" class="text-[#72383D] hover:text-[#401B1B]">
-                            <?php if (isset($component)) { $__componentOriginalce0070e6ae017cca68172d0230e44821 = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginalce0070e6ae017cca68172d0230e44821 = $attributes; } ?>
-<?php $component = Mary\View\Components\Icon::resolve(['name' => 'o-x-mark'] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('icon'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\Mary\View\Components\Icon::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['class' => 'w-6 h-6']); ?>
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginalce0070e6ae017cca68172d0230e44821)): ?>
-<?php $attributes = $__attributesOriginalce0070e6ae017cca68172d0230e44821; ?>
-<?php unset($__attributesOriginalce0070e6ae017cca68172d0230e44821); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginalce0070e6ae017cca68172d0230e44821)): ?>
-<?php $component = $__componentOriginalce0070e6ae017cca68172d0230e44821; ?>
-<?php unset($__componentOriginalce0070e6ae017cca68172d0230e44821); ?>
-<?php endif; ?>
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                         </button>
                     </div>
 
                     <!--[if BLOCK]><![endif]--><?php if($selectedItem): ?>
-                        <div class="mb-6 p-4 bg-white/50 rounded-lg">
+                        <!-- Item Details -->
+                        <div class="bg-white/50 rounded-lg p-4 mb-6 border border-[#72383D]/20">
                             <h3 class="font-semibold text-[#401B1B] mb-2">Selected Item</h3>
-                            <p>Product: <?php echo e($selectedItem->product->product_name); ?></p>
-                            <p>Serial Number: <?php echo e($selectedItem->serial_number); ?></p>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-sm text-[#72383D]">Product</p>
+                                    <p class="font-semibold text-[#401B1B]"><?php echo e($selectedItem->product->product_name); ?></p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-[#72383D]">Serial Number</p>
+                                    <p class="font-semibold text-[#401B1B]"><?php echo e($selectedItem->serial_number); ?></p>
+                                </div>
+                            </div>
                         </div>
 
-                        <!--[if BLOCK]><![endif]--><?php if($availablePreorders->isEmpty()): ?>
-                            <p class="text-[#72383D] text-center py-4">No pending preorders found for this product.</p>
-                        <?php else: ?>
-                            <div class="space-y-4">
+                        <!-- Price Adjustment -->
+                        <div class="bg-white/50 rounded-lg p-4 mb-6 border border-[#72383D]/20">
+                            <h3 class="font-semibold text-[#401B1B] mb-2">Price Adjustment</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-sm text-[#72383D]">Original Price</p>
+                                    <p class="font-semibold text-[#401B1B]">₱<?php echo e(number_format($originalPrice, 2)); ?></p>
+                                </div>
+                                <div>
+                                    <label class="text-sm text-[#72383D]">New Price</label>
+                                    <input
+                                        type="number"
+                                        wire:model="newPrice"
+                                        step="0.01"
+                                        class="w-full rounded-lg border-[#72383D]/20 bg-white/50 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30"
+                                        placeholder="Enter new price..."
+                                    />
+                                    <!--[if BLOCK]><![endif]--><?php $__errorArgs = ['newPrice'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <span class="text-red-500 text-xs"><?php echo e($message); ?></span>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Available Preorders -->
+                        <div class="space-y-4">
+                            <h3 class="font-semibold text-[#401B1B]">Available Preorders</h3>
+                            <!--[if BLOCK]><![endif]--><?php if($availablePreorders->isEmpty()): ?>
+                                <p class="text-[#72383D] text-center py-4">No pending preorders found for this product.</p>
+                            <?php else: ?>
                                 <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $availablePreorders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $preorder): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                    <div class="p-4 bg-white/50 rounded-lg hover:bg-white/70 transition-colors">
+                                    <div class="p-4 bg-white/50 rounded-lg hover:bg-white/70 transition-colors border border-[#72383D]/20">
                                         <div class="flex justify-between items-start">
                                             <div>
                                                 <p class="font-semibold text-[#401B1B]"><?php echo e($preorder->customer->name); ?></p>
@@ -738,8 +763,86 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                         </div>
                                     </div>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                        </div>
+                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Repossessed Item Details Modal -->
+    <div x-data="{ show: <?php if ((object) ('showRepossessedDetailsModal') instanceof \Livewire\WireDirective) : ?>window.Livewire.find('<?php echo e($__livewire->getId()); ?>').entangle('<?php echo e('showRepossessedDetailsModal'->value()); ?>')<?php echo e('showRepossessedDetailsModal'->hasModifier('live') ? '.live' : ''); ?><?php else : ?>window.Livewire.find('<?php echo e($__livewire->getId()); ?>').entangle('<?php echo e('showRepossessedDetailsModal'); ?>')<?php endif; ?> }"
+         x-show="show"
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto">
+        
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-black/30 backdrop-blur-sm"
+                 x-show="show"
+                 @click="show = false"></div>
+            
+            <!-- Modal Content -->
+            <div class="relative z-[51] bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg max-w-2xl w-full border-2 border-[#72383D]/20 shadow-xl">
+                <div class="p-6">
+                    <!--[if BLOCK]><![endif]--><?php if($selectedRepossessedItem): ?>
+                        <div class="flex justify-between items-start mb-6">
+                            <h2 class="text-2xl font-bold text-[#401B1B]">Repossessed Item Details</h2>
+                            <button @click="show = false" class="text-[#72383D] hover:text-[#401B1B] transition-colors duration-300">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="space-y-6">
+                            <!-- Product Information -->
+                            <div class="bg-white/50 rounded-lg p-4 border border-[#72383D]/20">
+                                <h3 class="text-lg font-semibold text-[#401B1B] mb-3">Product Information</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-sm text-[#72383D]">Product Name</p>
+                                        <p class="font-semibold text-[#401B1B]"><?php echo e($selectedRepossessedItem->product->product_name); ?></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-[#72383D]">Serial Number</p>
+                                        <p class="font-semibold text-[#401B1B]"><?php echo e($selectedRepossessedItem->serial_number); ?></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-[#72383D]">Original Price</p>
+                                        <p class="font-semibold text-[#401B1B]">₱<?php echo e(number_format($selectedRepossessedItem->product->price, 2)); ?></p>
+                                    </div>
+                                </div>
                             </div>
-                        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+
+                            <!-- Previous Customer Information -->
+                            <div class="bg-white/50 rounded-lg p-4 border border-[#72383D]/20">
+                                <h3 class="text-lg font-semibold text-[#401B1B] mb-3">Previous Customer Information</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-sm text-[#72383D]">Customer Name</p>
+                                        <p class="font-semibold text-[#401B1B]"><?php echo e($selectedRepossessedItem->preorder->customer->name); ?></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-[#72383D]">Repossession Date</p>
+                                        <p class="font-semibold text-[#401B1B]">
+                                            <?php echo e($selectedRepossessedItem->repossessed_at ? Carbon\Carbon::parse($selectedRepossessedItem->repossessed_at)->format('M d, Y') : 'N/A'); ?>
+
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex justify-end">
+                            <button 
+                                wire:click="openAssignModal(<?php echo e($selectedRepossessedItem->id); ?>)"
+                                class="px-4 py-2 bg-gradient-to-r from-[#72383D] to-[#AB644B] hover:from-[#401B1B] hover:to-[#72383D] text-white rounded-lg transition duration-300"
+                            >
+                                Assign to New Customer
+                            </button>
+                        </div>
                     <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                 </div>
             </div>

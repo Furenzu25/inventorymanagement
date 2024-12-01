@@ -142,9 +142,9 @@
     </div>
 
     <!-- Payment History Table -->
-    <div class="bg-white/80 rounded-xl shadow-lg overflow-hidden">
+    <div class="bg-white/80 rounded-xl shadow-lg p-6">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-[#72383D]/10">
+            <table class="w-full">
                 <thead>
                     <tr class="bg-gradient-to-r from-[#72383D]/10 to-[#AB644B]/10">
                         <th class="px-6 py-4 text-left text-xs font-semibold text-[#401B1B] uppercase tracking-wider">Customer</th>
@@ -155,7 +155,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-[#72383D]/10">
-                    <!--[if BLOCK]><![endif]--><?php $__empty_1 = true; $__currentLoopData = $this->payments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $payment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                    <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $this->payments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $payment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <tr class="hover:bg-[#F2F2EB]/50 transition-colors duration-200">
                             <td class="px-6 py-4">
                                 <div class="flex items-center">
@@ -208,15 +208,26 @@
                                 <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                             </td>
                         </tr>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                        <tr>
-                            <td colspan="5" class="px-6 py-4 text-center text-[#72383D]">
-                                No payments found.
-                            </td>
-                        </tr>
-                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
                 </tbody>
             </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="mt-6">
+            <?php echo e($this->payments->links()); ?>
+
+        </div>
+
+        <!-- Items Per Page Selector -->
+        <div class="mt-4 flex items-center justify-end space-x-2">
+            <span class="text-sm text-[#72383D]">Items per page:</span>
+            <select wire:model.live="perPage" class="rounded-lg border-[#72383D]/20 bg-[#F2F2EB]/50 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
         </div>
     </div>
 

@@ -127,9 +127,9 @@
     </div>
 
     <!-- Payment History Table -->
-    <div class="bg-white/80 rounded-xl shadow-lg overflow-hidden">
+    <div class="bg-white/80 rounded-xl shadow-lg p-6">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-[#72383D]/10">
+            <table class="w-full">
                 <thead>
                     <tr class="bg-gradient-to-r from-[#72383D]/10 to-[#AB644B]/10">
                         <th class="px-6 py-4 text-left text-xs font-semibold text-[#401B1B] uppercase tracking-wider">Customer</th>
@@ -140,7 +140,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-[#72383D]/10">
-                    @forelse($this->payments as $payment)
+                    @foreach($this->payments as $payment)
                         <tr class="hover:bg-[#F2F2EB]/50 transition-colors duration-200">
                             <td class="px-6 py-4">
                                 <div class="flex items-center">
@@ -188,15 +188,25 @@
                                 @endif
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="px-6 py-4 text-center text-[#72383D]">
-                                No payments found.
-                            </td>
-                        </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="mt-6">
+            {{ $this->payments->links() }}
+        </div>
+
+        <!-- Items Per Page Selector -->
+        <div class="mt-4 flex items-center justify-end space-x-2">
+            <span class="text-sm text-[#72383D]">Items per page:</span>
+            <select wire:model.live="perPage" class="rounded-lg border-[#72383D]/20 bg-[#F2F2EB]/50 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
         </div>
     </div>
 

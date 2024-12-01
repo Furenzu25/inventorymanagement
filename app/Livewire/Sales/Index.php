@@ -14,9 +14,67 @@ class Index extends Component
 {
     use WithPagination;
 
+    protected $paginationTheme = 'tailwind';
+
     public $search = '';
     public $sortField = 'completion_date';
     public $sortDirection = 'desc';
+    public $perPage = 10;
+    public $filterType = '';
+
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFilterType()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSortField()
+    {
+        $this->resetPage();
+    }
+
+    public function getSalesProperty()
+    {
+        return Sale::with(['customer', 'accountReceivable.preorder.preorderItems.product'])
+            ->when($this->search, function($query) {
+                $query->whereHas('customer', function($q) {
+                    $q->where('name', 'like', '%' . $this->search . '%');
+                });
+            })
+            ->when($this->filterType, function($query) {
+                $query->where('type', $this->filterType);
+            })
+            ->orderBy($this->sortField, $this->sortDirection)
+            ->paginate($this->perPage);
+    }
+
+    public function getSalesTrendData()
+    {
+        return Sale::selectRaw('DATE(completion_date) as date, SUM(total_amount) as total')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->map(function ($sale) {
+                return [
+                    'date' => Carbon::parse($sale->date)->format('M d, Y'),
+                    'total' => floatval($sale->total)
+                ];
+            });
+    }
+
+    public function render()
+    {
+        $salesTrend = $this->getSalesTrendData();
+
+        return view('livewire.sales.index', [
+            'sales' => $this->sales,
+            'salesTrend' => $salesTrend
+        ]);
+    }
 
     public function createSaleFromAR(AccountReceivable $ar)
     {
@@ -63,36 +121,5 @@ class Index extends Component
             // Update payment status if needed
             $payment->update(['recorded_in_sales' => true]);
         });
-    }
-
-    public function getSalesTrendData()
-    {
-        return Sale::selectRaw('DATE(completion_date) as date, SUM(total_amount) as total')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get()
-            ->map(function ($sale) {
-                return [
-                    'date' => Carbon::parse($sale->date)->format('M d, Y'),
-                    'total' => floatval($sale->total)
-                ];
-            });
-    }
-
-    public function render()
-    {
-        $salesTrend = $this->getSalesTrendData();
-
-        return view('livewire.sales.index', [
-            'sales' => Sale::query()
-                ->when($this->search, function ($query) {
-                    $query->whereHas('customer', function ($q) {
-                        $q->where('name', 'like', '%' . $this->search . '%');
-                    });
-                })
-                ->orderBy($this->sortField, $this->sortDirection)
-                ->paginate(10),
-            'salesTrend' => $salesTrend
-        ]);
     }
 } 
