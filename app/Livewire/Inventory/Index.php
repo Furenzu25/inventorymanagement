@@ -37,6 +37,9 @@ class Index extends Component
     public $selectedRepossessedItem = null;
     public $newPrice = null;
     public $originalPrice = null;
+    public $showCancellationModal = false;
+    public $cancellationReason = '';
+    public $selectedPreorderId = null;
     
     protected $rules = [
         'serialNumber' => 'required|unique:inventory_items,serial_number',
@@ -519,6 +522,9 @@ class Index extends Component
             ->where('status', 'approved')
             ->get();
         
+        // Close the Repossessed Details Modal
+        $this->showRepossessedDetailsModal = false;
+
         $this->showAssignCustomerModal = true;
     }
 
@@ -610,5 +616,59 @@ class Index extends Component
         $this->selectedRepossessedItem = InventoryItem::with(['product', 'preorder.customer'])
             ->findOrFail($itemId);
         $this->showRepossessedDetailsModal = true;
+    }
+
+    public function openCancellationModal($preorderId)
+    {
+        $this->selectedPreorderId = $preorderId;
+        $this->cancellationReason = '';
+        $this->showCancellationModal = true;
+    }
+
+    public function cancelOrder()
+    {
+        $this->validate([
+            'cancellationReason' => 'required|min:10',
+        ], [
+            'cancellationReason.required' => 'Please provide a reason for cancellation.',
+            'cancellationReason.min' => 'The reason must be at least 10 characters.',
+        ]);
+
+        DB::transaction(function () {
+            $preorder = Preorder::findOrFail($this->selectedPreorderId);
+            
+            // Update inventory items if they exist
+            if ($preorder->inventoryItems()->exists()) {
+                $preorder->inventoryItems()->update([
+                    'status' => 'available_for_reassignment',
+                    'cancellation_date' => now(),
+                    'preorder_id' => null
+                ]);
+            }
+            
+            $preorder->update([
+                'status' => 'Cancelled',
+                'cancellation_date' => now(),
+                'cancelled_by' => 'admin',
+                'cancellation_reason' => $this->cancellationReason
+            ]);
+
+            // Get all product names
+            $productNames = $preorder->preorderItems->map(function ($item) {
+                return $item->product->product_name;
+            })->join(', ');
+
+            // Create notification for customer
+            CustomerNotification::create([
+                'customer_id' => $preorder->customer_id,
+                'title' => 'Order Cancelled',
+                'message' => "Your order for the following products: {$productNames} has been cancelled by the administrator. Reason: {$this->cancellationReason}",
+                'type' => 'order_cancelled'
+            ]);
+        });
+
+        $this->showCancellationModal = false;
+        $this->reset(['cancellationReason', 'selectedPreorderId']);
+        session()->flash('message', 'Order has been cancelled successfully.');
     }
 }

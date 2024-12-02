@@ -69,10 +69,15 @@ class NotificationService
 
     public static function preorderApproved(Preorder $preorder)
     {
+        // Get the product names from the preorder items
+        $productNames = $preorder->preorderItems->map(function($item) {
+            return $item->product->product_name;
+        })->implode(', ');
+
         CustomerNotification::create([
             'customer_id' => $preorder->customer_id,
             'title' => 'Pre-order Approved',
-            'message' => "Your pre-order #{$preorder->id} has been approved!",
+            'message' => "Your pre-order for {$productNames} has been approved!",
             'type' => 'preorder_approval'
         ]);
     }
@@ -105,5 +110,21 @@ class NotificationService
             'message' => "Your loan for {$preorder->preorderItems->first()->product->product_name} is now active. Your monthly payment of ₱" . number_format($preorder->monthly_payment, 2) . " will be due every " . now()->format('jS') . " of the month.",
             'type' => 'loan_activated'
         ]);
+    }
+
+    public static function orderCancelledByCustomer(Preorder $preorder, $reason)
+    {
+        // Notify admin
+        $admin = User::where('is_admin', true)->first();
+        if ($admin) {
+            $admin->notify(new PreorderStatusNotification(
+                $preorder,
+                'Order Cancelled by Customer',
+                "Order #{$preorder->id} has been cancelled by {$preorder->customer->name}. Reason: {$reason}"
+            ));
+        }
+
+        // Create customer notification
+        
     }
 }

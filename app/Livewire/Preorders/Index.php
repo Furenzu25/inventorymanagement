@@ -37,6 +37,12 @@ class Index extends Component
     public $showDisapprovalModal = false;
     public $disapprovalReason = '';
     public $selectedPreorderId;
+    public $showEditModal = false;
+    public $showDeleteModal = false;
+    public $editingPreorder = null;
+    public $deletingPreorderId = null;
+    public $editingLoanDuration;
+    public $editingQuantities = [];
 
     protected $rules = [
         'preorder.customer_id' => 'required|exists:customers,id',
@@ -208,12 +214,10 @@ class Index extends Component
     {
         DB::transaction(function () use ($id) {
             $preorder = Preorder::findOrFail($id);
-            $preorder->update(['status' => Preorder::STATUS_APPROVED]);
+            $preorder->update(['status' => 'approved']);
 
             // Create customer notification
             NotificationService::preorderApproved($preorder);
-
-            // Rest of your approval logic...
         });
         
         session()->flash('message', 'Pre-order approved successfully.');
@@ -262,7 +266,7 @@ class Index extends Component
             $preorder = Preorder::findOrFail($this->selectedPreorderId);
             
             $preorder->update([
-                'status' => Preorder::STATUS_DISAPPROVED,
+                'status' => 'disapproved',
                 'disapproval_reason' => $this->disapprovalReason
             ]);
 
@@ -274,5 +278,80 @@ class Index extends Component
         $this->reset(['disapprovalReason', 'selectedPreorderId']);
         
         session()->flash('message', 'Pre-order has been disapproved.');
+    }
+
+    public function openEditModal($preorderId)
+    {
+        $preorder = Preorder::with('preorderItems.product')->find($preorderId);
+        $this->editingPreorder = $preorder;
+        $this->editingLoanDuration = $preorder->loan_duration;
+        
+        // Initialize quantities
+        foreach ($preorder->preorderItems as $item) {
+            $this->editingQuantities[$item->id] = $item->quantity;
+        }
+        
+        $this->showEditModal = true;
+    }
+
+    public function closeEditModal()
+    {
+        $this->showEditModal = false;
+        $this->editingPreorder = null;
+        $this->editingLoanDuration = null;
+        $this->editingQuantities = [];
+    }
+
+    public function updatePreorder()
+    {
+        DB::transaction(function () {
+            $preorder = Preorder::findOrFail($this->editingPreorder->id);
+            
+            // Update loan duration
+            $preorder->loan_duration = $this->editingLoanDuration;
+            
+            // Calculate new total amount based on quantities
+            $totalAmount = 0;
+            foreach ($this->editingPreorder->preorderItems as $item) {
+                $quantity = $this->editingQuantities[$item->id] ?? $item->quantity;
+                $totalAmount += $quantity * $item->price;
+                
+                // Update item quantity
+                $item->update(['quantity' => $quantity]);
+            }
+            
+            // Calculate new monthly payment
+            $monthlyPayment = $this->calculateMonthlyPayment(
+                $totalAmount,
+                $this->editingLoanDuration,
+                $preorder->interest_rate
+            );
+            
+            // Update preorder
+            $preorder->update([
+                'loan_duration' => $this->editingLoanDuration,
+                'total_amount' => $totalAmount,
+                'monthly_payment' => $monthlyPayment
+            ]);
+        });
+
+        $this->closeEditModal();
+        session()->flash('message', 'Pre-order updated successfully.');
+    }
+
+    public function openDeleteModal($preorderId)
+    {
+        $this->deletingPreorderId = $preorderId;
+        $this->showDeleteModal = true;
+    }
+
+    public function deletePreorder()
+    {
+        $preorder = Preorder::findOrFail($this->deletingPreorderId);
+        $preorder->delete();
+        
+        $this->showDeleteModal = false;
+        $this->deletingPreorderId = null;
+        session()->flash('message', 'Pre-order deleted successfully.');
     }
 }

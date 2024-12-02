@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->string('title');
             $table->text('message');
+            $table->text('cancellation_reason')->nullable();
             $table->string('type')->default('preorder_disapproval');
             $table->boolean('is_read')->default(false);
             $table->timestamps();

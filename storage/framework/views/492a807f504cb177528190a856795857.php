@@ -96,10 +96,19 @@
                                                     View Details
                                                 </button>
                                                 
-                                                <!--[if BLOCK]><![endif]--><?php if(in_array($order->status, ['Pending', 'approved', 'in_stock', 'arrived'])): ?>
-                                                    <button wire:click="cancelPreorder(<?php echo e($order->id); ?>)"
-                                                            onclick="return confirm('Are you sure you want to cancel this order? This action cannot be undone.')"
-                                                            class="text-red-600 hover:text-red-800 transition-colors duration-200">
+                                                <!--[if BLOCK]><![endif]--><?php if($order->status === 'Cancelled' || $order->status === 'disapproved'): ?>
+                                                    <button 
+                                                        wire:click="showDisapprovalReason('<?php echo e($order->status === 'Cancelled' ? $order->cancellation_reason : $order->disapproval_reason); ?>')"
+                                                        class="text-xs bg-[#72383D] text-white px-3 py-1 rounded-full hover:bg-[#401B1B] transition-colors duration-200"
+                                                    >
+                                                        View Reason
+                                                    </button>
+                                                <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                                
+                                                <!--[if BLOCK]><![endif]--><?php if(in_array($order->status, ['Pending', 'approved'])): ?>
+                                                    <button 
+                                                        wire:click="openCancellationModal(<?php echo e($order->id); ?>)"
+                                                        class="text-[#72383D] hover:text-[#401B1B] transition-colors duration-200">
                                                         Cancel Order
                                                     </button>
                                                 <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
@@ -117,14 +126,17 @@
 
     <!-- Order Details Modal -->
     <div x-show="$wire.showOrderDetails" 
-         x-transition
+
          class="fixed inset-0 z-50 overflow-y-auto" 
          aria-labelledby="modal-title" 
          role="dialog" 
          aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" 
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-black/30 backdrop-blur-sm " 
                  aria-hidden="true"
+                 x-show="$wire.showOrderDetails"
+                
                  wire:click="$set('showOrderDetails', false)"></div>
 
             <div class="inline-block align-bottom bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
@@ -246,6 +258,121 @@
                         </div>
                     </div>
                 <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+            </div>
+        </div>
+    </div>
+
+    <!-- Reason Modal -->
+    <template x-teleport="<?php echo e('body'); ?>">
+        <div x-data="{ showReasonModal: <?php if ((object) ('showReasonModal') instanceof \Livewire\WireDirective) : ?>window.Livewire.find('<?php echo e($__livewire->getId()); ?>').entangle('<?php echo e('showReasonModal'->value()); ?>')<?php echo e('showReasonModal'->hasModifier('live') ? '.live' : ''); ?><?php else : ?>window.Livewire.find('<?php echo e($__livewire->getId()); ?>').entangle('<?php echo e('showReasonModal'); ?>')<?php endif; ?> }">
+            <template x-if="showReasonModal">
+                <div class="fixed inset-0 z-50 overflow-y-auto backdrop-blur-sm">
+                    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+                        <div class="fixed inset-0 transition-opacity bg-gray-500/30" aria-hidden="true">
+                        </div>
+
+                        <div class="relative bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg max-w-lg w-full border-2 border-[#72383D]/20 shadow-xl">
+                            <div class="p-6">
+                                <h3 class="text-2xl font-bold text-[#401B1B] mb-6">Cancellation Reason</h3>
+                                
+                                <div class="bg-[#AB644B]/10 p-4 rounded-lg">
+                                    <p class="text-[#72383D]"><?php echo e($selectedReason); ?></p>
+                                </div>
+                                
+                                <div class="mt-6 flex justify-end">
+                                    <button 
+                                        @click="showReasonModal = false"
+                                        class="px-4 py-2 bg-[#72383D] text-white rounded-lg hover:bg-[#401B1B] transition-colors duration-200"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </template>
+
+    <!-- Cancellation Modal -->
+    <div x-data="{ show: <?php if ((object) ('showCancellationModal') instanceof \Livewire\WireDirective) : ?>window.Livewire.find('<?php echo e($__livewire->getId()); ?>').entangle('<?php echo e('showCancellationModal'->value()); ?>')<?php echo e('showCancellationModal'->hasModifier('live') ? '.live' : ''); ?><?php else : ?>window.Livewire.find('<?php echo e($__livewire->getId()); ?>').entangle('<?php echo e('showCancellationModal'); ?>')<?php endif; ?> }"
+         x-show="show"
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto">
+        
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-black/30 backdrop-blur-sm"
+                 x-show="show"
+                 @click="show = false"></div>
+            
+            <!-- Modal Content -->
+            <div class="relative z-[51] bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg max-w-2xl w-full border-2 border-[#72383D]/20 shadow-xl">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-6">
+                        <h2 class="text-2xl font-bold text-[#401B1B]">Cancel Order</h2>
+                        <button @click="show = false" class="text-[#72383D] hover:text-[#401B1B] transition-colors duration-300">
+                            <?php if (isset($component)) { $__componentOriginalce0070e6ae017cca68172d0230e44821 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalce0070e6ae017cca68172d0230e44821 = $attributes; } ?>
+<?php $component = Mary\View\Components\Icon::resolve(['name' => 'o-x-mark'] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('icon'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Mary\View\Components\Icon::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'w-6 h-6']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalce0070e6ae017cca68172d0230e44821)): ?>
+<?php $attributes = $__attributesOriginalce0070e6ae017cca68172d0230e44821; ?>
+<?php unset($__attributesOriginalce0070e6ae017cca68172d0230e44821); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalce0070e6ae017cca68172d0230e44821)): ?>
+<?php $component = $__componentOriginalce0070e6ae017cca68172d0230e44821; ?>
+<?php unset($__componentOriginalce0070e6ae017cca68172d0230e44821); ?>
+<?php endif; ?>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-[#401B1B] font-medium mb-2">Reason for Cancellation</label>
+                            <textarea
+                                wire:model="cancellationReason"
+                                class="w-full rounded-lg border-[#AB644B]/20 bg-white/50 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30 shadow-inner resize-none"
+                                rows="4"
+                                placeholder="Please provide a reason for cancellation..."
+                            ></textarea>
+                            <!--[if BLOCK]><![endif]--><?php $__errorArgs = ['cancellationReason'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                <span class="text-red-500 text-sm mt-1"><?php echo e($message); ?></span>
+                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
+                        </div>
+
+                        <div class="flex justify-end gap-3 mt-6">
+                            <button 
+                                wire:click="$set('showCancellationModal', false)"
+                                class="px-4 py-2 bg-[#9CABB4] hover:bg-[#72383D] text-white rounded-lg transition duration-300"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                wire:click="cancelPreorder"
+                                class="px-4 py-2 bg-gradient-to-r from-[#72383D] to-[#AB644B] hover:from-[#401B1B] hover:to-[#72383D] text-white rounded-lg transition duration-300"
+                            >
+                                Confirm Cancellation
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -121,7 +121,7 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Mary\View\Components\Button::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['wire:click' => 'approvePreorder('.e($preorder->id).')','class' => 'bg-[#72383D] hover:bg-[#401B1B] text-white text-xs px-2 py-1']); ?>
+<?php $component->withAttributes(['wire:click' => 'approvePreorder('.e($preorder->id).')','class' => 'bg-gradient-to-r from-[#401B1B] to-[#72383D] hover:from-[#72383D] hover:to-[#AB644B] text-white text-xs px-2 py-1']); ?>
                                             Approve
                                          <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
@@ -142,7 +142,7 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Mary\View\Components\Button::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['wire:click' => 'openDisapprovalModal('.e($preorder->id).')','class' => 'bg-[#AB644B] hover:bg-[#72383D] text-white text-xs px-2 py-1']); ?>
+<?php $component->withAttributes(['wire:click' => 'openDisapprovalModal('.e($preorder->id).')','class' => 'bg-gradient-to-r from-[#401B1B] to-[#72383D] hover:from-[#72383D] hover:to-[#AB644B] text-white text-xs px-2 py-1']); ?>
                                             Disapprove
                                          <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
@@ -164,7 +164,7 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Mary\View\Components\Button::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['wire:click' => 'edit('.e($preorder->id).')','class' => 'bg-[#9CABB4] hover:bg-[#72383D] text-white text-xs px-2 py-1']); ?>
+<?php $component->withAttributes(['wire:click' => 'openEditModal('.e($preorder->id).')','class' => 'bg-[#9CABB4] hover:bg-[#72383D] text-white text-xs px-2 py-1']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal602b228a887fab12f0012a3179e5b533)): ?>
@@ -184,7 +184,7 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Mary\View\Components\Button::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['wire:click' => 'delete('.e($preorder->id).')','wire:confirm' => 'Are you sure you want to delete this pre-order?','class' => 'bg-[#AB644B] hover:bg-[#72383D] text-white text-xs px-2 py-1']); ?>
+<?php $component->withAttributes(['wire:click' => 'openDeleteModal('.e($preorder->id).')','class' => 'bg-[#AB644B] hover:bg-[#72383D] text-white text-xs px-2 py-1']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal602b228a887fab12f0012a3179e5b533)): ?>
@@ -210,94 +210,192 @@
     </div>
 
     <!-- Disapproval Modal -->
-    <?php if (isset($component)) { $__componentOriginal89a573612f1f1cb2dd9fc072235d4356 = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal89a573612f1f1cb2dd9fc072235d4356 = $attributes; } ?>
-<?php $component = Mary\View\Components\Modal::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('modal'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\Mary\View\Components\Modal::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['wire:model' => 'showDisapprovalModal']); ?>
-        <div class="p-6">
-            <h2 class="text-2xl font-bold text-[#401B1B] mb-6">Disapprove Pre-order</h2>
+    <div x-data="{ show: <?php if ((object) ('showDisapprovalModal') instanceof \Livewire\WireDirective) : ?>window.Livewire.find('<?php echo e($__livewire->getId()); ?>').entangle('<?php echo e('showDisapprovalModal'->value()); ?>')<?php echo e('showDisapprovalModal'->hasModifier('live') ? '.live' : ''); ?><?php else : ?>window.Livewire.find('<?php echo e($__livewire->getId()); ?>').entangle('<?php echo e('showDisapprovalModal'); ?>')<?php endif; ?> }"
+         x-show="show"
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto">
+        
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-black/30 backdrop-blur-sm"
+                 x-show="show"
+                 @click="show = false"></div>
             
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-[#401B1B] font-medium mb-2">Reason for Disapproval</label>
-                    <textarea
-                        wire:model="disapprovalReason"
-                        class="w-full rounded-lg border-[#AB644B]/20 bg-white/50 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30 shadow-inner resize-none"
-                        rows="4"
-                        placeholder="Please provide a detailed reason for disapproval..."
-                    ></textarea>
-                    <!--[if BLOCK]><![endif]--><?php $__errorArgs = ['disapprovalReason'];
+            <!-- Modal Content -->
+            <div class="relative z-[51] bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg max-w-2xl w-full border-2 border-[#72383D]/20 shadow-xl">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-6">
+                        <h2 class="text-2xl font-bold text-[#401B1B]">Disapprove Pre-order</h2>
+                        <button @click="show = false" class="text-[#72383D] hover:text-[#401B1B] transition-colors duration-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-[#401B1B] font-medium mb-2">Reason for Disapproval</label>
+                            <textarea
+                                wire:model="disapprovalReason"
+                                class="w-full rounded-lg border-[#AB644B]/20 bg-white/50 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30 shadow-inner resize-none"
+                                rows="4"
+                                placeholder="Please provide a detailed reason for disapproval..."
+                            ></textarea>
+                            <!--[if BLOCK]><![endif]--><?php $__errorArgs = ['disapprovalReason'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?>
-                        <span class="text-red-500 text-sm mt-1"><?php echo e($message); ?></span>
-                    <?php unset($message);
+                                <span class="text-red-500 text-sm mt-1"><?php echo e($message); ?></span>
+                            <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
-                </div>
+                        </div>
 
-                <div class="flex justify-end gap-3">
-                    <?php if (isset($component)) { $__componentOriginal602b228a887fab12f0012a3179e5b533 = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal602b228a887fab12f0012a3179e5b533 = $attributes; } ?>
-<?php $component = Mary\View\Components\Button::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('button'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\Mary\View\Components\Button::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['wire:click' => '$set(\'showDisapprovalModal\', false)','class' => 'bg-[#9CABB4] hover:bg-[#72383D]']); ?>
-                        Cancel
-                     <?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal602b228a887fab12f0012a3179e5b533)): ?>
-<?php $attributes = $__attributesOriginal602b228a887fab12f0012a3179e5b533; ?>
-<?php unset($__attributesOriginal602b228a887fab12f0012a3179e5b533); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal602b228a887fab12f0012a3179e5b533)): ?>
-<?php $component = $__componentOriginal602b228a887fab12f0012a3179e5b533; ?>
-<?php unset($__componentOriginal602b228a887fab12f0012a3179e5b533); ?>
-<?php endif; ?>
-                    <?php if (isset($component)) { $__componentOriginal602b228a887fab12f0012a3179e5b533 = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal602b228a887fab12f0012a3179e5b533 = $attributes; } ?>
-<?php $component = Mary\View\Components\Button::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('button'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\Mary\View\Components\Button::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['wire:click' => 'disapprovePreorder','class' => 'bg-gradient-to-r from-[#72383D] to-[#AB644B] hover:from-[#401B1B] hover:to-[#72383D]']); ?>
-                        Confirm Disapproval
-                     <?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal602b228a887fab12f0012a3179e5b533)): ?>
-<?php $attributes = $__attributesOriginal602b228a887fab12f0012a3179e5b533; ?>
-<?php unset($__attributesOriginal602b228a887fab12f0012a3179e5b533); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal602b228a887fab12f0012a3179e5b533)): ?>
-<?php $component = $__componentOriginal602b228a887fab12f0012a3179e5b533; ?>
-<?php unset($__componentOriginal602b228a887fab12f0012a3179e5b533); ?>
-<?php endif; ?>
+                        <div class="flex justify-end gap-3 mt-6">
+                            <button 
+                                wire:click="$set('showDisapprovalModal', false)"
+                                class="px-4 py-2 bg-[#9CABB4] hover:bg-[#72383D] text-white rounded-lg transition duration-300"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                wire:click="disapprovePreorder"
+                                class="px-4 py-2 bg-gradient-to-r from-[#72383D] to-[#AB644B] hover:from-[#401B1B] hover:to-[#72383D] text-white rounded-lg transition duration-300"
+                            >
+                                Confirm Disapproval
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-     <?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal89a573612f1f1cb2dd9fc072235d4356)): ?>
-<?php $attributes = $__attributesOriginal89a573612f1f1cb2dd9fc072235d4356; ?>
-<?php unset($__attributesOriginal89a573612f1f1cb2dd9fc072235d4356); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal89a573612f1f1cb2dd9fc072235d4356)): ?>
-<?php $component = $__componentOriginal89a573612f1f1cb2dd9fc072235d4356; ?>
-<?php unset($__componentOriginal89a573612f1f1cb2dd9fc072235d4356); ?>
-<?php endif; ?>
+    </div>
+
+    <!-- Edit Modal -->
+    <div x-data="{ show: <?php if ((object) ('showEditModal') instanceof \Livewire\WireDirective) : ?>window.Livewire.find('<?php echo e($__livewire->getId()); ?>').entangle('<?php echo e('showEditModal'->value()); ?>')<?php echo e('showEditModal'->hasModifier('live') ? '.live' : ''); ?><?php else : ?>window.Livewire.find('<?php echo e($__livewire->getId()); ?>').entangle('<?php echo e('showEditModal'); ?>')<?php endif; ?> }"
+         x-show="show"
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto">
+        
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-black/30 backdrop-blur-sm"
+                 x-show="show"
+                 @click="$wire.closeEditModal()"></div>
+            
+            <!-- Modal Content -->
+            <div class="relative z-[51] bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg max-w-4xl w-full border-2 border-[#72383D]/20 shadow-xl">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-6">
+                        <h2 class="text-2xl font-bold text-[#401B1B]">Edit Pre-order</h2>
+                        <button @click="$wire.closeEditModal()" class="text-[#72383D] hover:text-[#401B1B] transition-colors duration-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!--[if BLOCK]><![endif]--><?php if($editingPreorder): ?>
+                    <div class="space-y-4">
+                        <!-- Customer Information -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[#401B1B] font-medium mb-2">Customer</label>
+                                <input type="text" value="<?php echo e($editingPreorder->customer->name); ?>" disabled
+                                    class="w-full rounded-lg border-[#AB644B]/20 bg-white/30 text-gray-600">
+                            </div>
+                            <div>
+                                <label class="block text-[#401B1B] font-medium mb-2">Loan Duration (months)</label>
+                                <select wire:model="editingLoanDuration"
+                                    class="w-full rounded-lg border-[#AB644B]/20 bg-white/50 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30">
+                                    <option value="6">6 months</option>
+                                    <option value="12">12 months</option>
+                                    <option value="24">24 months</option>
+                                    <option value="36">36 months</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Products -->
+                        <div>
+                            <label class="block text-[#401B1B] font-medium mb-2">Products</label>
+                            <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $editingPreorder->preorderItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <div class="flex gap-4 mb-2">
+                                    <input type="text" value="<?php echo e($item->product->product_name); ?>" disabled
+                                        class="flex-1 rounded-lg border-[#AB644B]/20 bg-white/30 text-gray-600">
+                                    <input type="number" wire:model="editingQuantities.<?php echo e($item->id); ?>"
+                                        class="w-24 rounded-lg border-[#AB644B]/20 bg-white/50 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30"
+                                        placeholder="Qty">
+                                </div>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
+                        </div>
+
+                        <div class="flex justify-end gap-3 mt-6">
+                            <button 
+                                wire:click="closeEditModal"
+                                class="px-4 py-2 bg-[#9CABB4] hover:bg-[#72383D] text-white rounded-lg transition duration-300"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                wire:click="updatePreorder"
+                                class="px-4 py-2 bg-gradient-to-r from-[#72383D] to-[#AB644B] hover:from-[#401B1B] hover:to-[#72383D] text-white rounded-lg transition duration-300"
+                            >
+                                Update Pre-order
+                            </button>
+                        </div>
+                    </div>
+                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div x-data="{ show: <?php if ((object) ('showDeleteModal') instanceof \Livewire\WireDirective) : ?>window.Livewire.find('<?php echo e($__livewire->getId()); ?>').entangle('<?php echo e('showDeleteModal'->value()); ?>')<?php echo e('showDeleteModal'->hasModifier('live') ? '.live' : ''); ?><?php else : ?>window.Livewire.find('<?php echo e($__livewire->getId()); ?>').entangle('<?php echo e('showDeleteModal'); ?>')<?php endif; ?> }"
+         x-show="show"
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto">
+        
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-black/30 backdrop-blur-sm"
+                 x-show="show"
+                 @click="show = false"></div>
+            
+            <!-- Modal Content -->
+            <div class="relative z-[51] bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg max-w-md w-full border-2 border-[#72383D]/20 shadow-xl">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-6">
+                        <h2 class="text-2xl font-bold text-[#401B1B]">Confirm Deletion</h2>
+                        <button @click="show = false" class="text-[#72383D] hover:text-[#401B1B] transition-colors duration-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <p class="text-[#72383D] mb-6">Are you sure you want to delete this pre-order? This action cannot be undone.</p>
+
+                    <div class="flex justify-end gap-3">
+                        <button 
+                            wire:click="$set('showDeleteModal', false)"
+                            class="px-4 py-2 bg-[#9CABB4] hover:bg-[#72383D] text-white rounded-lg transition duration-300"
+                        >
+                            Cancel
+                        </button>
+                        <button 
+                            wire:click="deletePreorder"
+                            class="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg transition duration-300"
+                        >
+                            Delete Pre-order
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div><?php /**PATH C:\laragon\www\inventorymanagement\resources\views/livewire/preorders/index.blade.php ENDPATH**/ ?>

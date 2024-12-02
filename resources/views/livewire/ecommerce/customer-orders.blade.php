@@ -74,10 +74,19 @@
                                                     View Details
                                                 </button>
                                                 
-                                                @if(in_array($order->status, ['Pending', 'approved', 'in_stock', 'arrived']))
-                                                    <button wire:click="cancelPreorder({{ $order->id }})"
-                                                            onclick="return confirm('Are you sure you want to cancel this order? This action cannot be undone.')"
-                                                            class="text-red-600 hover:text-red-800 transition-colors duration-200">
+                                                @if($order->status === 'Cancelled' || $order->status === 'disapproved')
+                                                    <button 
+                                                        wire:click="showDisapprovalReason('{{ $order->status === 'Cancelled' ? $order->cancellation_reason : $order->disapproval_reason }}')"
+                                                        class="text-xs bg-[#72383D] text-white px-3 py-1 rounded-full hover:bg-[#401B1B] transition-colors duration-200"
+                                                    >
+                                                        View Reason
+                                                    </button>
+                                                @endif
+                                                
+                                                @if(in_array($order->status, ['Pending', 'approved']))
+                                                    <button 
+                                                        wire:click="openCancellationModal({{ $order->id }})"
+                                                        class="text-[#72383D] hover:text-[#401B1B] transition-colors duration-200">
                                                         Cancel Order
                                                     </button>
                                                 @endif
@@ -95,14 +104,17 @@
 
     <!-- Order Details Modal -->
     <div x-show="$wire.showOrderDetails" 
-         x-transition
+
          class="fixed inset-0 z-50 overflow-y-auto" 
          aria-labelledby="modal-title" 
          role="dialog" 
          aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" 
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-black/30 backdrop-blur-sm " 
                  aria-hidden="true"
+                 x-show="$wire.showOrderDetails"
+                
                  wire:click="$set('showOrderDetails', false)"></div>
 
             <div class="inline-block align-bottom bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
@@ -204,6 +216,95 @@
                         </div>
                     </div>
                 @endif
+            </div>
+        </div>
+    </div>
+
+    <!-- Reason Modal -->
+    @teleport('body')
+        <div x-data="{ showReasonModal: @entangle('showReasonModal') }">
+            <template x-if="showReasonModal">
+                <div class="fixed inset-0 z-50 overflow-y-auto backdrop-blur-sm">
+                    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+                        <div class="fixed inset-0 transition-opacity bg-gray-500/30" aria-hidden="true">
+                        </div>
+
+                        <div class="relative bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg max-w-lg w-full border-2 border-[#72383D]/20 shadow-xl">
+                            <div class="p-6">
+                                <h3 class="text-2xl font-bold text-[#401B1B] mb-6">Cancellation Reason</h3>
+                                
+                                <div class="bg-[#AB644B]/10 p-4 rounded-lg">
+                                    <p class="text-[#72383D]">{{ $selectedReason }}</p>
+                                </div>
+                                
+                                <div class="mt-6 flex justify-end">
+                                    <button 
+                                        @click="showReasonModal = false"
+                                        class="px-4 py-2 bg-[#72383D] text-white rounded-lg hover:bg-[#401B1B] transition-colors duration-200"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    @endteleport
+
+    <!-- Cancellation Modal -->
+    <div x-data="{ show: @entangle('showCancellationModal') }"
+         x-show="show"
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto">
+        
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-black/30 backdrop-blur-sm"
+                 x-show="show"
+                 @click="show = false"></div>
+            
+            <!-- Modal Content -->
+            <div class="relative z-[51] bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg max-w-2xl w-full border-2 border-[#72383D]/20 shadow-xl">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-6">
+                        <h2 class="text-2xl font-bold text-[#401B1B]">Cancel Order</h2>
+                        <button @click="show = false" class="text-[#72383D] hover:text-[#401B1B] transition-colors duration-300">
+                            <x-icon name="o-x-mark" class="w-6 h-6" />
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-[#401B1B] font-medium mb-2">Reason for Cancellation</label>
+                            <textarea
+                                wire:model="cancellationReason"
+                                class="w-full rounded-lg border-[#AB644B]/20 bg-white/50 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30 shadow-inner resize-none"
+                                rows="4"
+                                placeholder="Please provide a reason for cancellation..."
+                            ></textarea>
+                            @error('cancellationReason')
+                                <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="flex justify-end gap-3 mt-6">
+                            <button 
+                                wire:click="$set('showCancellationModal', false)"
+                                class="px-4 py-2 bg-[#9CABB4] hover:bg-[#72383D] text-white rounded-lg transition duration-300"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                wire:click="cancelPreorder"
+                                class="px-4 py-2 bg-gradient-to-r from-[#72383D] to-[#AB644B] hover:from-[#401B1B] hover:to-[#72383D] text-white rounded-lg transition duration-300"
+                            >
+                                Confirm Cancellation
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

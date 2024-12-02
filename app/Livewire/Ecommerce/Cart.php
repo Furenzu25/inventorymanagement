@@ -28,11 +28,12 @@ class Cart extends Component
 
     protected $rules = [
         'loanDuration' => 'required|integer|in:6,12,24,36',
-        'paymentMethod' => 'required|in:Card,Cash,Bank Transfer',
+        'paymentMethod' => 'required|string|in:Card,Cash,Bank Transfer',
     ];
 
     protected $messages = [
         'paymentMethod.required' => 'Please select a payment method.',
+        'paymentMethod.in' => 'Please select a valid payment method.',
     ];
 
     public function mount()
@@ -49,6 +50,8 @@ class Cart extends Component
 
     public function submitPreorder()
     {
+        $this->validate();
+
         if (empty($this->cartItems)) {
             session()->flash('error', 'Your cart is empty. Please add items before submitting a pre-order.');
             return;

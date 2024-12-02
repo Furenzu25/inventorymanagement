@@ -40,7 +40,8 @@ class Preorder extends Model
         'total_amount',
         'monthly_payment',
         'interest_rate',
-        'disapproval_reason'
+        'disapproval_reason',
+        'cancellation_reason'
     ];
 
     protected $casts = [

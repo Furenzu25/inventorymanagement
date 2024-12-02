@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Models\User;
+use App\Services\NotificationService;
 
 class CustomerOrders extends Component
 {
@@ -22,6 +23,8 @@ class CustomerOrders extends Component
     public $cancellationReason = '';
     public $showCancellationModal = false;
     public $selectedOrderId = null;
+    public $showReasonModal = false;
+    public $selectedReason = '';
 
     public function render()
     {
@@ -43,16 +46,30 @@ class CustomerOrders extends Component
         $this->showOrderDetails = true;
     }
 
-    public function cancelPreorder($orderId)
+    public function openCancellationModal($orderId)
     {
-        DB::transaction(function () use ($orderId) {
-            $preorder = Preorder::where('id', $orderId)
-                ->where('customer_id', Auth::user()->customer->id)
-                ->firstOrFail();
+        $this->selectedOrderId = $orderId;
+        $this->cancellationReason = '';
+        $this->showCancellationModal = true;
+    }
+
+    public function cancelPreorder()
+    {
+        $this->validate([
+            'cancellationReason' => 'required|min:10',
+        ], [
+            'cancellationReason.required' => 'Please provide a reason for cancellation.',
+            'cancellationReason.min' => 'The reason must be at least 10 characters.',
+        ]);
+
+        DB::transaction(function () {
+            $preorder = Preorder::where('id', $this->selectedOrderId)
+                               ->where('customer_id', Auth::user()->customer->id)
+                               ->firstOrFail();
             
-            // Update to match the statuses shown in the blade template
-            if (!in_array($preorder->status, ['Pending', 'approved', 'in_stock', 'arrived'])) {
-                session()->flash('error', 'This order cannot be cancelled at its current stage.');
+            // Only allow cancellation for pending and approved orders
+            if (!in_array($preorder->status, ['Pending', 'approved'])) {
+                session()->flash('error', 'Orders cannot be cancelled at this stage.');
                 return;
             }
             
@@ -65,6 +82,7 @@ class CustomerOrders extends Component
                 ]);
             }
             
+            // Update the preorder status
             $preorder->update([
                 'status' => 'Cancelled',
                 'cancellation_date' => now(),
@@ -72,24 +90,14 @@ class CustomerOrders extends Component
                 'cancellation_reason' => $this->cancellationReason
             ]);
 
-            // Create notification for admin
-            DB::table('notifications')->insert([
-                'id' => Str::uuid(),
-                'type' => 'order_cancelled',
-                'notifiable_type' => 'App\Models\User',
-                'notifiable_id' => User::where('is_admin', true)->first()->id,
-                'data' => json_encode([
-                    'title' => 'Order Cancelled',
-                    'message' => "Order #{$preorder->id} has been cancelled by customer {$preorder->customer->name}. Reason: {$this->cancellationReason}",
-                    'status' => 'unread',
-                    'preorder_id' => $preorder->id
-                ]),
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
-            
+            // Create notification for admin about the cancellation
+            NotificationService::orderCancelledByCustomer($preorder, $this->cancellationReason);
+
             session()->flash('message', 'Your order has been cancelled successfully.');
         });
+
+        $this->showCancellationModal = false;
+        $this->reset(['cancellationReason', 'selectedOrderId']);
     }
 
     public function cancelOrder($orderId)
@@ -113,4 +121,10 @@ class CustomerOrders extends Component
             session()->flash('message', 'Your order has been cancelled successfully.');
         });
     }
-} 
+
+    public function showDisapprovalReason($reason)
+    {
+        $this->selectedReason = $reason;
+        $this->showReasonModal = true;
+    }
+}

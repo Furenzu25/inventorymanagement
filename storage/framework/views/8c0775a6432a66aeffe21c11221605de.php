@@ -108,6 +108,27 @@
 <?php $component = $__componentOriginal602b228a887fab12f0012a3179e5b533; ?>
 <?php unset($__componentOriginal602b228a887fab12f0012a3179e5b533); ?>
 <?php endif; ?>
+                                        <?php if (isset($component)) { $__componentOriginal602b228a887fab12f0012a3179e5b533 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal602b228a887fab12f0012a3179e5b533 = $attributes; } ?>
+<?php $component = Mary\View\Components\Button::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Mary\View\Components\Button::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['wire:click' => 'openCancellationModal('.e($preorder->id).')','class' => 'bg-gradient-to-r from-[#72383D] to-[#9CABB4] hover:from-[#9CABB4] hover:to-[#72383D] text-white text-xs px-2 py-1 ml-2']); ?>
+                                            Cancel Order
+                                         <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal602b228a887fab12f0012a3179e5b533)): ?>
+<?php $attributes = $__attributesOriginal602b228a887fab12f0012a3179e5b533; ?>
+<?php unset($__attributesOriginal602b228a887fab12f0012a3179e5b533); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal602b228a887fab12f0012a3179e5b533)): ?>
+<?php $component = $__componentOriginal602b228a887fab12f0012a3179e5b533; ?>
+<?php unset($__componentOriginal602b228a887fab12f0012a3179e5b533); ?>
+<?php endif; ?>
                                     <?php elseif($preorder->status === 'in_stock' || $preorder->status === 'picked_up'): ?>
                                         <div class="space-y-2">
                                             <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $preorder->inventoryItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -844,6 +865,69 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                             </button>
                         </div>
                     <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add the Cancellation Modal -->
+    <div x-data="{ show: <?php if ((object) ('showCancellationModal') instanceof \Livewire\WireDirective) : ?>window.Livewire.find('<?php echo e($__livewire->getId()); ?>').entangle('<?php echo e('showCancellationModal'->value()); ?>')<?php echo e('showCancellationModal'->hasModifier('live') ? '.live' : ''); ?><?php else : ?>window.Livewire.find('<?php echo e($__livewire->getId()); ?>').entangle('<?php echo e('showCancellationModal'); ?>')<?php endif; ?> }"
+         x-show="show"
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto">
+        
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-black/30 backdrop-blur-sm"
+                 x-show="show"
+                 @click="show = false"></div>
+            
+            <!-- Modal Content -->
+            <div class="relative z-[51] bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg max-w-md w-full border-2 border-[#72383D]/20 shadow-xl">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-6">
+                        <h2 class="text-2xl font-bold text-[#401B1B]">Cancel Order</h2>
+                        <button @click="show = false" class="text-[#72383D] hover:text-[#401B1B] transition-colors duration-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-[#401B1B] font-medium mb-2">Reason for Cancellation</label>
+                        <textarea
+                            wire:model="cancellationReason"
+                            class="w-full rounded-lg border-[#AB644B]/20 bg-white/50 focus:border-[#72383D] focus:ring focus:ring-[#72383D]/30"
+                            rows="4"
+                            placeholder="Please provide a reason for cancellation..."
+                        ></textarea>
+                        <!--[if BLOCK]><![endif]--><?php $__errorArgs = ['cancellationReason'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <span class="text-red-600 text-sm"><?php echo e($message); ?></span>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
+                    </div>
+
+                    <div class="flex justify-end gap-3">
+                        <button 
+                            wire:click="$set('showCancellationModal', false)"
+                            class="px-4 py-2 bg-[#9CABB4] hover:bg-[#72383D] text-white rounded-lg transition duration-300"
+                        >
+                            Cancel
+                        </button>
+                        <button 
+                            wire:click="cancelOrder"
+                            class="px-4 py-2 bg-gradient-to-r from-[#72383D] to-[#AB644B] hover:from-[#401B1B] hover:to-[#72383D] text-white rounded-lg transition duration-300"
+                        >
+                            Confirm Cancellation
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
