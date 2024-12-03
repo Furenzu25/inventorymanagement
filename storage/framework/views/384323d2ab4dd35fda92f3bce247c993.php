@@ -174,7 +174,7 @@
                             <td class="px-6 py-4">
                                 <div class="text-sm text-[#401B1B]">₱<?php echo e(number_format($payment->amount_paid, 2)); ?></div>
                                 <div class="text-xs text-[#72383D]">
-                                    AR #<?php echo e($payment->accountReceivable->id); ?> - <?php echo e($payment->accountReceivable->preorder->preorderItems->map(function($item) { return $item->product->product_name; })->implode(', ')); ?>
+                                    AR #<?php echo e($payment->accountReceivable->id); ?> - Remaining: ₱<?php echo e(number_format($payment->accountReceivable->getRemainingBalanceWithInterest(), 2)); ?>
 
                                 </div>
                             </td>
@@ -267,7 +267,7 @@
                                     <option value="<?php echo e($ar->id); ?>">
                                         AR #<?php echo e($ar->id); ?> - <?php echo e($ar->preorder->preorderItems->map(function($item) { return $item->product->product_name; })->implode(', ')); ?>
 
-                                        (₱<?php echo e(number_format($ar->remaining_balance, 2)); ?> remaining)
+                                        (₱<?php echo e(number_format($ar->getRemainingBalanceWithInterest(), 2)); ?> remaining)
                                     </option>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
                             </select>
@@ -291,7 +291,7 @@
                                                 <td class="px-6 py-4 text-[#401B1B]"><?php echo e($payment->payment_date->format('M d, Y')); ?></td>
                                                 <td class="px-6 py-4 text-[#72383D] font-medium">₱<?php echo e(number_format($payment->amount_paid, 2)); ?></td>
                                                 <td class="px-6 py-4 text-[#72383D]">₱<?php echo e(number_format($payment->due_amount, 2)); ?></td>
-                                                <td class="px-6 py-4 text-[#72383D]">₱<?php echo e(number_format($payment->remaining_balance, 2)); ?></td>
+                                                <td class="px-6 py-4 text-[#72383D]">₱<?php echo e(number_format($payment->accountReceivable->getRemainingBalanceWithInterest(), 2)); ?></td>
                                                 <td class="px-6 py-4">
                                                     <span class="px-2 py-1 rounded-full text-xs font-semibold
                                                         <?php echo e($payment->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'); ?>">
@@ -376,7 +376,7 @@
                                     <option value="">Select an AR</option>
                                     <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $accountReceivables; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ar): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <option value="<?php echo e($ar->id); ?>">
-                                            <?php echo e($ar->customer->name); ?> - ₱<?php echo e(number_format($ar->remaining_balance, 2)); ?>
+                                            <?php echo e($ar->customer->name); ?> - ₱<?php echo e(number_format($ar->getTotalAmountWithInterest(), 2)); ?>
 
                                         </option>
                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
@@ -391,15 +391,15 @@
 
                         <!--[if BLOCK]><![endif]--><?php if($selectedARDetails): ?>
                             <!-- AR Details Card -->
-                            <div class="bg-white/80 p-4 rounded-lg border border-[#72383D]/20">
+                            <div class="bg-white/50 rounded-lg p-4 mt-4">
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
-                                        <p class="text-xs text-[#72383D]">Monthly Payment</p>
-                                        <p class="text-lg font-semibold text-[#401B1B]">₱<?php echo e(number_format($selectedARDetails->monthly_payment, 2)); ?></p>
+                                        <p class="text-sm text-[#72383D]">Monthly Payment</p>
+                                        <p class="text-xl font-bold text-[#401B1B]">₱<?php echo e(number_format($selectedARDetails->monthly_payment, 2)); ?></p>
                                     </div>
                                     <div>
-                                        <p class="text-xs text-[#72383D]">Remaining Balance</p>
-                                        <p class="text-lg font-semibold text-[#401B1B]">₱<?php echo e(number_format($selectedARDetails->remaining_balance, 2)); ?></p>
+                                        <p class="text-sm text-[#72383D]">Remaining Balance</p>
+                                        <p class="text-xl font-bold text-[#401B1B]">₱<?php echo e(number_format($selectedARDetails->getRemainingBalanceWithInterest(), 2)); ?></p>
                                     </div>
                                 </div>
                             </div>

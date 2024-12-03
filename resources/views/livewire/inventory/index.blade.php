@@ -50,7 +50,7 @@
                                         <span class="text-gray-500">No pickup details</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3">
+                                <td class="px-4 py-2">
                                     @if($preorder->status === 'approved')
                                         <x-button 
                                             wire:click="openStockInModal({{ $preorder->id }})" 
@@ -99,6 +99,16 @@
                                                 </x-button>
                                             </div>
                                         @endif
+
+                                        <!-- Cancel button for in_stock and picked_up stages -->
+                                        <div class="mt-2">
+                                            <x-button 
+                                                wire:click="openCancellationModal({{ $preorder->id }})"
+                                                class="bg-gradient-to-r from-[#72383D] to-[#9CABB4] hover:from-[#9CABB4] hover:to-[#72383D] text-white text-xs px-2 py-1 w-full"
+                                            >
+                                                Cancel Order
+                                            </x-button>
+                                        </div>
                                     @elseif($preorder->status === 'loaned')
                                         <span class="px-3 py-1 text-sm rounded-full bg-green-100 text-green-800">
                                             Loan Active

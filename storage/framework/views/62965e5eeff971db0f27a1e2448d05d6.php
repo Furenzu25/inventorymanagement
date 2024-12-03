@@ -91,7 +91,8 @@
                                 <div class="space-y-1">
                                     <p><span class="text-[#72383D]">Duration:</span> <?php echo e($preorder->loan_duration); ?>mo</p>
                                     <p><span class="text-[#72383D]">Monthly:</span> ₱<?php echo e(number_format($preorder->monthly_payment, 2)); ?></p>
-                                    <p><span class="text-[#72383D]">Total:</span> ₱<?php echo e(number_format($preorder->total_amount, 2)); ?></p>
+                                    <p><span class="text-[#72383D]">Base Amount:</span> ₱<?php echo e(number_format($preorder->total_amount, 2)); ?></p>
+                                    <p><span class="text-[#72383D]">Total with Interest:</span> ₱<?php echo e(number_format($preorder->calculateTotalWithInterest(), 2)); ?></p>
                                     <p><span class="text-[#72383D]">Location:</span> <?php echo e($preorder->bought_location); ?></p>
                                 </div>
                             </td>

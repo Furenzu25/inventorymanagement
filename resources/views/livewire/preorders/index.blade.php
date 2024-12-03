@@ -57,7 +57,8 @@
                                 <div class="space-y-1">
                                     <p><span class="text-[#72383D]">Duration:</span> {{ $preorder->loan_duration }}mo</p>
                                     <p><span class="text-[#72383D]">Monthly:</span> ₱{{ number_format($preorder->monthly_payment, 2) }}</p>
-                                    <p><span class="text-[#72383D]">Total:</span> ₱{{ number_format($preorder->total_amount, 2) }}</p>
+                                    <p><span class="text-[#72383D]">Base Amount:</span> ₱{{ number_format($preorder->total_amount, 2) }}</p>
+                                    <p><span class="text-[#72383D]">Total with Interest:</span> ₱{{ number_format($preorder->calculateTotalWithInterest(), 2) }}</p>
                                     <p><span class="text-[#72383D]">Location:</span> {{ $preorder->bought_location }}</p>
                                 </div>
                             </td>

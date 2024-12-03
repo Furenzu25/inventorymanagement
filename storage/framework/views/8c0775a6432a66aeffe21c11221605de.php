@@ -85,7 +85,7 @@
                                         <span class="text-gray-500">No pickup details</span>
                                     <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                 </td>
-                                <td class="px-4 py-3">
+                                <td class="px-4 py-2">
                                     <!--[if BLOCK]><![endif]--><?php if($preorder->status === 'approved'): ?>
                                         <?php if (isset($component)) { $__componentOriginal602b228a887fab12f0012a3179e5b533 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal602b228a887fab12f0012a3179e5b533 = $attributes; } ?>
@@ -194,6 +194,31 @@
 <?php endif; ?>
                                             </div>
                                         <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+
+                                        <!-- Cancel button for in_stock and picked_up stages -->
+                                        <div class="mt-2">
+                                            <?php if (isset($component)) { $__componentOriginal602b228a887fab12f0012a3179e5b533 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal602b228a887fab12f0012a3179e5b533 = $attributes; } ?>
+<?php $component = Mary\View\Components\Button::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Mary\View\Components\Button::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['wire:click' => 'openCancellationModal('.e($preorder->id).')','class' => 'bg-gradient-to-r from-[#72383D] to-[#9CABB4] hover:from-[#9CABB4] hover:to-[#72383D] text-white text-xs px-2 py-1 w-full']); ?>
+                                                Cancel Order
+                                             <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal602b228a887fab12f0012a3179e5b533)): ?>
+<?php $attributes = $__attributesOriginal602b228a887fab12f0012a3179e5b533; ?>
+<?php unset($__attributesOriginal602b228a887fab12f0012a3179e5b533); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal602b228a887fab12f0012a3179e5b533)): ?>
+<?php $component = $__componentOriginal602b228a887fab12f0012a3179e5b533; ?>
+<?php unset($__componentOriginal602b228a887fab12f0012a3179e5b533); ?>
+<?php endif; ?>
+                                        </div>
                                     <?php elseif($preorder->status === 'loaned'): ?>
                                         <span class="px-3 py-1 text-sm rounded-full bg-green-100 text-green-800">
                                             Loan Active

@@ -119,5 +119,17 @@ class AccountReceivable extends Model
         // If no payments yet, return the first payment due date (1 month after loan start)
         return $this->loan_start_date->addMonth();
     }
+
+    public function getTotalAmountWithInterest()
+    {
+        $interestAmount = $this->total_amount * ($this->interest_rate / 100);
+        return $this->total_amount + $interestAmount;
+    }
+
+    public function getRemainingBalanceWithInterest()
+    {
+        $totalWithInterest = $this->getTotalAmountWithInterest();
+        return $totalWithInterest - $this->total_paid;
+    }
 }
 

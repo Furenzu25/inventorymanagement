@@ -92,7 +92,12 @@ class Index extends Component
     {
         $this->accountReceivables = AccountReceivable::with('customer')
             ->where('status', 'ongoing')
-            ->get();
+            ->get()
+            ->map(function($ar) {
+                // Add the total with interest to each AR
+                $ar->display_amount = $ar->getTotalAmountWithInterest();
+                return $ar;
+            });
     }
 
     public function loadPaymentSubmissions()
@@ -252,10 +257,17 @@ class Index extends Component
     {
         if ($arId) {
             $this->selectedAR = $arId;
+            $ar = AccountReceivable::find($arId);
+            
             // Load all payments for this AR
             $this->selectedCustomerPayments = Payment::where('account_receivable_id', $arId)
                 ->orderBy('payment_date', 'desc')
                 ->get();
+            
+            // Update the remaining balance to include interest
+            if ($ar) {
+                $this->payment['remaining_balance'] = $ar->getRemainingBalanceWithInterest();
+            }
         } else {
             $this->selectedAR = null;
             $this->selectedCustomerPayments = collect();
@@ -274,14 +286,19 @@ class Index extends Component
             return;
         }
 
-        if ($this->selectedAR->status === 'paid') {
+        if ($this->selectedAR->status === 'completed') {
             session()->flash('error', 'This Account Receivable is already fully paid.');
             return;
         }
 
+        // Calculate total amount with interest
+        $totalWithInterest = $this->selectedAR->total_amount * (1 + ($this->selectedAR->interest_rate / 100));
+        
         $this->payment['due_amount'] = $this->selectedAR->monthly_payment;
         $this->payment['amount_paid'] = '';
         $this->payment['payment_date'] = date('Y-m-d');
+        $this->payment['total_with_interest'] = $totalWithInterest;
+        $this->payment['remaining_balance'] = $totalWithInterest - $this->selectedAR->total_paid;
         
         $this->recordPaymentOpen = true;
     }
@@ -623,7 +640,12 @@ class Index extends Component
                     $query->where('name', 'like', '%' . $this->customerSearch . '%');
                 })
                 ->where('status', '!=', 'paid')
-                ->get();
+                ->get()
+                ->map(function($ar) {
+                    // Add the total with interest to each AR
+                    $ar->display_amount = $ar->getTotalAmountWithInterest();
+                    return $ar;
+                });
         } else {
             $this->accountReceivables = [];
         }
@@ -635,11 +657,19 @@ class Index extends Component
             $this->selectedARDetails = AccountReceivable::with(['customer', 'preorder.preorderItems.product'])
                 ->find($this->selectedAR);
             
-            // Set default payment date to today
-            $this->payment['payment_date'] = date('Y-m-d');
-            
-            // Set default amount to monthly payment
-            $this->payment['amount_paid'] = $this->selectedARDetails->monthly_payment;
+            if ($this->selectedARDetails) {
+                // Set default payment date to today
+                $this->payment['payment_date'] = date('Y-m-d');
+                
+                // Set default amount to monthly payment
+                $this->payment['amount_paid'] = $this->selectedARDetails->monthly_payment;
+                
+                // Update the remaining balance to include interest
+                $this->payment['remaining_balance'] = $this->selectedARDetails->getRemainingBalanceWithInterest();
+                
+                // Ensure the selectedARDetails has the correct remaining balance
+                $this->selectedARDetails->remaining_balance = $this->selectedARDetails->getRemainingBalanceWithInterest();
+            }
         }
     }
 

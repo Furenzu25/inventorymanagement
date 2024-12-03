@@ -133,9 +133,9 @@
                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
                                 </td>
                                 <td class="px-4 py-2 text-[#401B1B]">₱<?php echo e(number_format($ar->monthly_payment, 2)); ?></td>
-                                <td class="px-4 py-2 text-[#401B1B]">₱<?php echo e(number_format($ar->total_paid, 2)); ?></td>
-                                <td class="px-4 py-2 text-[#401B1B]">₱<?php echo e(number_format($ar->remaining_balance, 2)); ?></td>
-                                <td class="px-4 py-2 text-[#401B1B]">
+                                <td class="px-4 py-2 text-[#401B1B]">₱<?php echo e(number_format($ar->total_paid > 0 ? $ar->total_paid : 0, 2)); ?></td>
+                                <td class="px-4 py-2 text-[#401B1B]">₱<?php echo e(number_format($ar->getTotalAmountWithInterest() - $ar->total_paid, 2)); ?></td>
+                                <td class="px-4 py-2">
                                     <!--[if BLOCK]><![endif]--><?php if($ar->loan_start_date && $ar->loan_end_date): ?>
                                         <div><?php echo e($ar->loan_start_date->format('M d, Y')); ?> -</div>
                                         <div><?php echo e($ar->loan_end_date->format('M d, Y')); ?></div>

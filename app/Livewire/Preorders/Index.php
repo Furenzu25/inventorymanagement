@@ -204,6 +204,9 @@ class Index extends Component
         // Calculate total interest amount
         $totalInterest = $totalAmount * ($interestRate / 100);
         
+        // Calculate total amount with interest
+        $totalWithInterest = $totalAmount + $totalInterest;
+        
         // Calculate fixed monthly payment (principal + interest)
         $monthlyPayment = ($totalAmount + $totalInterest) / $loanDuration;
         

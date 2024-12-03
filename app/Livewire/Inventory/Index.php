@@ -188,6 +188,10 @@ class Index extends Component
                 'picked_up',
                 'loaned'
             ])
+            ->whereDoesntHave('accountReceivable', function($query) {
+                $query->where('remaining_balance', 0)
+                    ->where('status', 'completed');
+            })
             ->with([
                 'customer', 
                 'preorderItems.product', 
@@ -202,6 +206,10 @@ class Index extends Component
                 ->with(['product'])
                 ->get(),
             'stockedOutItems' => InventoryItem::with(['preorder.customer', 'product'])
+                ->whereHas('preorder.accountReceivable', function($query) {
+                    $query->where('remaining_balance', 0)
+                        ->where('status', 'completed');
+                })
                 ->where('status', 'stocked_out')
                 ->orderBy('updated_at', 'desc')
                 ->get()
@@ -484,7 +492,34 @@ class Index extends Component
 
     public function refreshStockedOutItems()
     {
+        // First, update any inventory items that should be stocked out
+        DB::transaction(function () {
+            // Find all inventory items with completed account receivables
+            $completedItems = InventoryItem::whereHas('preorder.accountReceivable', function($query) {
+                $query->where('remaining_balance', 0)
+                    ->where('status', 'completed');
+            })
+            ->where('status', 'loaned')
+            ->get();
+
+            // Update their status to stocked out
+            foreach ($completedItems as $item) {
+                $item->update([
+                    'status' => 'stocked_out',
+                    'stocked_out_at' => now()
+                ]);
+
+                // Create notification
+                NotificationService::itemStockedOut($item);
+            }
+        });
+
+        // Then refresh the stockedOutItems property
         $this->stockedOutItems = InventoryItem::with(['preorder.customer', 'product'])
+            ->whereHas('preorder.accountReceivable', function($query) {
+                $query->where('remaining_balance', 0)
+                    ->where('status', 'completed');
+            })
             ->where('status', 'stocked_out')
             ->orderBy('updated_at', 'desc')
             ->get();
