@@ -179,18 +179,10 @@ class Index extends Component
 
     public function render()
     {
-        $this->refreshStockedOutItems();
-        
-        return view('livewire.inventory.index', [
-            'pendingPreorders' => Preorder::whereIn('status', [
-                'approved', 
-                'in_stock', 
-                'picked_up',
-                'loaned'
-            ])
+        // First, get preorders that are NOT completed in AR
+        $pendingPreorders = Preorder::whereIn('status', ['approved', 'in_stock', 'picked_up', 'loaned'])
             ->whereDoesntHave('accountReceivable', function($query) {
-                $query->where('remaining_balance', 0)
-                    ->where('status', 'completed');
+                $query->where('status', 'completed');
             })
             ->with([
                 'customer', 
@@ -198,20 +190,24 @@ class Index extends Component
                 'inventoryItems',
                 'inventoryItems.pickedUpBy'
             ])
-            ->get(),
+            ->get();
+
+        // Get stocked out items where AR is completed
+        $this->stockedOutItems = InventoryItem::with(['preorder.customer', 'product'])
+            ->whereHas('preorder.accountReceivable', function($query) {
+                $query->where('status', 'completed');
+            })
+            ->where('status', 'stocked_out')
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        return view('livewire.inventory.index', [
+            'pendingPreorders' => $pendingPreorders,
             'repossessedItems' => InventoryItem::where('status', 'repossessed')
                 ->with(['preorder.customer', 'preorder.preorderItems.product'])
                 ->get(),
             'reassignableItems' => InventoryItem::where('status', 'available_for_reassignment')
                 ->with(['product'])
-                ->get(),
-            'stockedOutItems' => InventoryItem::with(['preorder.customer', 'product'])
-                ->whereHas('preorder.accountReceivable', function($query) {
-                    $query->where('remaining_balance', 0)
-                        ->where('status', 'completed');
-                })
-                ->where('status', 'stocked_out')
-                ->orderBy('updated_at', 'desc')
                 ->get()
         ]);
     }
