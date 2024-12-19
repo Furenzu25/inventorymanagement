@@ -69,16 +69,20 @@
                 <h1 class="company-name text-2xl font-bold mb-6 text-center">Rosels Trading</h1>
                 
                 <nav class="space-y-2">
-                    <a href="/dashboard" class="sidebar-button block w-full py-2 px-4 rounded text-white hover:bg-opacity-80">
+                    <a href="/dashboard" 
+                       class="sidebar-button block w-full py-2 px-4 rounded text-white hover:bg-opacity-80 <?php echo e(request()->is('dashboard*') ? 'bg-[#AB644B]' : ''); ?>">
                         <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
                     </a>
-                    <a href="<?php echo e(route('inventory.index')); ?>" class="sidebar-button block w-full py-2 px-4 rounded text-white hover:bg-opacity-80">
+                    <a href="<?php echo e(route('inventory.index')); ?>" 
+                       class="sidebar-button block w-full py-2 px-4 rounded text-white hover:bg-opacity-80 <?php echo e(request()->routeIs('inventory.*') ? 'bg-[#AB644B]' : ''); ?>">
                         <i class="fas fa-box mr-2"></i> Inventory
                     </a>    
-                    <a href="<?php echo e(route('customers.index')); ?>" class="sidebar-button block w-full py-2 px-4 rounded text-white hover:bg-opacity-80">
+                    <a href="<?php echo e(route('customers.index')); ?>" 
+                       class="sidebar-button block w-full py-2 px-4 rounded text-white hover:bg-opacity-80 <?php echo e(request()->routeIs('customers.*') ? 'bg-[#AB644B]' : ''); ?>">
                         <i class="fas fa-users mr-2"></i> Customers
                     </a>
-                    <a href="<?php echo e(route('products.index')); ?>" class="sidebar-button block w-full py-2 px-4 rounded text-white hover:bg-opacity-80">
+                    <a href="<?php echo e(route('products.index')); ?>" 
+                       class="sidebar-button block w-full py-2 px-4 rounded text-white hover:bg-opacity-80 <?php echo e(request()->routeIs('products.*') ? 'bg-[#AB644B]' : ''); ?>">
                         <i class="fas fa-box mr-2"></i> Products
                     </a>
                     <a href="<?php echo e(route('preorders.index')); ?>" class="sidebar-button block w-full py-2 px-4 rounded text-white hover:bg-opacity-80">
