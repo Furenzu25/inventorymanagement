@@ -11,6 +11,9 @@ RUN apt-get update \
         zip \
         unzip \
         libzip-dev \
+        sqlite3 \
+        libsqlite3-dev \
+        pkg-config \
         nodejs \
         npm \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
