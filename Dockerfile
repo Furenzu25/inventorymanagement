@@ -37,7 +37,11 @@ RUN php artisan storage:link \
 # Build frontend assets
 RUN npm ci \
     && npm run build
-
+# Build frontend assets
+RUN npm ci \
+    && npm run build \
+    && php artisan view:clear \
+    && php artisan optimize:clear    # drops cached vite manifest + routes/config
 # Set permissions
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
