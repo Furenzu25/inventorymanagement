@@ -30,14 +30,13 @@ RUN mkdir -p database \
     && chown -R www-data:www-data database
 
 # Build frontend assets
+# Recommended Dockerfile snippet
 RUN npm ci \
-    && npm run build
-
-# Create storage symlink & clear config/view caches
-RUN php artisan storage:link \
+    && npm run build \
+    && php artisan view:clear \
     && php artisan config:clear \
-    && php artisan route:clear \
-    && php artisan view:clear
+    && php artisan route:clear
+
 
 # Set permissions for storage and cache directories
 RUN chown -R www-data:www-data storage bootstrap/cache database
