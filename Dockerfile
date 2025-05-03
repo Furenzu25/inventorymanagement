@@ -43,12 +43,17 @@ RUN mkdir -p database \
     && touch database/database.sqlite \
     && chown -R www-data:www-data database
 
+# Create storage symlink and clear caches
+RUN php artisan storage:link \
+    && php artisan config:clear \
+    && php artisan route:clear
+
 # Install PHP dependencies
 RUN composer install --optimize-autoloader --no-dev
 
 # Install Node packages and build front-end assets
-RUN npm ci
-RUN npm run build
+RUN npm ci \
+    && npm run build
 
 # Set permissions for storage and cache
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
@@ -56,5 +61,5 @@ RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 # Expose application port
 EXPOSE 8080
 
-# Start Laravel application
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080"]
+# On free tier, run migrations at startup then serve the app
+CMD ["bash", "-lc", "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8080"]
