@@ -46,6 +46,11 @@ RUN composer install --optimize-autoloader --no-dev
 # Install Node packages and build front-end assets
 RUN npm ci
 RUN npm run build
+# Build frontend assets
+RUN npm ci \
+    && npm run build \
+    && php artisan view:clear \
+    && php artisan optimize:clear    # drops cached vite manifest + routes/config
 
 # Set permissions for storage and cache
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
