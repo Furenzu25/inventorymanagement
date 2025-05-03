@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\AccountReceivable;
 
 class Preorder extends Model
 {
@@ -40,7 +41,8 @@ class Preorder extends Model
         'total_amount',
         'monthly_payment',
         'interest_rate',
-        'disapproval_reason'
+        'disapproval_reason',
+        'cancellation_reason'
     ];
 
     protected $casts = [
@@ -72,5 +74,16 @@ class Preorder extends Model
     public function inventoryItems()
     {
         return $this->hasMany(InventoryItem::class);
+    }
+
+    public function accountReceivable()
+    {
+        return $this->hasOne(AccountReceivable::class);
+    }
+
+    public function calculateTotalWithInterest()
+    {
+        $interestAmount = $this->total_amount * ($this->interest_rate / 100);
+        return $this->total_amount + $interestAmount;
     }
 }

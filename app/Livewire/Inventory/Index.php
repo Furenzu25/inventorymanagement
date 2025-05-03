@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 use App\Notifications\StockInCompleted;
 use App\Notifications\FirstMonthlyPaymentDue;
 use App\Models\CustomerNotification;
+use App\Services\NotificationService;
 
 class Index extends Component
 {
@@ -30,6 +31,15 @@ class Index extends Component
     public $showPickupDetailsModal = false;
     public $selectedItem = null;
     public $stockedOutItems = [];
+    public $showItemDetails = false;
+    public $showAssignCustomerModal = false;
+    public $showRepossessedDetailsModal = false;
+    public $selectedRepossessedItem = null;
+    public $newPrice = null;
+    public $originalPrice = null;
+    public $showCancellationModal = false;
+    public $cancellationReason = '';
+    public $selectedPreorderId = null;
     
     protected $rules = [
         'serialNumber' => 'required|unique:inventory_items,serial_number',
@@ -43,6 +53,7 @@ class Index extends Component
             ->where('status', 'stocked_out')
             ->orderBy('updated_at', 'desc')
             ->get();
+        $this->availablePreorders = collect([]);
     }
 
     public function openAddModal()
@@ -168,31 +179,35 @@ class Index extends Component
 
     public function render()
     {
-        $this->refreshStockedOutItems();
-        
-        return view('livewire.inventory.index', [
-            'pendingPreorders' => Preorder::whereIn('status', [
-                'approved', 
-                'in_stock', 
-                'picked_up',
-                'loaned'
-            ])
+        // First, get preorders that are NOT completed in AR
+        $pendingPreorders = Preorder::whereIn('status', ['approved', 'in_stock', 'picked_up', 'loaned'])
+            ->whereDoesntHave('accountReceivable', function($query) {
+                $query->where('status', 'completed');
+            })
             ->with([
                 'customer', 
                 'preorderItems.product', 
                 'inventoryItems',
                 'inventoryItems.pickedUpBy'
             ])
-            ->get(),
+            ->get();
+
+        // Get stocked out items where AR is completed
+        $this->stockedOutItems = InventoryItem::with(['preorder.customer', 'product'])
+            ->whereHas('preorder.accountReceivable', function($query) {
+                $query->where('status', 'completed');
+            })
+            ->where('status', 'stocked_out')
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        return view('livewire.inventory.index', [
+            'pendingPreorders' => $pendingPreorders,
             'repossessedItems' => InventoryItem::where('status', 'repossessed')
                 ->with(['preorder.customer', 'preorder.preorderItems.product'])
                 ->get(),
             'reassignableItems' => InventoryItem::where('status', 'available_for_reassignment')
-                ->with(['product', 'preorder.customer'])
-                ->get(),
-            'stockedOutItems' => InventoryItem::with(['preorder.customer', 'product'])
-                ->where('status', 'stocked_out')
-                ->orderBy('updated_at', 'desc')
+                ->with(['product'])
                 ->get()
         ]);
     }
@@ -312,18 +327,18 @@ class Index extends Component
             $loanStartDate = now();
             $loanEndDate = $loanStartDate->copy()->addMonths($preorder->loan_duration);
             
-            // Calculate total loan amount including interest
-            $totalLoanAmount = $preorder->monthly_payment * $preorder->loan_duration;
-            $totalInterest = $totalLoanAmount - $preorder->total_amount;
+            // Get the actual price (either override or original)
+            $inventoryItem = $preorder->inventoryItems()->first();
+            $actualPrice = $inventoryItem->price_override ?? $preorder->total_amount;
             
-            // Create Account Receivable
+            // Create Account Receivable with the correct price
             AccountReceivable::create([
                 'preorder_id' => $preorder->id,
                 'customer_id' => $preorder->customer_id,
                 'monthly_payment' => $preorder->monthly_payment,
                 'total_paid' => 0,
-                'remaining_balance' => $totalLoanAmount,
-                'total_amount' => $preorder->total_amount,
+                'remaining_balance' => $actualPrice,
+                'total_amount' => $actualPrice,
                 'payment_months' => $preorder->loan_duration,
                 'interest_rate' => $preorder->interest_rate,
                 'status' => 'ongoing',
@@ -331,10 +346,12 @@ class Index extends Component
                 'loan_end_date' => $loanEndDate,
             ]);
 
-            // Update preorder and inventory status
+            // Update statuses
             $preorder->update(['status' => 'loaned']);
-            InventoryItem::where('preorder_id', $preorder->id)
-                ->update(['status' => 'loaned']);
+            $inventoryItem->update(['status' => 'loaned']);
+
+            // Add notification
+            NotificationService::loanActivated($preorder);
         });
 
         session()->flash('message', 'Loan processed successfully. Account Receivable has been created.');
@@ -471,9 +488,218 @@ class Index extends Component
 
     public function refreshStockedOutItems()
     {
+        // First, update any inventory items that should be stocked out
+        DB::transaction(function () {
+            // Find all inventory items with completed account receivables
+            $completedItems = InventoryItem::whereHas('preorder.accountReceivable', function($query) {
+                $query->where('remaining_balance', 0)
+                    ->where('status', 'completed');
+            })
+            ->where('status', 'loaned')
+            ->get();
+
+            // Update their status to stocked out
+            foreach ($completedItems as $item) {
+                $item->update([
+                    'status' => 'stocked_out',
+                    'stocked_out_at' => now()
+                ]);
+
+                // Create notification
+                NotificationService::itemStockedOut($item);
+            }
+        });
+
+        // Then refresh the stockedOutItems property
         $this->stockedOutItems = InventoryItem::with(['preorder.customer', 'product'])
+            ->whereHas('preorder.accountReceivable', function($query) {
+                $query->where('remaining_balance', 0)
+                    ->where('status', 'completed');
+            })
             ->where('status', 'stocked_out')
             ->orderBy('updated_at', 'desc')
             ->get();
+    }
+
+    public function viewItemDetails($itemId)
+    {
+        $this->selectedItem = InventoryItem::with(['product'])
+            ->findOrFail($itemId);
+        
+        // Initialize availablePreorders as a collection
+        $this->availablePreorders = Preorder::where('status', 'Approved')
+            ->whereHas('preorderItems', function ($query) {
+                $query->whereHas('product', function ($q) {
+                    $q->where('id', $this->selectedItem->product_id);
+                });
+            })
+            ->whereDoesntHave('inventoryItems')
+            ->get();
+        
+        $this->showItemDetails = true;
+    }
+
+    public function openAssignModal($itemId)
+    {
+        $this->selectedItem = InventoryItem::with(['product'])->find($itemId);
+        $this->originalPrice = $this->selectedItem->product->price;
+        $this->newPrice = $this->originalPrice; // Default to original price
+        
+        // Get only preorders that match the product type
+        $this->availablePreorders = Preorder::with('customer')
+            ->whereHas('preorderItems', function ($query) {
+                $query->where('product_id', $this->selectedItem->product_id);
+            })
+            ->where('status', 'approved')
+            ->get();
+        
+        // Close the Repossessed Details Modal
+        $this->showRepossessedDetailsModal = false;
+
+        $this->showAssignCustomerModal = true;
+    }
+
+    public function selectItemForAssignment($itemId)
+    {
+        $this->selectedItem = InventoryItem::with(['product', 'preorder.customer'])->find($itemId);
+        $this->showAssignCustomerModal = true;
+    }
+
+    public function assignToCustomer($preorderId)
+    {
+        try {
+            $this->validate([
+                'newPrice' => 'required|numeric|min:0',
+            ]);
+
+            DB::transaction(function () use ($preorderId) {
+                $preorder = Preorder::findOrFail($preorderId);
+                
+                // Update preorder item with new price
+                $preorderItem = $preorder->preorderItems()
+                    ->where('product_id', $this->selectedItem->product_id)
+                    ->first();
+                    
+                if ($preorderItem) {
+                    // Update the preorder item with new price
+                    $preorderItem->update([
+                        'unit_price' => $this->newPrice,
+                        'total_price' => $this->newPrice * $preorderItem->quantity
+                    ]);
+                    
+                    // Update the main preorder total and recalculate monthly payment
+                    $totalAmount = $this->newPrice * $preorderItem->quantity;
+                    $monthlyPayment = $this->calculateMonthlyPayment(
+                        $totalAmount,
+                        $preorder->loan_duration,
+                        $preorder->interest_rate
+                    );
+                    
+                    $preorder->update([
+                        'total_amount' => $totalAmount,
+                        'monthly_payment' => $monthlyPayment
+                    ]);
+                }
+                
+                // Update inventory item
+                $this->selectedItem->update([
+                    'status' => 'in_stock',
+                    'preorder_id' => $preorder->id,
+                    'repossession_date' => null,
+                    'cancellation_date' => null,
+                    'price_override' => $this->newPrice,
+                    'picked_up_at' => null
+                ]);
+                
+                $preorder->update(['status' => 'in_stock']);
+                
+                // Create notification
+                CustomerNotification::create([
+                    'customer_id' => $preorder->customer_id,
+                    'title' => 'Item Ready for Pickup',
+                    'message' => "Your order for {$this->selectedItem->product->product_name} is ready for pickup.",
+                    'type' => 'order_arrived'
+                ]);
+            });
+            
+            $this->showAssignCustomerModal = false;
+            $this->reset(['newPrice', 'originalPrice']);
+            session()->flash('message', 'Item successfully assigned to customer. Please record pickup before processing loan.');
+            
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error assigning item: ' . $e->getMessage());
+        }
+    }
+
+    private function calculateMonthlyPayment($totalAmount, $loanDuration, $interestRate)
+    {
+        // Calculate total interest amount
+        $totalInterest = $totalAmount * ($interestRate / 100);
+        
+        // Calculate fixed monthly payment (principal + interest)
+        $monthlyPayment = ($totalAmount + $totalInterest) / $loanDuration;
+        
+        return round($monthlyPayment, 2);
+    }
+
+    public function viewRepossessedDetails($itemId)
+    {
+        $this->selectedRepossessedItem = InventoryItem::with(['product', 'preorder.customer'])
+            ->findOrFail($itemId);
+        $this->showRepossessedDetailsModal = true;
+    }
+
+    public function openCancellationModal($preorderId)
+    {
+        $this->selectedPreorderId = $preorderId;
+        $this->cancellationReason = '';
+        $this->showCancellationModal = true;
+    }
+
+    public function cancelOrder()
+    {
+        $this->validate([
+            'cancellationReason' => 'required|min:10',
+        ], [
+            'cancellationReason.required' => 'Please provide a reason for cancellation.',
+            'cancellationReason.min' => 'The reason must be at least 10 characters.',
+        ]);
+
+        DB::transaction(function () {
+            $preorder = Preorder::findOrFail($this->selectedPreorderId);
+            
+            // Update inventory items if they exist
+            if ($preorder->inventoryItems()->exists()) {
+                $preorder->inventoryItems()->update([
+                    'status' => 'available_for_reassignment',
+                    'cancellation_date' => now(),
+                    'preorder_id' => null
+                ]);
+            }
+            
+            $preorder->update([
+                'status' => 'Cancelled',
+                'cancellation_date' => now(),
+                'cancelled_by' => 'admin',
+                'cancellation_reason' => $this->cancellationReason
+            ]);
+
+            // Get all product names
+            $productNames = $preorder->preorderItems->map(function ($item) {
+                return $item->product->product_name;
+            })->join(', ');
+
+            // Create notification for customer
+            CustomerNotification::create([
+                'customer_id' => $preorder->customer_id,
+                'title' => 'Order Cancelled',
+                'message' => "Your order for the following products: {$productNames} has been cancelled by the administrator. Reason: {$this->cancellationReason}",
+                'type' => 'order_cancelled'
+            ]);
+        });
+
+        $this->showCancellationModal = false;
+        $this->reset(['cancellationReason', 'selectedPreorderId']);
+        session()->flash('message', 'Order has been cancelled successfully.');
     }
 }

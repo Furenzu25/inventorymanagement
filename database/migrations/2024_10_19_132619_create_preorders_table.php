@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('payment_method');
             $table->date('order_date');
             $table->text('disapproval_reason')->nullable();
+            $table->text('cancellation_reason')->nullable();
             $table->timestamps();
             $table->index('customer_id');
         });

@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Auth;
 
 class NotificationBell extends Component
 {
-    public $showNotifications = false;
     public $notifications = [];
     public $unreadCount = 0;
 
@@ -29,12 +28,6 @@ class NotificationBell extends Component
                 ->unreadNotifications()
                 ->count();
         }
-    }
-
-    public function toggleNotifications()
-    {
-        $this->showNotifications = !$this->showNotifications;
-        $this->loadNotifications();
     }
 
     public function markAsRead($notificationId)

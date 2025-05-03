@@ -35,7 +35,14 @@ class Index extends Component
                 });
             })
             ->orderBy($this->sortField, $this->sortDirection)
-            ->paginate(10);
+            ->get()
+            ->map(function ($ar) {
+                // Update status to 'completed' if remaining balance is 0
+                if ($ar->remaining_balance <= 0 && $ar->status !== 'defaulted') {
+                    $ar->update(['status' => 'completed']);
+                }
+                return $ar;
+            });
 
         $totalAR = $accountReceivables->sum('total_paid');
         $totalOutstanding = $this->getTotalOutstandingProperty();
@@ -166,6 +173,9 @@ class Index extends Component
     public function getTotalOutstandingProperty()
     {
         return AccountReceivable::where('status', 'ongoing')  // Only count ongoing ARs
-            ->sum('remaining_balance');
+            ->sum(DB::raw('CASE 
+                WHEN remaining_balance = 0 THEN 0
+                ELSE remaining_balance 
+            END'));
     }
 }

@@ -11,28 +11,31 @@
             
             <div class="space-y-4">
                 <!--[if BLOCK]><![endif]--><?php $__currentLoopData = $notifications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $notification): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <div class="flex items-start p-3 <?php echo e(!$notification->is_read ? 'bg-[#AB644B]/10' : 'bg-transparent'); ?> rounded-lg border border-[#72383D]/20 shadow-sm">
-                        <div class="flex-1">
-                            <h4 class="font-medium text-[#401B1B]"><?php echo e($notification->title); ?></h4>
-                            <p class="text-sm text-gray-600">
-                                <?php echo e(strstr($notification->message, '. Reason:', true) ?: $notification->message); ?>
+                    <div class="mb-4 p-3 <?php echo e(!$notification->is_read ? 'bg-white/50' : 'bg-white/30'); ?> rounded-lg border border-[#72383D]/10">
+                        <h4 class="font-semibold text-[#401B1B]"><?php echo e($notification->title); ?></h4>
+                        <p class="text-sm text-[#72383D]">
+                            <?php echo e(strstr($notification->message, '. Reason:', true) ?: $notification->message); ?>
 
-                            </p>
-                            
-                            <!--[if BLOCK]><![endif]--><?php if($notification->type === 'preorder_disapproval'): ?>
+                        </p>
+                        <div class="mt-2 flex justify-between items-center">
+                            <span class="text-xs text-[#72383D]/70">
+                                <?php echo e($notification->created_at->diffForHumans()); ?>
+
+                            </span>
+                            <!--[if BLOCK]><![endif]--><?php if($notification->type === 'preorder_disapproval' || $notification->type === 'order_cancelled'): ?>
                                 <button 
                                     wire:click="showDisapprovalReason('<?php echo e(str_replace('Reason: ', '', strstr($notification->message, 'Reason:'))); ?>')"
-                                    class="mt-2 text-sm text-red-600 hover:text-red-800 font-medium underline"
+                                    class="text-xs bg-[#72383D] text-white px-3 py-1 rounded-full hover:bg-[#401B1B] transition-colors duration-200"
                                 >
-                                    See Reason
+                                    View Reason
                                 </button>
                             <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
-                            
-                            <span class="text-xs text-gray-500 block mt-2"><?php echo e($notification->created_at->diffForHumans()); ?></span>
                         </div>
-                        
                         <!--[if BLOCK]><![endif]--><?php if(!$notification->is_read): ?>
-                            <button wire:click="markAsRead(<?php echo e($notification->id); ?>)" class="text-sm text-[#AB644B] hover:text-[#72383D] ml-2">
+                            <button 
+                                wire:click="markAsRead(<?php echo e($notification->id); ?>)" 
+                                class="text-xs text-[#72383D] hover:text-[#401B1B] mt-2"
+                            >
                                 Mark as read
                             </button>
                         <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
@@ -40,7 +43,7 @@
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><!--[if ENDBLOCK]><![endif]-->
             </div>
         <?php else: ?>
-            <p class="text-center text-gray-500 py-4 border border-[#72383D]/20 rounded-lg">No notifications</p>
+            <p class="text-center text-[#72383D] py-4 border border-[#72383D]/20 rounded-lg">No notifications</p>
         <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
     </div>
 
@@ -48,24 +51,24 @@
     <template x-teleport="<?php echo e('body'); ?>">
         <div x-data="{ showReasonModal: <?php if ((object) ('showReasonModal') instanceof \Livewire\WireDirective) : ?>window.Livewire.find('<?php echo e($__livewire->getId()); ?>').entangle('<?php echo e('showReasonModal'->value()); ?>')<?php echo e('showReasonModal'->hasModifier('live') ? '.live' : ''); ?><?php else : ?>window.Livewire.find('<?php echo e($__livewire->getId()); ?>').entangle('<?php echo e('showReasonModal'); ?>')<?php endif; ?> }">
             <template x-if="showReasonModal">
-                <div class="fixed inset-0" style="z-index: 9999;">
-                    <!-- Backdrop with blur -->
-                    <div class="fixed inset-0 bg-black/30 backdrop-blur-md transition-opacity"
-                         @click="showReasonModal = false"></div>
+                <div class="fixed inset-0 z-50 overflow-y-auto backdrop-blur-sm">
+                    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+                        <div class="fixed inset-0 transition-opacity bg-gray-500/30" aria-hidden="true">
+                        </div>
 
-                    <!-- Modal Content -->
-                    <div class="fixed inset-0 flex items-center justify-center p-4">
                         <div class="relative bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6] rounded-lg max-w-lg w-full border-2 border-[#72383D]/20 shadow-xl">
                             <div class="p-6">
-                                <h3 class="text-2xl font-bold text-[#401B1B] mb-6">Disapproval Reason</h3>
+                                <h3 class="text-2xl font-bold text-[#401B1B] mb-6">Cancellation Reason</h3>
                                 
-                                <div class="bg-red-50 p-4 rounded-lg">
-                                    <p class="text-red-600"><?php echo e($selectedReason); ?></p>
+                                <div class="bg-[#AB644B]/10 p-4 rounded-lg">
+                                    <p class="text-[#72383D]"><?php echo e($selectedReason); ?></p>
                                 </div>
-
-                                <div class="flex justify-end mt-6">
-                                    <button @click="showReasonModal = false" 
-                                        class="bg-[#72383D] hover:bg-[#401B1B] text-white px-4 py-2 rounded-lg">
+                                
+                                <div class="mt-6 flex justify-end">
+                                    <button 
+                                        @click="showReasonModal = false"
+                                        class="px-4 py-2 bg-[#72383D] text-white rounded-lg hover:bg-[#401B1B] transition-colors duration-200"
+                                    >
                                         Close
                                     </button>
                                 </div>

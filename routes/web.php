@@ -60,6 +60,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/sales', App\Livewire\Sales\Index::class)->name('sales.index');
     Route::get('/profile', Profile::class)->name('profile');
+    Route::get('/messages', \App\Livewire\Ecommerce\Messages::class)->name('messages');
 });
 
 // Protected routes (require auth and email verification)
@@ -105,3 +106,8 @@ Route::post('/email/resend', function (Request $request) {
 
     return back()->with('resent', true);
 })->middleware(['auth', 'throttle:6,1'])->name('verification.resend');
+
+// Admin messages route
+Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->group(function () {
+    Route::get('/admin/messages', \App\Livewire\Admin\Messages::class)->name('admin.messages');
+});

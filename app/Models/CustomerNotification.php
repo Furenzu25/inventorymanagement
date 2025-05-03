@@ -16,7 +16,8 @@ class CustomerNotification extends Model
         'title',
         'message',
         'type',
-        'is_read'
+        'is_read',
+        'cancellation_reason'
     ];
 
     protected $casts = [

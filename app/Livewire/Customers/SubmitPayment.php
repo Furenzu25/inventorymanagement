@@ -39,6 +39,7 @@ class SubmitPayment extends Component
     {
         $this->accountReceivables = Auth::user()->customer?->accountReceivables ?? collect();
         $this->paymentDate = now()->format('Y-m-d');
+        $this->showModal = false;
     }
 
     public function openPaymentModal($arId)
@@ -127,5 +128,11 @@ class SubmitPayment extends Component
     public function render()
     {
         return view('livewire.customers.submit-payment');
+    }
+
+    public function closeModal()
+    {
+        $this->showModal = false;
+        $this->reset(['amount', 'paymentProof', 'paymentDate']); // Reset form fields
     }
 }

@@ -3,13 +3,26 @@
         'name' => 'laravel/laravel',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
+<<<<<<< HEAD
         'reference' => 'c2ceaf1b2e3396af27c4bad5b465df820a7a8d6c',
+=======
+        'reference' => '7e8e069d980adffbd5b80d02bd3466b71344723c',
+>>>>>>> temp-from-detached
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
         'dev' => true,
     ),
     'versions' => array(
+        'asantibanez/livewire-charts' => array(
+            'pretty_version' => 'v4.1.0',
+            'version' => '4.1.0.0',
+            'reference' => '35324eace3c45112935eba7ccca3087fa52deb48',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../asantibanez/livewire-charts',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'blade-ui-kit/blade-heroicons' => array(
             'pretty_version' => '2.4.0',
             'version' => '2.4.0.0',
@@ -472,7 +485,11 @@
         'laravel/laravel' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
+<<<<<<< HEAD
             'reference' => 'c2ceaf1b2e3396af27c4bad5b465df820a7a8d6c',
+=======
+            'reference' => '7e8e069d980adffbd5b80d02bd3466b71344723c',
+>>>>>>> temp-from-detached
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -679,6 +696,15 @@
             'reference' => '86eddacc1b1be9791b3c8fca4a9ef77db6a07cdc',
             'type' => 'library',
             'install_path' => __DIR__ . '/../owenvoke/blade-fontawesome',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'paragonie/sodium_compat' => array(
+            'pretty_version' => 'v2.1.0',
+            'version' => '2.1.0.0',
+            'reference' => 'a673d5f310477027cead2e2f2b6db5d8368157cb',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../paragonie/sodium_compat',
             'aliases' => array(),
             'dev_requirement' => false,
         ),
@@ -890,6 +916,15 @@
             'reference' => '2fd717afa05341b4f8152547f142cd2f130f6818',
             'type' => 'library',
             'install_path' => __DIR__ . '/../psy/psysh',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'pusher/pusher-php-server' => array(
+            'pretty_version' => '7.2.6',
+            'version' => '7.2.6.0',
+            'reference' => 'd89e9997191d18fb0fe03a956fa3ccfe0af524ea',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../pusher/pusher-php-server',
             'aliases' => array(),
             'dev_requirement' => false,
         ),
