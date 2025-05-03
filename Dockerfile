@@ -29,21 +29,18 @@ RUN mkdir -p database \
     && touch database/database.sqlite \
     && chown -R www-data:www-data database
 
+# Build frontend assets
+RUN npm ci \
+    && npm run build
+
 # Create storage symlink & clear config/view caches
 RUN php artisan storage:link \
     && php artisan config:clear \
     && php artisan route:clear \
     && php artisan view:clear
 
-# Build frontend assets and clear caches again
-RUN npm ci \
-    && npm run build \
-    && php artisan config:clear \
-    && php artisan route:clear \
-    && php artisan view:clear
-
 # Set permissions for storage and cache directories
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+RUN chown -R www-data:www-data storage bootstrap/cache database
 
 # Expose application port
 EXPOSE 8080
