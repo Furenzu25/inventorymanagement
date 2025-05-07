@@ -21,6 +21,11 @@ WORKDIR /var/www
 COPY composer.json composer.lock ./
 RUN composer install --optimize-autoloader --no-dev --no-scripts
 
+# Copy package.json and build frontend assets first
+COPY package.json package-lock.json ./
+COPY vite.config.js postcss.config.js tailwind.config.js ./
+RUN npm ci
+
 # Copy rest of the application
 COPY . .
 
@@ -42,7 +47,7 @@ RUN php artisan config:clear || true
 RUN php artisan route:clear || true
 
 # Build frontend assets
-RUN npm ci && npm run build
+RUN npm run build
 
 # Clear view cache safely
 RUN php artisan view:clear || true
@@ -51,6 +56,7 @@ RUN php artisan view:clear || true
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/public
 
 # Expose port
 EXPOSE 8080
