@@ -64,3 +64,28 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Environment Setup
+
+This project uses environment variables for configuration. We provide two template files:
+- `env.template` - For local development environments
+- `env.production` - For production deployment environments
+
+To set up your local environment:
+
+1. Copy `env.template` to `.env`:
+   ```
+   cp env.template .env
+   ```
+
+2. Generate an application key:
+   ```
+   php artisan key:generate
+   ```
+
+3. Update any environment-specific values in your `.env` file.
+
+For production deployment:
+1. Use the `env.production` file as a reference for setting production values
+2. Environment variables for deployment are configured in the `render.yaml` file
+3. Make sure to set the security-related values appropriately

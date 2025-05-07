@@ -4,14 +4,15 @@ services:
     env: docker
     dockerfilePath: ./Dockerfile
     plan: free
-    healthCheckPath: /test
+    healthCheckPath: /
     envVars:
+      # Core application settings
       - key: APP_NAME
         value: Inventory Management
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
-        value: true
+        value: false
       - key: APP_URL
         fromService:
           name: inventory-management
@@ -22,20 +23,44 @@ services:
           name: inventory-management
           type: web
           property: url
+      
+      # Logging and database configuration
       - key: LOG_CHANNEL
         value: stack
+      - key: LOG_LEVEL
+        value: error  # Use 'error' in production instead of 'debug'
       - key: DB_CONNECTION
         value: sqlite
       - key: DB_DATABASE
         value: /var/www/database/database.sqlite
+      
+      # Cache and session configuration  
       - key: CACHE_DRIVER
         value: file
       - key: QUEUE_CONNECTION
         value: sync
       - key: SESSION_DRIVER
         value: file
+      - key: BROADCAST_DRIVER
+        value: log
+      - key: FILESYSTEM_DISK
+        value: local
+      
+      # Important security settings
       - key: APP_KEY
         generateValue: true
-    # Disk removed as it's not supported in free tier
+      - key: SESSION_SECURE_COOKIE
+        value: "true"
+      - key: SESSION_COOKIE_HTTPONLY
+        value: "true"
+      - key: SESSION_COOKIE_SAMESITE
+        value: "lax"
+      
+      # Node environment for asset building
+      - key: NODE_ENV
+        value: production
+    
+    buildCommand: ""  # Empty because build happens in Dockerfile
+    startCommand: "node server.js"
 
 # Database section removed since we're using SQLite 

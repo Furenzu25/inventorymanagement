@@ -19,25 +19,28 @@ WORKDIR /var/www
 
 # Copy composer files only and install dependencies
 COPY composer.json composer.lock ./
-RUN composer install --optimize-autoloader --no-dev --no-scripts
+RUN composer install --optimize-autoloader --no-scripts
 
 # Copy package.json and build frontend assets first
 COPY package.json package-lock.json ./
-COPY vite.config.js postcss.config.js tailwind.config.js ./
+COPY vite.config.js postcss.config.js tailwind.config.js .nvmrc ./
 RUN npm ci
+
+# Copy server.js that was created
+COPY server.js ./
+
+# Copy env templates
+COPY env.template ./
+COPY env.production ./
 
 # Copy rest of the application
 COPY . .
 
-# Set up environment with debug enabled to see error details
-RUN cp -n .env.example .env 2>/dev/null || true
-RUN sed -i 's/APP_DEBUG=false/APP_DEBUG=true/g' .env
-RUN sed -i 's/APP_ENV=production/APP_ENV=development/g' .env
-# Fix the APP_URL to use localhost during build
-RUN sed -i 's#APP_URL=.*#APP_URL=http://localhost#g' .env
-# Set explicit SQLite path
-RUN echo "DB_CONNECTION=sqlite" >> .env
+# Create a proper .env file for production using our production template
+RUN cp env.production .env
 RUN echo "DB_DATABASE=/var/www/database/database.sqlite" >> .env
+
+# Generate app key
 RUN php artisan key:generate --force
 
 # Prepare SQLite database file and ensure permissions
@@ -46,30 +49,25 @@ RUN mkdir -p database \
     && chmod 777 database/database.sqlite \
     && chown -R www-data:www-data database
 
-# Run migrations to set up database schema first
+# Run migrations to set up database schema
 RUN php artisan migrate --force || true
 
 # Create storage symlink & clear caches
-RUN php artisan storage:link 2>/dev/null || true
-RUN php artisan config:clear || true
-RUN php artisan route:clear || true
+RUN php artisan storage:link || true
+RUN php artisan config:clear
+RUN php artisan route:clear
+RUN php artisan view:clear
 
-# Build frontend assets
+# Build frontend assets with production settings
 RUN npm run build
-# Copy the build files to the correct location and ensure they have right permissions
+
+# Ensure the build directory exists in public
+RUN mkdir -p public/build
+# Copy build files to the public directory if they exist elsewhere
 RUN cp -r public/build /var/www/public/ || true
-RUN chmod -R 755 /var/www/public/build
 
-# Clear view cache safely
-RUN php artisan view:clear || true
-# Skip optimize:clear as it causes errors with SQLite
-# RUN php artisan optimize:clear || true
-
-# Set permissions
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
-RUN chown -R www-data:www-data /var/www/public
-
-# Update permissions for all storage subdirectories
+# Set proper permissions
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/www/public
 RUN find /var/www/storage -type d -exec chmod 755 {} \;
 RUN find /var/www/storage -type f -exec chmod 644 {} \;
 RUN chmod -R 777 /var/www/storage/logs
@@ -79,5 +77,5 @@ RUN chmod -R 777 /var/www/bootstrap/cache
 # Expose port
 EXPOSE 8080
 
-# Run migrations at startup and serve application
-CMD ["bash", "-lc", "php artisan migrate --force && php -d display_errors=1 -d display_startup_errors=1 artisan serve --host=0.0.0.0 --port=8080"]
+# Use the Node.js server script which runs Laravel's PHP server
+CMD ["node", "server.js"]
