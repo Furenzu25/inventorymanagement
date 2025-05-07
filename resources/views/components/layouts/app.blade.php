@@ -8,20 +8,12 @@
     
     @livewireStyles
     
-    @if(file_exists(public_path('build/manifest.json')))
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @else
-        <!-- Direct CSS fallback -->
-        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-        <link href="{{ asset('build/assets/app-CjzQmVFP.css') }}" rel="stylesheet">
-        <script type="module" src="{{ asset('build/assets/app-DW2q8-8h.js') }}"></script>
-    @endif
-    
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+    <!-- Inline critical CSS to ensure styling works -->
     <style>
+        @tailwind base;
+        @tailwind components;
+        @tailwind utilities;
+        
         :root {
             --color-primary: #401B1B;
             --color-secondary: #72383D;
@@ -64,7 +56,59 @@
             background-color: white;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+        
+        /* Add core tailwind utility classes */
+        .flex { display: flex; }
+        .flex-1 { flex: 1 1 0%; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .relative { position: relative; }
+        .fixed { position: fixed; }
+        .absolute { position: absolute; }
+        .w-full { width: 100%; }
+        .h-full { height: 100%; }
+        .min-h-screen { min-height: 100vh; }
+        .p-4 { padding: 1rem; }
+        .p-6 { padding: 1.5rem; }
+        .m-6 { margin: 1.5rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .ml-64 { margin-left: 16rem; }
+        .mr-2 { margin-right: 0.5rem; }
+        .mt-8 { margin-top: 2rem; }
+        .space-y-2 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.5rem; }
+        .space-x-4 > :not([hidden]) ~ :not([hidden]) { margin-left: 1rem; }
+        .rounded { border-radius: 0.25rem; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .rounded-full { border-radius: 9999px; }
+        .bg-white { background-color: white; }
+        .text-white { color: white; }
+        .text-center { text-align: center; }
+        .font-bold { font-weight: 700; }
+        .text-2xl { font-size: 1.5rem; }
+        .shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .w-64 { width: 16rem; }
+        .z-40 { z-index: 40; }
+        .z-50 { z-index: 50; }
+        .transition-all { transition-property: all; }
+        .transition-transform { transition-property: transform; }
+        .duration-300 { transition-duration: 300ms; }
+        .transform { transform: translateX(0); }
+        .bottom-0 { bottom: 0; }
+        .bottom-6 { bottom: 1.5rem; }
+        .right-6 { right: 1.5rem; }
+        .block { display: block; }
+        .hover\:bg-opacity-80:hover { opacity: 0.8; }
     </style>
+
+    <!-- Safely include Vite generated assets if possible -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Tailwind CDN as additional fallback -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 
 <body class="bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6]">
