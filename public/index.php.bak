@@ -1,0 +1,58 @@
+<?php
+
+// Simple version for troubleshooting
+
+echo <<<HTML
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Laravel Application Status</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { color: #333; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .ok { background-color: #d4edda; color: #155724; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        pre { background: #f5f5f5; padding: 10px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>Laravel Application Status</h1>
+    <div class="status ok">
+        This simplified file is loading correctly. If you're seeing this page, it means
+        your web server is working but the Laravel application may have configuration issues.
+    </div>
+
+    <h2>Application Details</h2>
+    <p>Directory: <?= dirname(__DIR__) ?></p>
+    <p>PHP Version: <?= phpversion() ?></p>
+    <p>Server Software: <?= $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown' ?></p>
+    
+    <h2>Troubleshooting Steps</h2>
+    <ol>
+        <li>Check the <a href="/diagnostic.php">Diagnostic Page</a> for detailed system information</li>
+        <li>Check logs in the storage/logs directory</li>
+        <li>Ensure the .env file exists and is properly formatted</li>
+        <li>Confirm database connection settings are correct</li>
+        <li>Try running "php artisan optimize:clear" to clear cached configuration</li>
+    </ol>
+
+    <h2>Environment Status</h2>
+    <pre>
+<?php
+$required_paths = [
+    'storage' => is_dir(dirname(__DIR__) . '/storage') && is_writable(dirname(__DIR__) . '/storage'),
+    'bootstrap/cache' => is_dir(dirname(__DIR__) . '/bootstrap/cache') && is_writable(dirname(__DIR__) . '/bootstrap/cache'),
+    '.env' => file_exists(dirname(__DIR__) . '/.env'),
+    'database/database.sqlite' => file_exists(dirname(__DIR__) . '/database/database.sqlite')
+];
+
+foreach ($required_paths as $path => $exists) {
+    echo $path . ': ' . ($exists ? 'OK' : 'MISSING or NOT WRITABLE') . "\n";
+}
+?>
+    </pre>
+</body>
+</html>
+HTML; 
