@@ -43,7 +43,7 @@
                 </div>
                 <div class="md:w-2/3 p-8">
                     <div class="text-center mb-8">
-                        <h2 class="text-2xl font-bold logo-text">Welcome Back!</h2>
+                        <h2 class="text-2xl font-bold logo-text">Welcome to Rosels Trading!</h2>
                         <p class="text-gray-600 mt-2">Please login to access your inventory management dashboard</p>
                     </div>
                     
@@ -59,6 +59,22 @@
                     
                     <div class="mt-8 text-center text-sm text-gray-500">
                         <p>© {{ date('Y') }} Rosels Trading. All rights reserved.</p>
+                    </div>
+                    
+                    <!-- Debug Info -->
+                    <div class="mt-8 p-4 bg-gray-100 rounded-lg">
+                        <h3 class="font-bold">Debug Info:</h3>
+                        <ul class="mt-2 text-xs text-gray-600">
+                            <li>PHP Version: {{ phpversion() }}</li>
+                            <li>Laravel Version: {{ app()->version() }}</li>
+                            <li>Environment: {{ app()->environment() }}</li>
+                            <li>Debug Mode: {{ config('app.debug') ? 'Enabled' : 'Disabled' }}</li>
+                            <li>Database Driver: {{ config('database.default') }}</li>
+                            <li>Database File: {{ env('DB_DATABASE', 'Not set') }}</li>
+                            <li>File Exists: {{ file_exists(env('DB_DATABASE', '')) ? 'Yes' : 'No' }}</li>
+                            <li>Storage Path: {{ storage_path() }}</li>
+                            <li>Storage Writable: {{ is_writable(storage_path()) ? 'Yes' : 'No' }}</li>
+                        </ul>
                     </div>
                 </div>
             </div>

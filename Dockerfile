@@ -29,13 +29,19 @@ RUN npm ci
 # Copy rest of the application
 COPY . .
 
-# Set up environment
+# Set up environment with debug enabled to see error details
 RUN cp -n .env.example .env 2>/dev/null || true
+RUN sed -i 's/APP_DEBUG=false/APP_DEBUG=true/g' .env
+RUN sed -i 's/APP_ENV=production/APP_ENV=development/g' .env
+# Set explicit SQLite path
+RUN echo "DB_CONNECTION=sqlite" >> .env
+RUN echo "DB_DATABASE=/var/www/database/database.sqlite" >> .env
 RUN php artisan key:generate --force
 
-# Prepare SQLite database file
+# Prepare SQLite database file and ensure permissions
 RUN mkdir -p database \
     && touch database/database.sqlite \
+    && chmod 777 database/database.sqlite \
     && chown -R www-data:www-data database
 
 # Run migrations to set up database schema first
@@ -58,8 +64,15 @@ RUN php artisan view:clear || true
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 RUN chown -R www-data:www-data /var/www/public
 
+# Update permissions for all storage subdirectories
+RUN find /var/www/storage -type d -exec chmod 755 {} \;
+RUN find /var/www/storage -type f -exec chmod 644 {} \;
+RUN chmod -R 777 /var/www/storage/logs
+RUN chmod -R 777 /var/www/storage/framework
+RUN chmod -R 777 /var/www/bootstrap/cache
+
 # Expose port
 EXPOSE 8080
 
 # Run migrations at startup and serve application
-CMD ["bash", "-lc", "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8080"]
+CMD ["bash", "-lc", "php artisan migrate --force && php -d display_errors=1 -d display_startup_errors=1 artisan serve --host=0.0.0.0 --port=8080"]

@@ -25,8 +25,39 @@ use App\Livewire\Admin\AdminOrders;
 use App\Livewire\Landing;
 use App\Livewire\Customers\SubmitPayment;
 
+// Debug route
+Route::get('/debug', function () {
+    $db_file = env('DB_DATABASE', database_path('database.sqlite'));
+    
+    return response()->json([
+        'status' => 'OK',
+        'php_version' => phpversion(),
+        'laravel_version' => app()->version(),
+        'environment' => app()->environment(),
+        'debug' => config('app.debug'),
+        'database_connection' => config('database.default'),
+        'database_file' => $db_file,
+        'database_file_exists' => file_exists($db_file),
+        'database_file_writable' => is_writable($db_file),
+        'storage_path' => storage_path(),
+        'storage_path_exists' => is_dir(storage_path()),
+        'storage_path_writable' => is_writable(storage_path()),
+        'public_path' => public_path(),
+        'public_path_exists' => is_dir(public_path()),
+        'public_path_writable' => is_writable(public_path()),
+        'bootstrap_cache_path' => base_path('bootstrap/cache'),
+        'bootstrap_cache_exists' => is_dir(base_path('bootstrap/cache')),
+        'bootstrap_cache_writable' => is_writable(base_path('bootstrap/cache')),
+        'env_file_exists' => file_exists(base_path('.env')),
+        'sqlite_extension_loaded' => extension_loaded('pdo_sqlite'),
+    ]);
+});
+
 // Public routes
-Route::get('/', \App\Livewire\Landing::class)->name('landing');
+Route::get('/', function() {
+    return view('welcome');
+})->name('landing');
+
 Route::get('/login', Login::class)->name('login');
 Route::get('/register', Register::class)->name('register');
 Route::get('/forgot-password', ForgotPassword::class)->name('password.request');
@@ -110,4 +141,14 @@ Route::post('/email/resend', function (Request $request) {
 // Admin messages route
 Route::middleware(['auth', 'verified', \App\Http\Middleware\AdminMiddleware::class])->group(function () {
     Route::get('/admin/messages', \App\Livewire\Admin\Messages::class)->name('admin.messages');
+});
+
+// Super simple test route - should work even if other routes fail
+Route::get('/test', function () {
+    return '<html><body><h1>Test Route Works!</h1><p>PHP Version: ' . phpversion() . '</p></body></html>';
+});
+
+// Fallback route for when everything else fails
+Route::fallback(function () {
+    return view('welcome');
 });
