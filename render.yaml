@@ -20,27 +20,9 @@ services:
       - key: LOG_CHANNEL
         value: stack
       - key: DB_CONNECTION
-        value: mysql
-      - key: DB_HOST
-        fromDatabase:
-          name: inventory-db
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: inventory-db
-          property: port
+        value: sqlite
       - key: DB_DATABASE
-        fromDatabase:
-          name: inventory-db
-          property: database
-      - key: DB_USERNAME
-        fromDatabase:
-          name: inventory-db
-          property: username
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: inventory-db
-          property: password
+        value: /var/www/database/database.sqlite
       - key: CACHE_DRIVER
         value: file
       - key: QUEUE_CONNECTION
@@ -49,12 +31,6 @@ services:
         value: file
       - key: APP_KEY
         generateValue: true
-    disk:
-      name: inventory-storage
-      mountPath: /var/www/storage
-      sizeGB: 1
+    # Disk removed as it's not supported in free tier
 
-databases:
-  - name: inventory-db
-    databaseName: inventory
-    plan: free 
+# Database section removed since we're using SQLite 
