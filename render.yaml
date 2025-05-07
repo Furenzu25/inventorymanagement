@@ -4,18 +4,24 @@ services:
     env: docker
     dockerfilePath: ./Dockerfile
     plan: free
-    healthCheckPath: /
+    healthCheckPath: /test
     envVars:
       - key: APP_NAME
         value: Inventory Management
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
-        value: false
+        value: true
       - key: APP_URL
-        value: https://inventory-management-k228.onrender.com
+        fromService:
+          name: inventory-management
+          type: web
+          property: url
       - key: ASSET_URL
-        value: https://inventory-management-k228.onrender.com
+        fromService:
+          name: inventory-management
+          type: web
+          property: url
       - key: LOG_CHANNEL
         value: stack
       - key: DB_CONNECTION

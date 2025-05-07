@@ -33,6 +33,8 @@ COPY . .
 RUN cp -n .env.example .env 2>/dev/null || true
 RUN sed -i 's/APP_DEBUG=false/APP_DEBUG=true/g' .env
 RUN sed -i 's/APP_ENV=production/APP_ENV=development/g' .env
+# Fix the APP_URL to use localhost during build
+RUN sed -i 's#APP_URL=.*#APP_URL=http://localhost#g' .env
 # Set explicit SQLite path
 RUN echo "DB_CONNECTION=sqlite" >> .env
 RUN echo "DB_DATABASE=/var/www/database/database.sqlite" >> .env
