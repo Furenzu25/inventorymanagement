@@ -8,8 +8,35 @@
     
     @livewireStyles
     
-    <!-- Vite Assets -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <!-- Using a try-catch block to handle potential Vite errors -->
+    @php
+    $viteCssPath = null;
+    $viteJsPath = null;
+    
+    try {
+        $viteManifest = json_decode(file_get_contents(public_path('build/manifest.json')), true);
+        if (isset($viteManifest['resources/css/app.css']['file'])) {
+            $viteCssPath = 'build/' . $viteManifest['resources/css/app.css']['file'];
+        }
+        if (isset($viteManifest['resources/js/app.js']['file'])) {
+            $viteJsPath = 'build/' . $viteManifest['resources/js/app.js']['file'];
+        }
+    } catch (\Exception $e) {
+        // Manifest file not found or invalid
+    }
+    @endphp
+    
+    @if($viteCssPath && $viteJsPath)
+        <!-- Vite assets found, use them -->
+        <link rel="stylesheet" href="{{ asset($viteCssPath) }}">
+        <script type="module" src="{{ asset($viteJsPath) }}"></script>
+    @else
+        <!-- Fallback to @vite directive -->
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        
+        <!-- Additional CDN fallbacks -->
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    @endif
     
     <!-- Fallback if Vite assets fail to load -->
     <script>
@@ -79,9 +106,6 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
     </style>
-    
-    <!-- Tailwind Fallback -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 
 <body class="bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6]">

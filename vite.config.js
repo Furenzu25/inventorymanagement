@@ -6,6 +6,9 @@ export default defineConfig({
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.js'],
             refresh: true,
+            // Ensure manifest is generated in the correct location
+            publicDirectory: 'public',
+            buildDirectory: 'build',
         }),
     ],
     build: {
@@ -13,7 +16,7 @@ export default defineConfig({
         manifest: true,
         // Optimize build
         minify: 'terser',
-        // Make output more verbose to diagnose issues
+        // Make sure output goes to the right place
         outDir: 'public/build',
     },
 });

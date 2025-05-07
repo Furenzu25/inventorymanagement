@@ -56,6 +56,9 @@ RUN php artisan route:clear || true
 
 # Build frontend assets
 RUN npm run build
+# Copy the build files to the correct location and ensure they have right permissions
+RUN cp -r public/build /var/www/public/ || true
+RUN chmod -R 755 /var/www/public/build
 
 # Clear view cache safely
 RUN php artisan view:clear || true
