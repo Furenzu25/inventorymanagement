@@ -1,5 +1,5 @@
-const { spawn } = require('child_process');
-const path = require('path');
+import { spawn } from 'child_process';
+import path from 'path';
 
 // Use environment variable for port or default to 8080
 const PORT = process.env.PORT || 8080;

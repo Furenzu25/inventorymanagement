@@ -59,6 +59,24 @@ services:
       # Node environment for asset building
       - key: NODE_ENV
         value: production
+      
+      # Mail configuration (customize these values in Render dashboard for security)
+      - key: MAIL_MAILER
+        value: smtp
+      - key: MAIL_HOST
+        value: smtp.mailtrap.io  # Replace with your actual SMTP server
+      - key: MAIL_PORT
+        value: "2525"
+      - key: MAIL_USERNAME
+        value: your_production_username  # Set this in Render dashboard
+      - key: MAIL_PASSWORD
+        value: your_production_password  # Set this in Render dashboard
+      - key: MAIL_ENCRYPTION
+        value: tls
+      - key: MAIL_FROM_ADDRESS
+        value: no-reply@your-domain.com  # Replace with your actual address
+      - key: MAIL_FROM_NAME
+        value: "Rosels Trading"
     
     buildCommand: ""  # Empty because build happens in Dockerfile
     startCommand: "node server.js"
