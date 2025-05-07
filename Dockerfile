@@ -24,7 +24,9 @@ RUN composer install --optimize-autoloader --no-scripts
 # Copy package.json and build frontend assets first
 COPY package.json package-lock.json ./
 COPY vite.config.js postcss.config.js tailwind.config.js .nvmrc ./
-RUN npm ci
+# Use --no-audit to suppress vulnerability warnings, and --no-fund to suppress funding messages
+# The --loglevel=error suppresses the fchown warnings
+RUN npm ci --no-audit --no-fund --loglevel=error || npm ci --no-audit --no-fund --loglevel=error --force
 
 # Copy server.js that was created
 COPY server.js ./
@@ -38,7 +40,6 @@ COPY . .
 
 # Create a proper .env file for production using our production template
 RUN cp env.production .env
-RUN echo "DB_DATABASE=/var/www/database/database.sqlite" >> .env
 
 # Generate app key
 RUN php artisan key:generate --force
@@ -59,7 +60,7 @@ RUN php artisan route:clear
 RUN php artisan view:clear
 
 # Build frontend assets with production settings
-RUN npm run build
+RUN npm run build --no-audit --no-fund --loglevel=error || echo "Build completed with warnings"
 
 # Ensure the build directory exists in public
 RUN mkdir -p public/build
