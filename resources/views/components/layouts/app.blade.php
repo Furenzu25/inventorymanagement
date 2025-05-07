@@ -7,7 +7,29 @@
     <title>{{ isset($title) ? $title.' | '.config('app.name') : config('app.name') }}</title>
     
     @livewireStyles
+    
+    <!-- Vite Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    <!-- Fallback if Vite assets fail to load -->
+    <script>
+        // Check if the Vite assets failed to load
+        window.addEventListener('error', function(e) {
+            if (e.target.tagName === 'LINK' && e.target.href.includes('/build/assets/')) {
+                // Create fallback CSS
+                var link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = '/build/assets/app-CjzQmVFP.css';
+                document.head.appendChild(link);
+                
+                // Create fallback script
+                var script = document.createElement('script');
+                script.src = '/build/assets/app-DW2q8-8h.js';
+                script.type = 'module';
+                document.body.appendChild(script);
+            }
+        }, true);
+    </script>
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
@@ -57,6 +79,9 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
     </style>
+    
+    <!-- Tailwind Fallback -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 
 <body class="bg-gradient-to-br from-[#F2F2EB] to-[#D2DCE6]">
