@@ -24,24 +24,26 @@ RUN composer install --optimize-autoloader --no-dev --no-scripts
 # Copy rest of the application
 COPY . .
 
+# Set up environment
+RUN cp -n .env.example .env 2>/dev/null || true
+RUN php artisan key:generate --force
+
 # Prepare SQLite database file
 RUN mkdir -p database \
     && touch database/database.sqlite \
     && chown -R www-data:www-data database
 
 # Create storage symlink & clear caches
-RUN php artisan storage:link \
+RUN php artisan storage:link 2>/dev/null || true \
     && php artisan config:clear \
     && php artisan route:clear
 
 # Build frontend assets
 RUN npm ci \
-    && npm run build
-# Build frontend assets
-RUN npm ci \
     && npm run build \
     && php artisan view:clear \
     && php artisan optimize:clear    # drops cached vite manifest + routes/config
+
 # Set permissions
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
