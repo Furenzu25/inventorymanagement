@@ -8,34 +8,13 @@
     
     @livewireStyles
     
-    <!-- Using a try-catch block to handle potential Vite errors -->
-    @php
-    $viteCssPath = null;
-    $viteJsPath = null;
-    
-    try {
-        $viteManifest = json_decode(file_get_contents(public_path('build/manifest.json')), true);
-        if (isset($viteManifest['resources/css/app.css']['file'])) {
-            $viteCssPath = 'build/' . $viteManifest['resources/css/app.css']['file'];
-        }
-        if (isset($viteManifest['resources/js/app.js']['file'])) {
-            $viteJsPath = 'build/' . $viteManifest['resources/js/app.js']['file'];
-        }
-    } catch (\Exception $e) {
-        // Manifest file not found or invalid
-    }
-    @endphp
-    
-    @if($viteCssPath && $viteJsPath)
-        <!-- Vite assets found, use them -->
-        <link rel="stylesheet" href="{{ asset($viteCssPath) }}">
-        <script type="module" src="{{ asset($viteJsPath) }}"></script>
-    @else
-        <!-- Fallback to @vite directive -->
+    @if(file_exists(public_path('build/manifest.json')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-        
-        <!-- Additional CDN fallbacks -->
+    @else
+        <!-- Direct CSS fallback -->
         <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+        <link href="{{ asset('build/assets/app-CjzQmVFP.css') }}" rel="stylesheet">
+        <script type="module" src="{{ asset('build/assets/app-DW2q8-8h.js') }}"></script>
     @endif
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
