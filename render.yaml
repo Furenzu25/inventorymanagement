@@ -4,7 +4,12 @@ services:
     env: docker
     dockerfilePath: ./Dockerfile
     plan: free
+    healthCheckPath: /health-check
+    healthCheckTimeout: 100
+    healthCheckInterval: 15s
     envVars:
+      - key: PORT
+        value: 10000
       - key: APP_NAME
         value: "Rosels Trading"
       - key: APP_ENV

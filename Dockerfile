@@ -40,6 +40,7 @@ RUN echo "APP_NAME=\"Rosels Trading\"" > .env
 RUN echo "APP_ENV=production" >> .env
 RUN echo "APP_DEBUG=false" >> .env
 RUN echo "APP_URL=http://localhost" >> .env
+RUN echo "APP_KEY=" >> .env
 RUN echo "DB_CONNECTION=sqlite" >> .env
 RUN echo "DB_DATABASE=/var/www/database/database.sqlite" >> .env
 RUN echo "BROADCAST_DRIVER=log" >> .env
@@ -72,7 +73,7 @@ RUN chmod -R 777 node_modules/.bin/
 RUN vite build
 
 # Expose port
-EXPOSE 8000
+EXPOSE ${PORT:-8000}
 
-# Run PHP built-in server
-CMD php artisan serve --host=0.0.0.0 --port=8000 
+# Run PHP built-in server with environment PORT variable
+CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8000} 
