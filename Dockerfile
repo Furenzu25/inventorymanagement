@@ -67,7 +67,9 @@ RUN php artisan view:cache
 
 # Generate assets
 RUN npm install
-RUN npx vite build
+RUN npm install -g vite
+RUN chmod -R 777 node_modules/.bin/
+RUN vite build
 
 # Expose port
 EXPOSE 8000
