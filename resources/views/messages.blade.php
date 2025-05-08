@@ -1,3 +1,3 @@
-<x-app-layout>
+<x-layouts.app>
     <livewire:messages.chat-box />
-</x-app-layout> 
+</x-layouts.app> 

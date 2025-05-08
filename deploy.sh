@@ -2,25 +2,48 @@
 # Deployment script for Render.com
 
 # Make sure we're in the right directory
-echo "Starting deployment to Render..."
+echo "Starting deployment preparation..."
 
-# Check if render-cli is installed
-if ! command -v render &> /dev/null
-then
-    echo "render-cli not found, installing..."
-    npm install -g @renderinc/cli
+# Run Laravel optimizations locally before deploying
+echo "Running Laravel optimizations..."
+php artisan optimize
+php artisan config:cache
+php artisan event:cache
+php artisan route:cache
+php artisan view:cache
+
+# Set APP_DEBUG to false for production
+sed -i 's/APP_DEBUG=true/APP_DEBUG=false/g' .env
+
+# Check if git is initialized
+if [ ! -d ".git" ]; then
+    echo "Git repository not initialized. Initializing..."
+    git init
+    git add .
+    git commit -m "Initial commit for deployment"
 fi
 
-# Authenticate with Render (will prompt for token)
-echo "Authenticating with Render..."
-render auth
+# Prompt for GitHub repository URL if not already set
+if ! git remote -v | grep -q origin; then
+    echo "No remote repository set."
+    read -p "Enter your GitHub repository URL: " repo_url
+    git remote add origin $repo_url
+    echo "Remote repository added."
+fi
 
-# Deploy the service
-echo "Deploying to Render... (Make sure you have created the service in Render dashboard first)"
-render deploy --data='{
-  "service": "rosels-trading",
-  "clearCache": true
-}'
+# Push code to GitHub
+echo "Pushing code to GitHub..."
+git add .
+git commit -m "Prepare for deployment to Render.com"
+git push -u origin main || git push -u origin master
 
-echo "Deployment completed! Visit your service on Render dashboard to monitor progress."
-echo "Your app should be available at https://rosels-trading.onrender.com once deployment is complete."
+# Deploy to Render
+echo "Deploying to Render..."
+echo "1. Visit https://dashboard.render.com/new/web-service"
+echo "2. Connect your GitHub repository"
+echo "3. Use Docker environment"
+echo "4. Select the Free plan"
+echo "5. Click 'Create Web Service'"
+
+echo "Deployment preparation completed!"
+echo "Your app will be available at https://your-service-name.onrender.com once you complete the steps above."

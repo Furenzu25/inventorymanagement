@@ -1,3 +1,0 @@
-<svg class="inline w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
-</svg><?php /**PATH C:\laragon\www\inventorymanagement\storage\framework\views/1b9f60f42fc984a2c145b2bd6f2f8d34.blade.php ENDPATH**/ ?>

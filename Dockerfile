@@ -38,7 +38,7 @@ RUN chmod -R 777 database
 # Create .env file with the correct values
 RUN echo "APP_NAME=\"Rosels Trading\"" > .env
 RUN echo "APP_ENV=production" >> .env
-RUN echo "APP_DEBUG=true" >> .env
+RUN echo "APP_DEBUG=false" >> .env
 RUN echo "APP_URL=http://localhost" >> .env
 RUN echo "DB_CONNECTION=sqlite" >> .env
 RUN echo "DB_DATABASE=/var/www/database/database.sqlite" >> .env
@@ -57,6 +57,13 @@ RUN php artisan storage:link || echo "Storage link failed but continuing"
 # Run migrations and seed database
 RUN php artisan migrate:fresh --force
 RUN php artisan db:seed --force
+
+# Run Laravel optimization commands
+RUN php artisan optimize
+RUN php artisan config:cache
+RUN php artisan event:cache
+RUN php artisan route:cache
+RUN php artisan view:cache
 
 # Generate assets
 RUN npm install
