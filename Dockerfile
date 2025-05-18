@@ -65,6 +65,12 @@ RUN npm run build
 # Link public storage
 RUN ln -sfn /var/data/uploads storage/app/public
 
+# Clear all caches before serving (bust cache)
+RUN php artisan config:clear
+RUN php artisan route:clear
+RUN php artisan view:clear
+RUN php artisan cache:clear
+
 # Expose port
 EXPOSE ${PORT:-8000}
 

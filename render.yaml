@@ -1,4 +1,5 @@
 services:
+  # This comment forces a full rebuild of the service
   - type: web
     name: rosels-trading
     env: docker
