@@ -26,8 +26,13 @@ use App\Livewire\Landing;
 use App\Livewire\Customers\SubmitPayment;
 
 // Health check route for Render
-Route::get('/health-check', function() {
-    return response()->json(['status' => 'ok']);
+Route::get('/health-check', function () {
+    return [
+        'status' => 'ok',
+        'env' => app()->environment(),
+        'app_url' => config('app.url'),
+        'asset_url' => config('app.asset_url')
+    ];
 });
 
 // Public routes
