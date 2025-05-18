@@ -8,4 +8,8 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    // Force HTTPS for assets in production
+    server: {
+        https: process.env.APP_ENV === 'production',
+    },
 });
